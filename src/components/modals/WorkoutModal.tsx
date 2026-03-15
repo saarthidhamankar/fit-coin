@@ -51,19 +51,19 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   const handleConfirm = async () => {
     const address = localStorage.getItem('fitcoin_wallet_address');
     if (!address) {
-      toast({ variant: "destructive", title: "Wallet Missing", description: "Please connect your wallet first." });
+      toast({ variant: "destructive", title: "Wallet Missing", description: "Connect your wallet first." });
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Calculate streak
       let newStreak = 1;
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
       if (profile?.lastWorkoutDate) {
         const lastWorkout = new Date(profile.lastWorkoutDate);
-        const today = new Date();
         const lastDate = new Date(lastWorkout.getFullYear(), lastWorkout.getMonth(), lastWorkout.getDate());
-        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         
         if (diffDays === 0) {
@@ -75,18 +75,17 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         }
       }
 
-      // 2. Mock Blockchain Update
       await rewardUser(address, preview.reward);
       
-      // 3. Firestore Updates
       if (user?.uid && db) {
+        const timestampStr = today.toISOString();
+        
         const sessionRef = collection(db, "users", user.uid, "workoutSessions");
         await addDoc(sessionRef, {
           userId: user.uid,
           workoutType: type,
           durationMinutes: duration,
-          startTime: new Date().toISOString(),
-          endTime: new Date(new Date().getTime() + duration * 60000).toISOString(),
+          startTime: timestampStr,
           totalTokensEarned: preview.reward,
           appliedBonuses: preview.breakdowns,
           timestamp: serverTimestamp()
@@ -96,18 +95,18 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         await updateDoc(profileRef, {
           totalWorkoutsCompleted: increment(1),
           totalFitEarned: increment(preview.reward),
-          lastWorkoutDate: new Date().toISOString(),
+          lastWorkoutDate: timestampStr,
           currentStreakDays: newStreak,
-          lastActivityAt: new Date().toISOString()
+          lastActivityAt: timestampStr
         });
 
         const logRef = collection(db, "users", user.uid, "activityLogs");
         await addDoc(logRef, {
           userId: user.uid,
           activityType: "WORKOUT_EARN",
-          description: `Logged: ${type} session`,
+          description: `Finished: ${type} session`,
           fitCoinsChange: preview.reward,
-          timestamp: new Date().toISOString()
+          timestamp: timestampStr
         });
       }
 
@@ -118,7 +117,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         colors: ['#18D156', '#BCFA22', '#ffffff']
       });
 
-      toast({ title: "Workout Saved", description: `You earned ${preview.reward} FIT tokens. Streak: ${newStreak} Days!` });
+      toast({ title: "Workout Saved", description: `You earned ${preview.reward} FIT. Streak: ${newStreak} Days!` });
       
       setOpen(false);
       onSuccess();
@@ -140,8 +139,8 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
         <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8 max-h-[90vh] overflow-y-auto scroll-smooth">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-headline font-black text-foreground uppercase italic tracking-tighter">Enter Workout</DialogTitle>
-            <p className="text-muted-foreground font-medium text-sm">Select your activity and set the time to earn FIT tokens.</p>
+            <DialogTitle className="text-3xl font-headline font-black text-foreground uppercase italic tracking-tighter">New Workout</DialogTitle>
+            <p className="text-muted-foreground font-medium text-sm">Pick your workout and set the time to earn FIT.</p>
           </DialogHeader>
           
           <div className="space-y-8 pb-4">

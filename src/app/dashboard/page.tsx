@@ -70,7 +70,7 @@ export default function Dashboard() {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, "users", user.uid, "workoutSessions"),
-      orderBy("startTime", "desc"),
+      orderBy("timestamp", "desc"),
       limit(100) 
     );
   }, [db, user?.uid]);
@@ -95,7 +95,7 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
-        const workoutDate = w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime || w.date || Date.now());
+        const workoutDate = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
         if (dayIdx !== -1) {
@@ -114,7 +114,7 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Aggressive scaling for immediate feedback
+    // Entry-level scaling: Lower denominators to make progress visible early
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
@@ -173,7 +173,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly workout history and earnings.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly history and earnings summary.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="pro-glass p-4 rounded-[2rem] flex items-center gap-4 group hover:scale-105 transition-all">
@@ -192,10 +192,10 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total FIT", value: balance, icon: Wallet, suffix: "" },
+            { label: "My FIT", value: balance, icon: Wallet, suffix: "" },
             { label: "Day Streak", value: currentStreak, suffix: " Days", icon: Flame },
             { label: "Total Workouts", value: totalWorkouts, suffix: "", icon: Dumbbell },
-            { label: "Goal Progress", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
+            { label: "Monthly Goal", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
               <Card className="rounded-[2.5rem] border-none pro-glass hover:shadow-xl transition-all group overflow-hidden">
@@ -223,7 +223,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is key to your success.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is the key to success.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={handleWorkoutSuccess} 
@@ -245,9 +245,9 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Weekly Fitness Balance
+                      Weekly Progress Chart
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map across all metrics</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map for the current week</p>
                   </div>
                   <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Sync</Badge>
                 </div>
@@ -295,7 +295,7 @@ export default function Dashboard() {
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
                   <Sparkles className="w-6 h-6 text-white/80" />
-                  Weekly Plan
+                  Daily Plan
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -309,7 +309,7 @@ export default function Dashboard() {
                       <p className="text-base leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Goals:</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Tasks:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <div key={i} className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first workout to unlock your daily fitness plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first workout to see your daily plan.</p>
                 )}
               </CardContent>
             </Card>
@@ -380,7 +380,7 @@ export default function Dashboard() {
                 
                 <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Progress</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Goal</span>
                     <span className="text-[11px] font-black text-primary">{Math.round(monthlyProgress)}%</span>
                   </div>
                   <Progress value={monthlyProgress} className="h-4 rounded-full bg-muted/30" />
