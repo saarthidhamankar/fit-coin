@@ -423,9 +423,7 @@ export default function Dashboard() {
                             <Avatar className="w-12 h-12 border-2 border-primary shadow-xl shadow-primary/30 scale-110">
                               <AvatarFallback className="bg-gradient-to-br from-orange-500 via-primary to-accent relative overflow-visible">
                                 <Flame className="w-6 h-6 text-white fill-white animate-pulse" />
-                                {d.day === 'Sun' && (
-                                  <span className="absolute -top-3 -right-3 text-xl filter drop-shadow-md animate-bounce">🔥</span>
-                                )}
+                                <span className="absolute -top-3 -right-3 text-xl filter drop-shadow-md animate-bounce">🔥</span>
                               </AvatarFallback>
                             </Avatar>
                           ) : (
