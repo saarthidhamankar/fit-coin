@@ -300,7 +300,7 @@ export default function Dashboard() {
                       </div>
                     )}
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Training Plan:</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Today's Exercises:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <motion.div 
                           key={i} 

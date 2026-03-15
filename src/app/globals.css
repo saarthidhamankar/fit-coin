@@ -55,6 +55,9 @@
   }
   body {
     @apply bg-background text-foreground font-body transition-colors duration-300;
+    background-image: radial-gradient(circle at top right, hsl(var(--primary) / 0.05), transparent 400px),
+                      radial-gradient(circle at bottom left, hsl(var(--accent) / 0.05), transparent 400px);
+    background-attachment: fixed;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
@@ -80,4 +83,9 @@
 
 .animate-glow {
   animation: glow 2s infinite ease-in-out;
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(24, 209, 86, 0.5); }
+  50% { opacity: 0.8; box-shadow: 0 0 20px rgba(24, 209, 86, 0.8); }
 }
