@@ -144,7 +144,6 @@ export default function ProfilePage() {
     try {
       await updateDoc(userDocRef, updates);
       
-      // If first time saving name, add a Genesis log
       if (!profile?.username && formData.username.trim()) {
         const logRef = collection(db, "users", user.uid, "activityLogs");
         await addDoc(logRef, {
