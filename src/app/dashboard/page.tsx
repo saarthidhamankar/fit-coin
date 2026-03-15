@@ -12,32 +12,24 @@ import {
   Wallet, 
   Flame, 
   Dumbbell, 
-  History, 
   Sparkles, 
   Calendar as CalendarIcon, 
-  Info, 
   Tag, 
-  BarChart3, 
   ChevronRight, 
-  Activity, 
-  ShieldCheck, 
-  Zap, 
   AlertTriangle, 
-  TrendingUp, 
-  Layers,
+  Target,
   Timer,
-  Check,
-  Target
+  ShieldCheck
 } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { generateMotivation, GenerateMotivationOutput } from "@/ai/flows/generate-motivation";
 import { Skeleton } from "@/components/ui/skeleton";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, updateDoc, addDoc } from "firebase/firestore";
 import { 
   Radar, 
   RadarChart, 
@@ -114,11 +106,11 @@ export default function Dashboard() {
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
     
-    // Scaling metrics to be more "visible" even with low initial counts
+    // Aggressive scaling so users see immediate progress (not 0%)
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
-      { subject: 'Workout Time', A: Math.min((totalDuration / 120) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 15, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 30) * 100, 100), fullMark: 100 },
+      { subject: 'Workout Time', A: Math.min((totalDuration / 90) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 20, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min((stats.currentStreak / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goal Progress', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
     ];
@@ -136,8 +128,8 @@ export default function Dashboard() {
       
       toast({
         variant: "destructive",
-        title: "Streak Warning: Time Gap",
-        description: `Deduction applied: -${penalty} FIT tokens.`,
+        title: "Streak Warning!",
+        description: `Deduction applied for inactivity: -${penalty} FIT tokens.`,
       });
 
       const newBalance = await penalizeUser(addr, penalty);
@@ -223,15 +215,15 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Recording your workout progress on FitCoin.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness progress on the network.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "Balance Update", description: "Your FIT balance is safe and secure." })}>
+            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "My FIT Balance", description: "Your tokens are safe and secure." })}>
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">FIT Balance</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">My FIT Balance</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -242,9 +234,9 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "FIT Total", value: balance, icon: Wallet, color: "text-primary" },
-            { label: "Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-primary" },
-            { label: "Workouts", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
+            { label: "My FIT Total", value: balance, icon: Wallet, color: "text-primary" },
+            { label: "Day Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-primary" },
+            { label: "Total Workouts", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
             { label: "Monthly Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-primary" }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
@@ -273,7 +265,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT. Every minute counts. Don't miss more than 2 days to keep your streak alive!</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT tokens. Every session counts. Don't miss more than 2 days to keep your streak alive!</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -281,7 +273,7 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Live View", description: "Your workout history is updating." })}>
+                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Live Sync", description: "Your workout history is updating." })}>
                   <div className="grid grid-cols-8 gap-1.5 w-full mb-6">
                     {Array.from({ length: 64 }).map((_, i) => (
                       <div 
@@ -291,7 +283,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </div>
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Status</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Sync</p>
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-black text-primary italic">UPDATING</span>
                     <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest animate-pulse">ACTIVE</Badge>
@@ -455,7 +447,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning: Don't miss a day!</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Missing your workout for more than 2 days will cost you -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Stay consistent to keep your earnings!
+                      Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay consistent to keep your earnings!
                     </p>
                   </div>
                 </div>
