@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield } from "lucide-react";
+import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield, User } from "lucide-react";
 import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
-  const { user, auth } = useUser();
+  const { user } = useUser();
   const db = useFirestore();
   const [address, setAddress] = useState<string | null>(null);
   const pathname = usePathname();
@@ -45,7 +45,6 @@ export default function Navbar() {
       setAddress(addr);
       localStorage.setItem('fitcoin_wallet_address', addr);
 
-      // Initialize or Update Profile in Firestore
       if (user?.uid && db) {
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, {
@@ -53,7 +52,6 @@ export default function Navbar() {
           lastLoginDate: new Date().toISOString()
         }, { merge: true });
 
-        // Record Login in Activity Ledger
         const logRef = doc(db, "users", user.uid, "activityLogs", `login-${Date.now()}`);
         await setDoc(logRef, {
           userId: user.uid,
@@ -95,7 +93,6 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Tab-style Navigation */}
         <div className="flex items-center bg-secondary/30 p-1 rounded-2xl border border-border/50">
           {navItems.map((item) => (
             <Link 
@@ -115,45 +112,39 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-2xl border border-border/50">
+          <div className="flex items-center gap-1 bg-secondary/30 p-1 rounded-2xl border border-border/50 mr-2">
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toast({ title: "Settings", description: "Identity and encryption managed via wallet." })}
-              className="rounded-xl h-9 w-9 hover:bg-primary/10 transition-all"
-            >
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </Button>
           </div>
-
-          <div className="hidden md:block h-6 w-px bg-border mx-1" />
 
           {address ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-10 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest px-4 hover:bg-primary/5 border-primary/20">
+                <Button variant="outline" className="h-10 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest px-4 hover:bg-primary/5 border-primary/20 bg-white/50 dark:bg-card/50">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
-                  {profile?.username || "My Account"}
+                  My Account
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                <DropdownMenuLabel className="font-headline font-black uppercase text-xs">Athlete Profile</DropdownMenuLabel>
-                <div className="px-2 pb-2 text-[10px] font-code text-muted-foreground truncate">
+              <DropdownMenuContent align="end" className="rounded-2xl w-64 p-2 shadow-2xl border-2">
+                <DropdownMenuLabel className="font-headline font-black uppercase text-xs p-3">Athlete Profile</DropdownMenuLabel>
+                <div className="px-3 pb-3 text-[10px] font-code text-muted-foreground truncate border-b mb-2">
                   {address}
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-3 focus:bg-primary/10">
                   <Link href="/profile" className="w-full flex items-center font-bold">
-                    <Activity className="mr-2 h-4 w-4" /> Performance Stats
+                    <User className="mr-3 h-4 w-4 text-primary" /> Profile View
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Encryption layer active." })} className="rounded-xl cursor-pointer font-bold">
-                  <Shield className="mr-2 h-4 w-4" /> Privacy Settings
+                <DropdownMenuItem asChild className="rounded-xl cursor-pointer p-3 focus:bg-primary/10">
+                  <Link href="/profile?tab=settings" className="w-full flex items-center font-bold">
+                    <Settings className="mr-3 h-4 w-4 text-primary" /> Athlete Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Biometric lock active." })} className="rounded-xl cursor-pointer font-bold p-3 focus:bg-primary/10">
+                  <Shield className="mr-3 h-4 w-4 text-primary" /> On-Chain Security
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl cursor-pointer font-bold">
-                  <LogOut className="mr-2 h-4 w-4" /> Disconnect
+                <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl cursor-pointer font-bold p-3 hover:bg-destructive/10">
+                  <LogOut className="mr-3 h-4 w-4" /> Disconnect Wallet
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
