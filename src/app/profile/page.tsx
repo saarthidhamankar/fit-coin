@@ -32,12 +32,13 @@ import {
   Cpu,
   X,
   ShoppingBag,
-  Dumbbell
+  Dumbbell,
+  Palette
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, updateDoc, collection, query, orderBy, limit } from "firebase/firestore";
+import { doc, updateDoc, collection, query, orderBy, limit, addDoc } from "firebase/firestore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,9 +48,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const ACHIEVEMENTS = [
   { id: 1, title: "Consistent", desc: "5 recorded sessions", icon: "📈", condition: (p: any) => (p?.totalWorkouts || 0) >= 5 },
-  { id: 2, title: "Advanced", desc: "10 recorded sessions", icon: "🏆", condition: (p: any) => (p?.totalWorkouts || 0) >= 10 },
+  { id: 2, title: "Professional", desc: "10 recorded sessions", icon: "🏆", condition: (p: any) => (p?.totalWorkouts || 0) >= 10 },
   { id: 3, title: "Streak Master", desc: "7 day streak reached", icon: "🔥", condition: (p: any) => (p?.currentDailyStreak || 0) >= 7 },
   { id: 4, title: "Authenticated", desc: "First session verified", icon: "🛡️", condition: (p: any) => (p?.totalWorkouts || 0) >= 1 },
+];
+
+const THEME_COLORS = [
+  { name: "Emerald", color: "145 85% 45%", value: "emerald" },
+  { name: "Sapphire", color: "220 85% 50%", value: "sapphire" },
+  { name: "Ruby", color: "0 85% 50%", value: "ruby" },
+  { name: "Amber", color: "35 90% 50%", value: "amber" },
 ];
 
 export default function ProfilePage() {
@@ -123,7 +131,7 @@ export default function ProfilePage() {
   };
 
   const handleSaveProfile = async () => {
-    if (!userDocRef) {
+    if (!userDocRef || !user?.uid || !db) {
       toast({ variant: "destructive", title: "Error", description: "Account ledger not initialized." });
       return;
     }
@@ -135,10 +143,31 @@ export default function ProfilePage() {
 
     try {
       await updateDoc(userDocRef, updates);
+      
+      // If first time saving name, add a Genesis log
+      if (!profile?.username && formData.username.trim()) {
+        const logRef = collection(db, "users", user.uid, "activityLogs");
+        await addDoc(logRef, {
+          userId: user.uid,
+          activityType: "IDENTITY_GENESIS",
+          description: "Athlete identity established on node.",
+          fitCoinsChange: 0,
+          timestamp: new Date().toISOString()
+        });
+      }
+
       toast({ title: "Changes Saved", description: "Your identity has been synchronized." });
       setEditOpen(false);
     } catch (e) {
       toast({ variant: "destructive", title: "Sync Failed", description: "Could not save changes." });
+    }
+  };
+
+  const setTheme = (colorValue: string) => {
+    const selected = THEME_COLORS.find(t => t.value === colorValue);
+    if (selected) {
+      document.documentElement.style.setProperty('--primary', selected.color);
+      toast({ title: "Aesthetic Updated", description: `Node visual protocol set to ${selected.name}.` });
     }
   };
 
@@ -356,16 +385,16 @@ export default function ProfilePage() {
                   activityLogs.map((log: any) => (
                     <div key={log.id} className="p-6 bg-white/40 dark:bg-black/40 rounded-3xl border border-white/20 flex items-center justify-between group hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${log.fitCoinsChange > 0 ? 'bg-primary/10 text-primary' : 'bg-red-500/10 text-red-500'}`}>
-                          {log.activityType === 'WORKOUT_EARN' ? <Dumbbell className="w-5 h-5" /> : log.activityType === 'STREAK_BREAK' ? <Zap className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${log.fitCoinsChange > 0 ? 'bg-primary/10 text-primary' : log.fitCoinsChange < 0 ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground'}`}>
+                          {log.activityType === 'WORKOUT_EARN' ? <Dumbbell className="w-5 h-5" /> : log.activityType === 'STREAK_BREAK' ? <Zap className="w-5 h-5" /> : log.activityType === 'IDENTITY_GENESIS' ? <History className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
                         </div>
                         <div>
                           <p className="font-black text-sm uppercase">{log.description}</p>
                           <p className="text-[10px] text-muted-foreground font-bold">{new Date(log.timestamp).toLocaleString()}</p>
                         </div>
                       </div>
-                      <div className={`font-black text-lg italic ${log.fitCoinsChange > 0 ? 'text-primary' : 'text-red-500'}`}>
-                        {log.fitCoinsChange > 0 ? '+' : ''}{log.fitCoinsChange} <span className="text-[10px] not-italic opacity-60">FIT</span>
+                      <div className={`font-black text-lg italic ${log.fitCoinsChange > 0 ? 'text-primary' : log.fitCoinsChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {log.fitCoinsChange !== 0 ? (log.fitCoinsChange > 0 ? '+' : '') : ''}{log.fitCoinsChange !== 0 ? log.fitCoinsChange : ''} {log.fitCoinsChange !== 0 ? <span className="text-[10px] not-italic opacity-60">FIT</span> : 'NODE ACTIVE'}
                       </div>
                     </div>
                   ))
@@ -449,31 +478,54 @@ export default function ProfilePage() {
       {/* Settings Protocol Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="rounded-[4rem] max-w-xl p-0 overflow-hidden border-none shadow-2xl focus:outline-none">
-          <div className="p-16 space-y-12 bg-gradient-to-br from-secondary/50 to-background">
-            <DialogHeader>
-              <DialogTitle className="font-headline font-black uppercase text-6xl italic tracking-tighter flex items-center gap-8">
-                <Settings className="w-16 h-16 text-primary" /> Settings
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-10">
-              <div className="bg-primary/5 rounded-[3.5rem] p-10 border-2 border-primary/10 flex items-start gap-8">
-                <Shield className="w-12 h-12 text-primary shrink-0" />
-                <div className="space-y-4">
-                  <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Account Privacy</p>
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your data is secured using industry-standard hashing protocols.</p>
+          <ScrollArea className="max-h-[85vh]">
+            <div className="p-16 space-y-12 bg-gradient-to-br from-secondary/50 to-background">
+              <DialogHeader>
+                <DialogTitle className="font-headline font-black uppercase text-6xl italic tracking-tighter flex items-center gap-8">
+                  <Settings className="w-16 h-16 text-primary" /> Settings
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-10">
+                {/* Theme Palette Section */}
+                <div className="space-y-6">
+                  <p className="text-[12px] font-black uppercase text-muted-foreground tracking-[0.4em] flex items-center gap-3">
+                    <Palette className="w-4 h-4 text-primary" /> Protocol Aesthetic
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {THEME_COLORS.map((t) => (
+                      <button 
+                        key={t.value} 
+                        onClick={() => setTheme(t.value)}
+                        className="flex items-center gap-4 p-5 bg-white/40 dark:bg-black/40 rounded-3xl border border-white/20 hover:border-primary/50 transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-xl" style={{ backgroundColor: `hsl(${t.color})` }} />
+                        <span className="font-black uppercase text-xs tracking-widest">{t.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                <div className="bg-primary/5 rounded-[3.5rem] p-10 border-2 border-primary/10 flex items-start gap-8">
+                  <Shield className="w-12 h-12 text-primary shrink-0" />
+                  <div className="space-y-4">
+                    <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Account Privacy</p>
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your data is secured using industry-standard hashing protocols.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4">
+                   <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Exporting...", description: "Compiling account history." })}>
+                     Export Performance Data <ChevronRight className="w-4 h-4" />
+                   </Button>
+                   <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Scanning...", description: "Searching for hardware." })}>
+                     Sync Wearable Hardware <RefreshCw className="w-4 h-4" />
+                   </Button>
+                </div>
+                <Button onClick={() => setSettingsOpen(false)} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary active:scale-95">Close Protocol</Button>
               </div>
-              <div className="grid gap-4">
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Exporting...", description: "Compiling account history." })}>
-                   Export Data <ChevronRight className="w-4 h-4" />
-                 </Button>
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Scanning...", description: "Searching for hardware." })}>
-                   Sync Hardware <RefreshCw className="w-4 h-4" />
-                 </Button>
-              </div>
-              <Button onClick={() => setSettingsOpen(false)} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary active:scale-95">Close</Button>
             </div>
-          </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </motion.div>
