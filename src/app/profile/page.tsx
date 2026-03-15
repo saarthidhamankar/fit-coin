@@ -190,7 +190,14 @@ export default function ProfilePage() {
               <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
             )}
             <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors" />
-            <Button size="sm" variant="secondary" className="absolute bottom-8 right-8 rounded-2xl glass-card border-none font-black uppercase text-[10px] tracking-widest hover:scale-110 transition-transform shadow-xl" onClick={() => setEditOpen(true)}>
+            
+            {/* Functional Change Banner Button */}
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              className="absolute bottom-8 right-8 z-20 rounded-2xl glass-card border-none font-black uppercase text-[10px] tracking-widest hover:scale-110 transition-all shadow-xl active:scale-95" 
+              onClick={() => setEditOpen(true)}
+            >
               <Camera className="w-4 h-4 mr-2" /> Change Banner
             </Button>
           </motion.div>
@@ -363,7 +370,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Activity Logs Modal */}
+      {/* Activity Ledger Modal */}
       <Dialog open={logsOpen} onOpenChange={setLogsOpen}>
         <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
           <div className="p-10 bg-gradient-to-b from-primary/5 to-background">
