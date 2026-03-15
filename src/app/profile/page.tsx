@@ -276,7 +276,7 @@ export default function ProfilePage() {
                   Achievement Vault
                 </CardTitle>
                 <Badge className={`${isPro ? 'bg-yellow-500/10 text-yellow-600' : 'bg-primary/10 text-primary'} border-none text-[10px] px-6 py-2 rounded-full font-black uppercase tracking-widest`}>
-                  {isPro ? 'Professional Verified' : 'Verified Account'}
+                  Verified Account
                 </Badge>
               </CardHeader>
               <CardContent className="p-12">
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                 <div className="divide-y divide-border/10">
                   {[
                     { id: 'public', label: "Public Profile", desc: "Show your progress on the global leaderboard.", icon: Globe },
-                    { id: 'biometric', label: "Biometric Login", desc: "Enable quick access using local biometrics.", icon: Smartphone },
+                    { id: 'biometric', label: "Biometric Authentication", desc: "Use fingerprint or facial recognition for secure access.", icon: Smartphone },
                     { id: 'alerts', label: "Status Alerts", desc: "Receive notifications for activity status.", icon: Zap }
                   ].map((s, i) => (
                     <div key={i} className="flex items-center justify-between p-12 hover:bg-primary/5 transition-all group">
