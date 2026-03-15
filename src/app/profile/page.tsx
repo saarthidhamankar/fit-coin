@@ -46,10 +46,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ACHIEVEMENTS = [
-  { id: 1, title: "Early Bird", desc: "5 morning sessions", icon: "🌅", condition: (p: any) => (p?.totalWorkouts || 0) >= 5 },
-  { id: 2, title: "Iron Soul", desc: "10 heavy lifts", icon: "💪", condition: (p: any) => (p?.totalWorkouts || 0) >= 10 },
-  { id: 3, title: "Flame Keeper", desc: "7 day streak", icon: "🔥", condition: (p: any) => (p?.currentDailyStreak || 0) >= 7 },
-  { id: 4, title: "Genesis", desc: "First workout", icon: "✨", condition: (p: any) => (p?.totalWorkouts || 0) >= 1 },
+  { id: 1, title: "Consistent", desc: "5 recorded sessions", icon: "📈", condition: (p: any) => (p?.totalWorkouts || 0) >= 5 },
+  { id: 2, title: "Advanced", desc: "10 recorded sessions", icon: "🏆", condition: (p: any) => (p?.totalWorkouts || 0) >= 10 },
+  { id: 3, title: "Streak Master", desc: "7 day streak reached", icon: "🔥", condition: (p: any) => (p?.currentDailyStreak || 0) >= 7 },
+  { id: 4, title: "Authenticated", desc: "First session verified", icon: "🛡️", condition: (p: any) => (p?.totalWorkouts || 0) >= 1 },
 ];
 
 export default function ProfilePage() {
@@ -115,7 +115,7 @@ export default function ProfilePage() {
       setBalance(newBalance);
       toast({
         title: "Balance Synchronized",
-        description: "Your FIT assets have been verified on the Sepolia node.",
+        description: "Your assets have been verified on the network node.",
       });
     } finally {
       setIsSyncing(false);
@@ -124,7 +124,7 @@ export default function ProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!userDocRef) {
-      toast({ variant: "destructive", title: "Protocol Error", description: "Athlete ledger not initialized." });
+      toast({ variant: "destructive", title: "Error", description: "Account ledger not initialized." });
       return;
     }
 
@@ -135,10 +135,10 @@ export default function ProfilePage() {
 
     try {
       await updateDoc(userDocRef, updates);
-      toast({ title: "Identity Committed", description: "Your athlete data has been synchronized." });
+      toast({ title: "Changes Saved", description: "Your identity has been synchronized." });
       setEditOpen(false);
     } catch (e) {
-      toast({ variant: "destructive", title: "Sync Failed", description: "Could not commit changes." });
+      toast({ variant: "destructive", title: "Sync Failed", description: "Could not save changes." });
     }
   };
 
@@ -146,7 +146,7 @@ export default function ProfilePage() {
     if (address) window.open(`https://sepolia.etherscan.io/address/${address}`, '_blank');
   };
 
-  const isElite = (profile?.totalWorkouts || 0) >= 10;
+  const isPro = (profile?.totalWorkouts || 0) >= 10;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
@@ -183,8 +183,8 @@ export default function ProfilePage() {
                 <h1 className="text-6xl font-headline font-black uppercase italic tracking-tighter text-foreground">
                   {profile?.username || "Athlete Name"}
                 </h1>
-                <Badge className={`${isElite ? 'bg-yellow-500' : 'bg-primary'} text-[10px] font-black uppercase tracking-widest px-4 py-1.5 shadow-lg`}>
-                  {isElite ? 'Elite Tier' : 'Novice Tier'}
+                <Badge className={`${isPro ? 'bg-yellow-500' : 'bg-primary'} text-[10px] font-black uppercase tracking-widest px-4 py-1.5 shadow-lg`}>
+                  {isPro ? 'Professional Status' : 'Standard Status'}
                 </Badge>
               </div>
               <div className="flex items-center justify-center md:justify-start gap-3 mt-4">
@@ -219,7 +219,7 @@ export default function ProfilePage() {
               <CardContent className="p-10 space-y-8">
                 <div className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" onClick={refreshBalance}>
                   <p className="text-[10px] font-black uppercase text-primary mb-3 tracking-[0.2em] flex items-center justify-between">
-                    FIT Balance
+                    Balance
                     <RefreshCw className={`w-4 h-4 transition-transform duration-700 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
                   </p>
                   <p className="text-6xl font-black text-primary tracking-tighter italic">
@@ -250,9 +250,9 @@ export default function ProfilePage() {
             <Card className="rounded-[3.5rem] border-none shadow-xl overflow-hidden glass-card">
               <CardContent className="p-10 space-y-8">
                 {[
-                  { label: "Total Grinds", value: profile?.totalWorkouts || "0", icon: LayoutGrid, color: "text-blue-500" },
-                  { label: "On-Chain Since", value: "Feb 2025", icon: Calendar, color: "text-orange-500" },
-                  { label: "Identity Node", value: "Verified", icon: Lock, color: "text-primary" }
+                  { label: "Total Sessions", value: profile?.totalWorkouts || "0", icon: LayoutGrid, color: "text-blue-500" },
+                  { label: "Member Since", value: "Feb 2025", icon: Calendar, color: "text-orange-500" },
+                  { label: "Account Secure", value: "Verified", icon: Lock, color: "text-primary" }
                 ].map((s, i) => (
                   <div key={i} className="flex items-center gap-6 group p-5 rounded-[2.5rem] border border-transparent">
                     <div className="w-16 h-16 rounded-2xl bg-muted/50 dark:bg-muted/10 flex items-center justify-center">
@@ -273,10 +273,10 @@ export default function ProfilePage() {
               <CardHeader className="flex flex-row items-center justify-between border-b border-border/10 bg-muted/10 p-12">
                 <CardTitle className="flex items-center gap-5 text-4xl font-black uppercase italic tracking-tighter">
                   <Award className="w-12 h-12 text-primary" />
-                  Protocol Achievement Vault
+                  Achievement Vault
                 </CardTitle>
-                <Badge className={`${isElite ? 'bg-yellow-500/10 text-yellow-600' : 'bg-primary/10 text-primary'} border-none text-[10px] px-6 py-2 rounded-full font-black uppercase tracking-widest`}>
-                  {isElite ? 'Elite Verified' : 'Standard Node'}
+                <Badge className={`${isPro ? 'bg-yellow-500/10 text-yellow-600' : 'bg-primary/10 text-primary'} border-none text-[10px] px-6 py-2 rounded-full font-black uppercase tracking-widest`}>
+                  {isPro ? 'Professional Verified' : 'Verified Account'}
                 </Badge>
               </CardHeader>
               <CardContent className="p-12">
@@ -288,14 +288,14 @@ export default function ProfilePage() {
                         key={a.id} 
                         whileHover={{ y: isUnlocked ? -8 : 0 }}
                         className={`flex flex-col items-center text-center p-8 rounded-[3.5rem] transition-all border ${isUnlocked ? 'bg-white/5 border-primary/30 shadow-lg' : 'bg-muted/10 border-border/50 opacity-50 grayscale'}`}
-                        onClick={() => toast({ title: a.title, description: isUnlocked ? a.desc : `Protocol Locked: ${a.desc}` })}
+                        onClick={() => toast({ title: a.title, description: isUnlocked ? a.desc : `Action required: ${a.desc}` })}
                       >
                         <div className={`w-28 h-28 rounded-3xl mb-6 flex items-center justify-center text-6xl bg-white dark:bg-card border-2 ${isUnlocked ? 'border-primary shadow-xl' : 'border-muted'}`}>
                           {a.icon}
                         </div>
                         <p className="text-[11px] font-black uppercase leading-tight tracking-[0.2em] mb-2">{a.title}</p>
                         <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-3 ${isUnlocked ? 'border-primary text-primary' : 'border-muted'}`}>
-                          {isUnlocked ? 'Sync\'d' : 'Locked'}
+                          {isUnlocked ? 'Earned' : 'Locked'}
                         </Badge>
                       </motion.div>
                     );
@@ -306,14 +306,14 @@ export default function ProfilePage() {
 
             <Card className="rounded-[4rem] border-none shadow-xl overflow-hidden glass-card">
               <CardHeader className="bg-muted/10 border-b border-border/10 p-12">
-                <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Privacy & Security Nodes</CardTitle>
+                <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Privacy & Security Settings</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border/10">
                   {[
-                    { id: 'public', label: "Public Profile Sync", desc: "Global visibility for competitive ranking.", icon: Globe },
-                    { id: 'biometric', label: "Biometric Protocol", desc: "Secure local biometric authentication.", icon: Smartphone },
-                    { id: 'alerts', label: "Metabolic Alerts", desc: "Notification for 48h streak tax risk.", icon: Zap }
+                    { id: 'public', label: "Public Profile", desc: "Show your progress on the global leaderboard.", icon: Globe },
+                    { id: 'biometric', label: "Biometric Login", desc: "Enable quick access using local biometrics.", icon: Smartphone },
+                    { id: 'alerts', label: "Status Alerts", desc: "Receive notifications for activity status.", icon: Zap }
                   ].map((s, i) => (
                     <div key={i} className="flex items-center justify-between p-12 hover:bg-primary/5 transition-all group">
                       <div className="flex items-center gap-8">
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-20 opacity-50 font-black uppercase tracking-widest">No node activity recorded.</div>
+                  <div className="text-center py-20 opacity-50 font-black uppercase tracking-widest">No activity recorded.</div>
                 )}
               </div>
             </ScrollArea>
@@ -384,31 +384,35 @@ export default function ProfilePage() {
         <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
           <div className="p-10 bg-gradient-to-b from-accent/10 to-background">
             <DialogHeader className="mb-8">
-              <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-accent">Node Diagnostics</DialogTitle>
-              <p className="text-muted-foreground text-sm font-medium">Cryptographic integrity & encryption status.</p>
+              <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-accent">Security Diagnostics</DialogTitle>
+              <p className="text-muted-foreground text-sm font-medium">Node integrity & verification status.</p>
             </DialogHeader>
-            <div className="grid gap-6">
-              {[
-                { label: "Encryption", value: "AES-256 GCM", icon: Lock, status: "Active" },
-                { label: "Identity Hash", value: address?.slice(0, 16) + "...", icon: Fingerprint, status: "Verified" },
-                { label: "Mesh Node", value: "Sepolia Testnet #441", icon: Globe, status: "Online" },
-                { label: "Processing", value: "Local Edge Engine", icon: Cpu, status: "Optimized" }
-              ].map((item, i) => (
-                <div key={i} className="p-6 bg-white/40 dark:bg-black/40 rounded-3xl border border-white/20 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
-                      <item.icon className="w-6 h-6" />
+            <ScrollArea className="h-[450px] pr-4">
+              <div className="grid gap-6">
+                {[
+                  { label: "Encryption", value: "AES-256 GCM", icon: Lock, status: "Active" },
+                  { label: "Identity Hash", value: address?.slice(0, 16) + "...", icon: Fingerprint, status: "Verified" },
+                  { label: "Network Node", value: "Sepolia Testnet #441", icon: Globe, status: "Online" },
+                  { label: "Processing", value: "Local Edge Sync", icon: Cpu, status: "Optimized" },
+                  { label: "Access Control", value: "Private Keys Secured", icon: Shield, status: "Encrypted" },
+                  { label: "Metabolic Link", value: "Verified Active", icon: Zap, status: "Sync'd" }
+                ].map((item, i) => (
+                  <div key={i} className="p-6 bg-white/40 dark:bg-black/40 rounded-3xl border border-white/20 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
+                        <item.icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
+                        <p className="font-black text-lg">{item.value}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.label}</p>
-                      <p className="font-black text-lg">{item.value}</p>
-                    </div>
+                    <Badge className="bg-accent/20 text-accent border-none text-[8px] font-black uppercase tracking-widest px-4">{item.status}</Badge>
                   </div>
-                  <Badge className="bg-accent/20 text-accent border-none text-[8px] font-black uppercase tracking-widest px-4">{item.status}</Badge>
-                </div>
-              ))}
-            </div>
-            <Button onClick={() => setSecurityOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-accent text-white shadow-xl">Close Node Info</Button>
+                ))}
+              </div>
+            </ScrollArea>
+            <Button onClick={() => setSecurityOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-accent text-white shadow-xl">Close Diagnostics</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -419,7 +423,7 @@ export default function ProfilePage() {
           <div className="p-12 space-y-10 bg-gradient-to-br from-primary/10 to-background">
             <DialogHeader className="space-y-4">
               <DialogTitle className="font-headline font-black uppercase text-5xl italic tracking-tighter text-primary">Edit Identity</DialogTitle>
-              <p className="text-muted-foreground text-base font-medium">Commit your athlete identity to the ledger.</p>
+              <p className="text-muted-foreground text-base font-medium">Synchronize your profile information.</p>
             </DialogHeader>
             <div className="space-y-8">
               <div className="space-y-3">
@@ -427,11 +431,11 @@ export default function ProfilePage() {
                 <Input id="username" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} className="rounded-3xl h-18 border-2 border-primary/20 bg-white/50 font-black text-lg px-8" />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="avatar" className="text-[11px] font-black uppercase tracking-widest ml-2">Avatar Ledger URL</Label>
+                <Label htmlFor="avatar" className="text-[11px] font-black uppercase tracking-widest ml-2">Avatar URL</Label>
                 <Input id="avatar" value={formData.avatarUrl} onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})} placeholder="https://..." className="rounded-3xl h-18 border-2 border-primary/20 bg-white/50 px-8" />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="banner" className="text-[11px] font-black uppercase tracking-widest ml-2">Banner Texture URL</Label>
+                <Label htmlFor="banner" className="text-[11px] font-black uppercase tracking-widest ml-2">Banner URL</Label>
                 <Input id="banner" value={formData.bannerUrl} onChange={(e) => setFormData({...formData, bannerUrl: e.target.value})} placeholder="https://..." className="rounded-3xl h-18 border-2 border-primary/20 bg-white/50 px-8" />
               </div>
               <Button onClick={handleSaveProfile} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary text-white hover:bg-primary/90">
@@ -448,23 +452,23 @@ export default function ProfilePage() {
           <div className="p-16 space-y-12 bg-gradient-to-br from-secondary/50 to-background">
             <DialogHeader>
               <DialogTitle className="font-headline font-black uppercase text-6xl italic tracking-tighter flex items-center gap-8">
-                <Settings className="w-16 h-16 text-primary" /> Protocol
+                <Settings className="w-16 h-16 text-primary" /> Settings
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-10">
               <div className="bg-primary/5 rounded-[3.5rem] p-10 border-2 border-primary/10 flex items-start gap-8">
                 <Shield className="w-12 h-12 text-primary shrink-0" />
                 <div className="space-y-4">
-                  <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Node Integrity</p>
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your performance data is secured via Sepolia-standard hashing.</p>
+                  <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Account Privacy</p>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your data is secured using industry-standard hashing protocols.</p>
                 </div>
               </div>
               <div className="grid gap-4">
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Exporting...", description: "Compiling node history." })}>
+                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Exporting...", description: "Compiling account history." })}>
                    Export Data <ChevronRight className="w-4 h-4" />
                  </Button>
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Scanning...", description: "Searching for wearable hardware." })}>
-                   Sync Wearables <RefreshCw className="w-4 h-4" />
+                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => toast({ title: "Scanning...", description: "Searching for hardware." })}>
+                   Sync Hardware <RefreshCw className="w-4 h-4" />
                  </Button>
               </div>
               <Button onClick={() => setSettingsOpen(false)} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary active:scale-95">Close</Button>
