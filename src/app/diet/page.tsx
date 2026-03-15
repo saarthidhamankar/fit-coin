@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Apple, Flame, Dumbbell, Zap, Coffee, Utensils, Info, CheckCircle2, Leaf } from "lucide-react";
+import { Apple, Flame, Dumbbell, Zap, Coffee, Utensils, Info, CheckCircle2, Leaf, Pill } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,39 +14,39 @@ type DietType = "Veg" | "NonVeg";
 
 const DIET_DATA = {
   FatLoss: {
-    title: "Loose Fat Protocol",
-    description: "Prioritizing calorie deficit with high satiety whole foods.",
+    title: "Metabolic Cut Protocol",
+    description: "Optimizing calorie deficit with high-fiber veggies, seeds, and micronutrients for fat oxidation.",
     calories: "1800-2000 kcal",
     protein: "160g+",
     NonVeg: [
-      { time: "Breakfast", icon: Coffee, title: "Egg White Omelette", detail: "5 egg whites, spinach, feta, 1 slice whole wheat toast." },
-      { time: "Lunch", icon: Utensils, title: "Grilled Chicken Salad", detail: "200g chicken breast, mixed greens, lemon vinaigrette." },
-      { time: "Snack", icon: Apple, title: "Boiled Eggs & Berries", detail: "2 whole eggs, handful of blueberries." },
-      { time: "Dinner", icon: Utensils, title: "Baked White Fish", detail: "Tilapia or Cod, steamed broccoli, half sweet potato." }
+      { time: "Breakfast", icon: Coffee, title: "Egg White & Green Forge", detail: "5 egg whites, steamed baby spinach, 1 banana, 1 Multivitamin capsule." },
+      { time: "Lunch", icon: Utensils, title: "Lean Chicken & Seeds", detail: "200g grilled chicken, mix of beans and broccoli, 1 tbsp pumpkin seeds." },
+      { time: "Snack", icon: Apple, title: "Nut & Berry Blend", detail: "Handful of almonds & walnuts, mixed berries, 2000mg Fish Oil supplement." },
+      { time: "Dinner", icon: Utensils, title: "Baked Fish & Fiber", detail: "Tilapia/Cod, 1 cup cooked black beans, steamed green veggies, 1 apple." }
     ],
     Veg: [
-      { time: "Breakfast", icon: Coffee, title: "Tofu Scramble", detail: "200g firm tofu, turmeric, nutritional yeast, spinach, toast." },
-      { time: "Lunch", icon: Utensils, title: "Lentil & Kale Bowl", detail: "1 cup cooked lentils, massaged kale, cucumber, tahini dressing." },
-      { time: "Snack", icon: Apple, title: "Roasted Chickpeas", detail: "50g air-fried chickpeas with sea salt and paprika." },
-      { time: "Dinner", icon: Utensils, title: "Low-Fat Paneer Grill", detail: "150g grilled paneer, mixed bell peppers, cauliflower rice." }
+      { time: "Breakfast", icon: Coffee, title: "Soya & Fruit Start", detail: "Tofu/Soya scramble, mixed fruits, 1 glass milk/soy milk, 1 Multivitamin." },
+      { time: "Lunch", icon: Utensils, title: "Paneer & Bean Bowl", detail: "150g low-fat paneer, boiled kidney beans, kale salad, flax seeds." },
+      { time: "Snack", icon: Apple, title: "Dry Fruit Crunch", detail: "Roasted chickpeas, 5 cashews, 3 dry figs, 1 small banana." },
+      { time: "Dinner", icon: Utensils, title: "Lentil & Veggie Power", detail: "1 cup thick yellow dal, stir-fried beans and carrots, cauliflower rice." }
     ]
   },
   MuscleGain: {
-    title: "Hypertrophy Fuel",
-    description: "Surplus calories optimized for muscle repair and recovery.",
+    title: "Anabolic Bulk Protocol",
+    description: "Surplus calories optimized for hypertrophy with complex carbs, healthy fats, and high-protein superfoods.",
     calories: "3000-3200 kcal",
     protein: "200g+",
     NonVeg: [
-      { time: "Breakfast", icon: Coffee, title: "Protein Power Oats", detail: "1 cup oats, 2 boiled eggs on the side, 1 tbsp peanut butter." },
-      { time: "Lunch", icon: Utensils, title: "Chicken & Brown Rice", detail: "250g grilled chicken, 1.5 cups rice, avocado, asparagus." },
-      { time: "Pre-Gym", icon: Zap, title: "Energy Boost", detail: "Rice cakes with honey and 1000mg Fish Oil supplement." },
-      { time: "Dinner", icon: Utensils, title: "Salmon & Pasta", detail: "Grilled salmon fillet, whole wheat pasta, olive oil, broccoli." }
+      { time: "Breakfast", icon: Coffee, title: "Power Oats & Eggs", detail: "1 cup oats with milk, 1 banana, 3 whole eggs, handful of mixed dry fruits." },
+      { time: "Lunch", icon: Utensils, title: "Chicken, Rice & Beans", detail: "250g grilled chicken, 1.5 cups brown rice, 1 cup black beans, avocado." },
+      { time: "Post-Gym", icon: Zap, title: "Hyper-Fuel Shake", detail: "500ml milk, 1 scoop protein, 1 tbsp peanut butter, 1 tbsp chia seeds." },
+      { time: "Dinner", icon: Utensils, title: "Salmon & Greens", detail: "Grilled salmon, whole wheat pasta, large portion of green veggies, sunflower seeds." }
     ],
     Veg: [
-      { time: "Breakfast", icon: Coffee, title: "Oatmeal Nut Blast", detail: "1.5 cups oats, soy milk, 2 tbsp almond butter, hemp seeds." },
-      { time: "Lunch", icon: Utensils, title: "Quinoa & Bean Burrito", detail: "1 cup quinoa, black beans, guacamole, salsa, spinach wrap." },
-      { time: "Pre-Gym", icon: Zap, title: "Tempeh Power", detail: "100g seared tempeh with soy sauce and honey." },
-      { time: "Dinner", icon: Utensils, title: "Tofu & Cashew Stir-fry", detail: "250g tofu, snap peas, carrots, cashews, brown rice." }
+      { time: "Breakfast", icon: Coffee, title: "Paneer & Nut Blast", detail: "200g Paneer bhurji, 1 glass milk, 1 banana, 10 almonds, 5 walnuts." },
+      { time: "Lunch", icon: Utensils, title: "Soya & Quinoa Feast", detail: "1 cup cooked soya chunks, 1 cup quinoa, mixed bean salad, hemp seeds." },
+      { time: "Post-Gym", icon: Zap, title: "Veggie Protein", detail: "Soy milk shake with 1 scoop protein, 1 tbsp almond butter, mixed dry fruits." },
+      { time: "Dinner", icon: Utensils, title: "Tofu & Nut Stir-fry", detail: "250g firm tofu, mixed veggies (broccoli/beans), cashews, brown rice." }
     ]
   }
 };
@@ -59,7 +59,7 @@ export default function DietPage() {
   const handleApplyPlan = (goal: string, type: string) => {
     toast({
       title: "Plan Activated",
-      description: `Your ${type} ${goal} protocol has been synced to your profile.`,
+      description: `Your ${type} ${goal} protocol including superfoods and multivitamins has been synced.`,
     });
   };
 
@@ -77,10 +77,10 @@ export default function DietPage() {
           className="text-center space-y-4"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-xs uppercase tracking-widest">
-            <Apple className="w-4 h-4" /> Metabolic Forge
+            <Apple className="w-4 h-4" /> Metabolic Protocol v2.0
           </div>
           <h1 className="text-5xl font-headline font-black uppercase tracking-tight italic">Dietary <span className="text-primary not-italic">Fuel</span></h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Optimize your recovery with science-backed nutrition plans. No beef. Only pure performance fuel.</p>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Scientifically designed plans featuring soya, paneer, nuts, and essential micronutrients. No beef. Pure gains.</p>
         </motion.div>
 
         <div className="flex flex-col gap-8">
@@ -121,17 +121,21 @@ export default function DietPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                   <CardHeader>
                     <CardTitle className="text-2xl font-black uppercase italic leading-none">
-                      Daily Targets
+                      Protocol Targets
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
-                      <p className="text-[10px] font-black uppercase opacity-70">Energy Intake</p>
+                      <p className="text-[10px] font-black uppercase opacity-70">Daily Energy</p>
                       <p className="text-4xl font-black tracking-tighter">{currentPlan.calories}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase opacity-70">Protein Benchmark</p>
+                      <p className="text-[10px] font-black uppercase opacity-70">Amino Baseline</p>
                       <p className="text-4xl font-black tracking-tighter">{currentPlan.protein}</p>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 bg-white/10 rounded-2xl border border-white/20">
+                      <Pill className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Multivitamin included</span>
                     </div>
                     <Button 
                       variant="secondary" 
@@ -150,8 +154,8 @@ export default function DietPage() {
                    <CardContent className="p-6">
                       <p className="text-sm font-bold leading-relaxed italic">
                         {dietType === "NonVeg" 
-                          ? "Focus on high-quality chicken and fish. Don't forget your daily 2000mg Fish Oil for joint health."
-                          : "Soy, tempeh, and lentils are your primary amino acid sources. Supplement with B12 for optimal energy."}
+                          ? "Focus on lean chicken, fish oil for joints, and eggs. Supplement with green veggies and seeds for fiber."
+                          : "Harness paneer, soya bean, and various beans for protein. Mix with dry fruits and banana for post-workout energy."}
                       </p>
                    </CardContent>
                 </Card>
@@ -177,9 +181,9 @@ export default function DietPage() {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
-                               <p className="text-[10px] font-black uppercase text-muted-foreground">{meal.time}</p>
+                               <p className="text-[10px] font-black uppercase text-primary">{meal.time}</p>
                                <Badge variant="outline" className={`text-[8px] font-black uppercase ${dietType === 'Veg' ? 'text-accent border-accent/30' : 'text-primary border-primary/30'}`}>
-                                 {dietType === 'Veg' ? 'Plant Based' : 'Protein Rich'}
+                                 {dietType === 'Veg' ? 'Plant Power' : 'Protein Rich'}
                                </Badge>
                             </div>
                             <h4 className="text-xl font-black uppercase">{meal.title}</h4>
@@ -198,7 +202,7 @@ export default function DietPage() {
                   <div>
                     <h5 className="text-lg font-black uppercase italic mb-1 text-accent-foreground">Protocol Tip</h5>
                     <p className="text-sm text-accent-foreground/80 font-medium leading-relaxed">
-                      Always prioritize whole foods. If you're on the Non-Veg plan, ensure chicken is grilled or baked, and fish is rich in Omega-3s.
+                      Always prioritize whole foods. Ensure you include a variety of seeds (chia, flax, pumpkin) for fats and dry fruits for quick energy. Don't skip your daily Multivitamins and fresh green veggies for optimal recovery and hormone balance.
                     </p>
                   </div>
                 </div>
