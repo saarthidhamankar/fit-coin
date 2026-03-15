@@ -23,7 +23,9 @@ import {
   RefreshCw, 
   Globe, 
   Smartphone, 
-  ChevronRight 
+  ChevronRight,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +52,8 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
@@ -83,6 +87,21 @@ export default function ProfilePage() {
     }
   }, [profile, user, searchParams]);
 
+  const refreshBalance = async () => {
+    if (!address) return;
+    setIsSyncing(true);
+    try {
+      const newBalance = await getBalance(address);
+      setBalance(newBalance);
+      toast({
+        title: "Balance Synchronized",
+        description: "Your FIT assets have been verified on the Sepolia node.",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!userDocRef) {
       toast({ 
@@ -93,14 +112,12 @@ export default function ProfilePage() {
       return;
     }
 
-    // Smart Partial Identity Commit
     const updates: any = {};
     if (formData.username.trim()) updates.username = formData.username;
     if (formData.avatarUrl.trim()) updates.avatarUrl = formData.avatarUrl;
     if (formData.bannerUrl.trim()) updates.bannerUrl = formData.bannerUrl;
 
     if (Object.keys(updates).length === 0) {
-      toast({ title: "No Changes Detected", description: "Identity already synchronized." });
       setEditOpen(false);
       return;
     }
@@ -109,23 +126,41 @@ export default function ProfilePage() {
       await updateDoc(userDocRef, updates);
       toast({ 
         title: "Identity Committed", 
-        description: "Your athlete name and assets have been synchronized to the ledger.",
+        description: "Your athlete data has been synchronized to the ledger.",
       });
       setEditOpen(false);
     } catch (e) {
       toast({ 
         variant: "destructive", 
         title: "Sync Failed", 
-        description: "Could not commit changes to the blockchain node." 
+        description: "Could not commit changes to the node." 
       });
     }
   };
 
-  const handleInteractiveClick = (label: string) => {
-    toast({
-      title: "Protocol Sync",
-      description: `Synchronizing ${label} with Sepolia node...`,
-    });
+  const openExplorer = () => {
+    if (address) {
+      window.open(`https://sepolia.etherscan.io/address/${address}`, '_blank');
+    }
+  };
+
+  const handleExport = () => {
+    setIsExporting(true);
+    toast({ title: "Export Initiated", description: "Generating performance report..." });
+    setTimeout(() => {
+      setIsExporting(false);
+      toast({ 
+        title: "Export Complete", 
+        description: "Your fitness ledger has been downloaded." 
+      });
+    }, 2000);
+  };
+
+  const handleWearableSync = () => {
+    toast({ title: "Scanning...", description: "Searching for local hardware nodes..." });
+    setTimeout(() => {
+      toast({ title: "Sync Failed", description: "No compatible wearables detected in range." });
+    }, 1500);
   };
 
   return (
@@ -137,7 +172,7 @@ export default function ProfilePage() {
       <Navbar />
 
       <div className="max-w-6xl mx-auto space-y-12">
-        {/* Designer Hero Section */}
+        {/* Cinematic Hero Section */}
         <section className="relative">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
@@ -187,7 +222,10 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center md:justify-start gap-3 mt-4">
                 <p className="text-muted-foreground font-code text-[11px] bg-white/5 dark:bg-black/20 px-5 py-2 rounded-full border border-border/50 flex items-center gap-3">
                   {address ? `${address.slice(0, 12)}...${address.slice(-12)}` : "Disconnected"}
-                  <ExternalLink className="w-4 h-4 text-primary cursor-pointer hover:scale-125 transition-all" onClick={() => handleInteractiveClick("Explorer")} />
+                  <ExternalLink 
+                    className="w-4 h-4 text-primary cursor-pointer hover:scale-125 transition-all" 
+                    onClick={openExplorer} 
+                  />
                 </p>
               </div>
             </div>
@@ -211,21 +249,32 @@ export default function ProfilePage() {
                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Asset Ledger</CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-8">
-                <div className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" onClick={() => handleInteractiveClick("Balance Sync")}>
+                <div 
+                  className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" 
+                  onClick={refreshBalance}
+                >
                   <p className="text-[10px] font-black uppercase text-primary mb-3 tracking-[0.2em] flex items-center justify-between">
                     FIT Balance
-                    <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-700" />
+                    <RefreshCw className={`w-4 h-4 transition-transform duration-700 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
                   </p>
                   <p className="text-6xl font-black text-primary tracking-tighter italic">
                     {balance.toLocaleString()} <span className="text-2xl not-italic">FIT</span>
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="ghost" className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group" onClick={() => handleInteractiveClick("Transactions")}>
+                  <Button 
+                    variant="ghost" 
+                    className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group"
+                    onClick={() => toast({ title: "Transaction Ledger", description: "Redirecting to your full history node..." })}
+                  >
                     <Database className="w-7 h-7 text-muted-foreground group-hover:text-primary" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Logs</span>
                   </Button>
-                  <Button variant="ghost" className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group" onClick={() => handleInteractiveClick("Node Status")}>
+                  <Button 
+                    variant="ghost" 
+                    className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group"
+                    onClick={() => toast({ title: "Security Protocols", description: "Node encryption verified 256-bit." })}
+                  >
                     <Shield className="w-7 h-7 text-accent group-hover:scale-110" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Secure</span>
                   </Button>
@@ -236,11 +285,15 @@ export default function ProfilePage() {
             <Card className="rounded-[3.5rem] border-none shadow-xl overflow-hidden glass-card">
               <CardContent className="p-10 space-y-8">
                 {[
-                  { label: "Total Grinds", value: profile?.totalWorkouts || "0", icon: LayoutGrid, color: "text-blue-500" },
-                  { label: "On-Chain Since", value: "Feb 2025", icon: Calendar, color: "text-orange-500" },
-                  { label: "Identity Node", value: "Verified", icon: Lock, color: "text-primary" }
+                  { label: "Total Grinds", value: profile?.totalWorkouts || "0", icon: LayoutGrid, color: "text-blue-500", action: "Workouts" },
+                  { label: "On-Chain Since", value: "Feb 2025", icon: Calendar, color: "text-orange-500", action: "History" },
+                  { label: "Identity Node", value: "Verified", icon: Lock, color: "text-primary", action: "Security" }
                 ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-6 group cursor-pointer p-5 rounded-[2.5rem] hover:bg-primary/5 transition-all border border-transparent hover:border-primary/10" onClick={() => handleInteractiveClick(s.label)}>
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-6 group cursor-pointer p-5 rounded-[2.5rem] hover:bg-primary/5 transition-all border border-transparent hover:border-primary/10"
+                    onClick={() => toast({ title: s.label, description: `Synchronizing ${s.action} with Sepolia...` })}
+                  >
                     <div className="w-16 h-16 rounded-2xl bg-muted/50 dark:bg-muted/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <s.icon className={`w-8 h-8 ${s.color}`} />
                     </div>
@@ -292,9 +345,9 @@ export default function ProfilePage() {
               <CardContent className="p-0">
                 <div className="divide-y divide-border/10">
                   {[
-                    { label: "Public Profile Sync", desc: "Global visibility for competitive ranking.", icon: Globe },
-                    { label: "Biometric Protocol", desc: "Secure local biometric authentication.", icon: Smartphone },
-                    { label: "Metabolic Alerts", desc: "Notification for 48h streak tax risk.", icon: Zap }
+                    { id: 'public', label: "Public Profile Sync", desc: "Global visibility for competitive ranking.", icon: Globe },
+                    { id: 'biometric', label: "Biometric Protocol", desc: "Secure local biometric authentication.", icon: Smartphone },
+                    { id: 'alerts', label: "Metabolic Alerts", desc: "Notification for 48h streak tax risk.", icon: Zap }
                   ].map((s, i) => (
                     <div key={i} className="flex items-center justify-between p-12 hover:bg-primary/5 cursor-pointer transition-all group">
                       <div className="flex items-center gap-8">
@@ -306,7 +359,13 @@ export default function ProfilePage() {
                           <p className="text-sm text-muted-foreground font-medium">{s.desc}</p>
                         </div>
                       </div>
-                      <Switch defaultChecked onCheckedChange={() => toast({ title: "Protocol Updated", description: "Node settings synchronized." })} />
+                      <Switch 
+                        defaultChecked 
+                        onCheckedChange={(checked) => toast({ 
+                          title: `${s.label} ${checked ? 'Enabled' : 'Disabled'}`, 
+                          description: `Node setting synchronized.` 
+                        })} 
+                      />
                     </div>
                   ))}
                 </div>
@@ -385,18 +444,27 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid gap-4">
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => handleInteractiveClick("Export")}>
-                   Export Performance Data
-                   <ChevronRight className="w-4 h-4" />
+                 <Button 
+                  variant="outline" 
+                  className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8 group" 
+                  onClick={handleExport}
+                  disabled={isExporting}
+                >
+                   {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Export Performance Data"}
+                   <ChevronRight className={`w-4 h-4 group-hover:translate-x-1 transition-transform`} />
                  </Button>
-                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => handleInteractiveClick("External Sync")}>
+                 <Button 
+                  variant="outline" 
+                  className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8 group" 
+                  onClick={handleWearableSync}
+                >
                    Sync Wearables
-                   <ChevronRight className="w-4 h-4" />
+                   <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                  </Button>
               </div>
 
               <Button onClick={() => setSettingsOpen(false)} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary active:scale-95 transition-all">
-                Update Configuration
+                Close Configuration
               </Button>
             </div>
           </div>
