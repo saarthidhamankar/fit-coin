@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Wallet, 
   Flame, 
@@ -459,25 +460,34 @@ export default function Dashboard() {
                         <motion.div 
                           whileHover={{ scale: 1.15 }}
                           className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all relative group shadow-sm",
-                          hasWorkout 
-                            ? 'bg-gradient-to-br from-primary to-accent text-white shadow-xl shadow-primary/20 scale-110' 
-                            : 'bg-muted/50 text-muted-foreground/30',
-                          isToday && !hasWorkout && 'border-2 border-primary/40 ring-4 ring-primary/10'
-                        )}>
+                            "w-12 h-12 flex items-center justify-center transition-all relative group",
+                            isToday && !hasWorkout && "ring-4 ring-primary/20 rounded-2xl"
+                          )}
+                        >
                           {hasWorkout ? (
-                            <Flame className="w-6 h-6 fill-white animate-pulse" />
-                          ) : isToday ? (
-                            <div className="w-2 h-2 rounded-full bg-primary/40 animate-ping" />
-                          ) : null}
+                            <Avatar className="w-12 h-12 border-2 border-primary shadow-xl shadow-primary/30 scale-110">
+                              <AvatarFallback className="bg-gradient-to-br from-orange-500 via-primary to-accent">
+                                <Flame className="w-6 h-6 text-white fill-white animate-pulse" />
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <div className={cn(
+                              "w-12 h-12 rounded-2xl flex items-center justify-center bg-muted/50 border border-muted",
+                              isToday && "border-primary/40 bg-primary/5"
+                            )}>
+                              {isToday && (
+                                <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                              )}
+                            </div>
+                          )}
                           
                           {isToday && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white" />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white shadow-sm" />
                           )}
                         </motion.div>
                         <span className={cn(
                           "text-[10px] font-black uppercase tracking-widest",
-                          isToday ? "text-primary scale-110" : "text-muted-foreground opacity-60"
+                          isToday ? "text-primary scale-110 font-black" : "text-muted-foreground opacity-60"
                         )}>{d.day[0]}</span>
                       </div>
                     );
