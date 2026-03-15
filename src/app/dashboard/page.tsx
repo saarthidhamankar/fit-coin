@@ -143,7 +143,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden">
+    <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background overflow-hidden">
       <Navbar />
       
       <div className="max-w-7xl mx-auto space-y-8">
@@ -157,7 +157,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Tracking metabolic effort on the FitCoin ledger.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group">
+            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "Asset Sync", description: "Your FIT tokens are cryptographically secured." })}>
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
             { label: "Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-accent" }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
-              <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20">
+              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20 cursor-help" onClick={() => toast({ title: stat.label, description: `Protocol status: ${stat.value}${stat.suffix || ''}` })}>
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -212,19 +212,21 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-56 h-56 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group">
-                  <div className="grid grid-cols-4 gap-2 w-full mb-6">
-                    {[1,2,3,4,5,6,7,8].map(i => (
-                      <div key={i} className="h-6 bg-primary/20 rounded-md animate-pulse" style={{ animationDelay: `${i*0.1}s` }} />
+                {/* Interactive Metabolic Matrix */}
+                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Metabolic Matrix", description: "Real-time performance load synchronization active." })}>
+                  <div className="grid grid-cols-8 gap-1.5 w-full mb-6">
+                    {Array.from({ length: 64 }).map((_, i) => (
+                      <div 
+                        key={i} 
+                        className="h-2 w-2 bg-primary/20 rounded-full animate-matrix-dot" 
+                        style={{ animationDelay: `${Math.random() * 2}s` }} 
+                      />
                     ))}
                   </div>
                   <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Protocol Load</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-black text-primary">SYNCING</span>
+                    <span className="text-xl font-black text-primary italic">SYNCING</span>
                     <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest animate-pulse">ACTIVE</Badge>
-                  </div>
-                  <div className="mt-6 flex gap-1.5 items-end h-10 w-full">
-                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-2.5 bg-primary/40 rounded-full animate-bounce" style={{ height: `${20 + Math.random()*80}%`, animationDelay: `${i*0.1}s` }} />)}
                   </div>
                 </div>
               </div>
@@ -311,6 +313,7 @@ export default function Dashboard() {
                         <motion.div 
                           key={i} 
                           whileHover={{ x: 8 }}
+                          onClick={() => toast({ title: "Protocol Details", description: s })}
                           className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
                         >
                           <div className="flex items-center gap-3">
@@ -360,7 +363,7 @@ export default function Dashboard() {
                   <Progress value={stats.monthlyProgress} className="h-4 rounded-full bg-muted/30" />
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => toast({ title: "Security Node", description: "Your performance data is verified on the Sepolia testnet." })}>
                    <ShieldCheck className="w-5 h-5 text-primary" />
                    <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Protocol Integrity Sync Active on Sepolia Ledger</p>
                 </div>

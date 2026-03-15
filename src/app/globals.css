@@ -23,7 +23,7 @@
     --border: 145 20% 90%;
     --input: 145 20% 90%;
     --ring: 145 85% 45%;
-    --radius: 1.5rem;
+    --radius: 2rem;
   }
 
   .dark {
@@ -54,37 +54,51 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/30;
     background: 
-      radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, hsl(var(--accent) / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, hsl(var(--accent) / 0.12) 0%, transparent 50%),
       radial-gradient(circle at 50% 50%, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
     background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
 .glass-card {
-  @apply bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-2xl;
+  @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
 }
 
-.neon-glow {
-  @apply shadow-[0_0_20px_rgba(24,209,86,0.25)];
+@keyframes mesh-float {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.mesh-background {
+  background: linear-gradient(-45deg, hsl(var(--primary) / 0.05), hsl(var(--accent) / 0.05), hsl(var(--background)), hsl(var(--primary) / 0.05));
+  background-size: 400% 400%;
+  animation: mesh-float 15s ease infinite;
 }
 
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+@keyframes pulse-matrix {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(0.98); }
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
+.animate-matrix-dot {
+  animation: pulse-matrix 2s ease-in-out infinite;
 }
