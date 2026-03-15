@@ -13,7 +13,6 @@ import {
   Dumbbell, 
   Sparkles, 
   Calendar as CalendarIcon, 
-  ChevronRight, 
   AlertTriangle, 
   Target,
   ShieldCheck,
@@ -116,8 +115,7 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Aggressive scaling for visual impact:
-    // Low targets (e.g., 20 tokens, 60 mins) to ensure 0% isn't shown after work
+    // Aggressive scaling so 0% isn't shown after work
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
       { subject: 'Workout Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
@@ -163,6 +161,10 @@ export default function Dashboard() {
     }
   }, [profile, address, balance, workouts]);
 
+  const handleWorkoutSuccess = () => {
+    if (address) getBalance(address).then(setBalance);
+  };
+
   if (!isClient) return null;
 
   return (
@@ -198,7 +200,7 @@ export default function Dashboard() {
           {[
             { label: "Total FIT", value: balance, icon: Wallet },
             { label: "Day Streak", value: stats.currentStreak, suffix: " Days", icon: Flame },
-            { label: "Workouts", value: stats.totalWorkouts, icon: Dumbbell },
+            { label: "Total Workouts", value: stats.totalWorkouts, icon: Dumbbell },
             { label: "Goal Progress", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
@@ -230,7 +232,7 @@ export default function Dashboard() {
                   <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is key.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
-                      onSuccess={() => address && getBalance(address).then(setBalance)} 
+                      onSuccess={handleWorkoutSuccess} 
                       userStats={stats} 
                     />
                   </div>
@@ -251,7 +253,7 @@ export default function Dashboard() {
                       <Target className="w-6 h-6 text-primary" />
                       Weekly Fitness Balance
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance attribute map</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map</p>
                   </div>
                   <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Sync</Badge>
                 </div>
@@ -299,7 +301,7 @@ export default function Dashboard() {
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
                   <Sparkles className="w-6 h-6 text-white/80" />
-                  Personal Plan
+                  Weekly Plan
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -345,8 +347,7 @@ export default function Dashboard() {
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
                         <div className={cn(
-                          "w-12 h-12 flex items-center justify-center transition-all relative",
-                          isToday && !hasWorkout && "ring-2 ring-primary/20 rounded-2xl"
+                          "w-12 h-12 flex items-center justify-center transition-all relative"
                         )}>
                           {hasWorkout ? (
                             <Avatar className="w-12 h-12 border-2 border-primary shadow-lg scale-110">
