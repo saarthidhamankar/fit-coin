@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ totalWorkouts: 0, currentStreak: 0, monthlyProgress: 0, goal: "MuscleGain" as "MuscleGain" | "FatLoss" });
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
+  const [matrixDelays, setMatrixDelays] = useState<number[]>([]);
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
@@ -101,6 +102,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
+    
     const addr = localStorage.getItem('fitcoin_wallet_address');
     if (addr) {
       setAddress(addr);
@@ -219,7 +222,7 @@ export default function Dashboard() {
                       <div 
                         key={i} 
                         className="h-2 w-2 bg-primary/20 rounded-full animate-matrix-dot" 
-                        style={{ animationDelay: `${Math.random() * 2}s` }} 
+                        style={{ animationDelay: matrixDelays[i] ? `${matrixDelays[i]}s` : '0s' }} 
                       />
                     ))}
                   </div>
