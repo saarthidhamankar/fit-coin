@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +9,7 @@ import { WorkoutType, calculateWorkoutReward } from "@/lib/workout-rules";
 import { rewardUser } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface WorkoutModalProps {
   onSuccess: () => void;
@@ -19,14 +18,14 @@ interface WorkoutModalProps {
 
 export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<WorkoutType>('Strength');
-  const [duration, setDuration] = useState(45);
+  const [type, setType] = useState<WorkoutType>('Gym/Strength');
+  const [duration, setDuration] = useState(60);
   const [preview, setPreview] = useState<{ reward: number; breakdowns: string[] }>({ reward: 0, breakdowns: [] });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const types: { icon: any; label: WorkoutType }[] = [
-    { icon: Dumbbell, label: 'Strength' },
+    { icon: Dumbbell, label: 'Gym/Strength' },
     { icon: Flame, label: 'HIIT' },
     { icon: Timer, label: 'Cardio' },
     { icon: Bike, label: 'Cycling' },
@@ -35,6 +34,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   ];
 
   useEffect(() => {
+    // Recalculate FIT rewards as the user "swipes" (slides) the duration slider
     setPreview(calculateWorkoutReward(duration, new Date(), userStats));
   }, [duration, userStats]);
 
@@ -56,16 +56,21 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         colors: ['#18D156', '#BCFA22', '#ffffff']
       });
 
-      toast({ title: "Workout Verified!", description: `Success! +${preview.reward} FIT tokens added to your wallet.` });
+      toast({ title: "Session Verified", description: `You earned ${preview.reward} FIT tokens. Keep grinding!` });
       
       const workouts = JSON.parse(localStorage.getItem(`fitcoin_history_${address}`) || "[]");
-      workouts.unshift({ type, duration, date: new Date().toISOString(), tokens: preview.reward });
+      workouts.unshift({ 
+        type: type.replace('Gym/', ''), // clean label for history
+        duration, 
+        date: new Date().toISOString(), 
+        tokens: preview.reward 
+      });
       localStorage.setItem(`fitcoin_history_${address}`, JSON.stringify(workouts.slice(0, 50)));
       
       setOpen(false);
       onSuccess();
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Transaction Failed", description: e.message });
+      toast({ variant: "destructive", title: "Verification Failed", description: e.message });
     } finally {
       setLoading(false);
     }
@@ -79,80 +84,89 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
           Log Session
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none">
-        <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8">
+      <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
+        <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8 max-h-[90vh] overflow-y-auto scroll-smooth">
           <DialogHeader>
-            <DialogTitle className="text-3xl font-headline font-black text-foreground">Log Activity</DialogTitle>
-            <p className="text-muted-foreground font-medium">Every minute counts toward your next reward.</p>
+            <DialogTitle className="text-3xl font-headline font-black text-foreground uppercase italic tracking-tighter">Verified Grind</DialogTitle>
+            <p className="text-muted-foreground font-medium text-sm">Select your activity and slide the timer to sync your tokens.</p>
           </DialogHeader>
           
-          <div className="space-y-8">
-            <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-8 pb-4">
+            <div className="grid grid-cols-2 gap-3">
               {types.map((t) => (
                 <button
                   key={t.label}
                   onClick={() => setType(t.label)}
-                  className={`flex flex-col items-center justify-center p-4 rounded-3xl border-2 transition-all relative group ${
+                  className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all relative group ${
                     type === t.label 
-                      ? "border-primary bg-white shadow-xl scale-105" 
+                      ? "border-primary bg-white shadow-xl scale-105 z-10" 
                       : "border-muted bg-muted/30 hover:border-primary/20 hover:bg-white"
                   }`}
                 >
-                  <t.icon className={`w-6 h-6 mb-2 transition-colors ${type === t.label ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${type === t.label ? "text-primary" : "text-muted-foreground"}`}>
+                  <t.icon className={`w-8 h-8 mb-3 transition-colors ${type === t.label ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center leading-none ${type === t.label ? "text-primary" : "text-muted-foreground"}`}>
                     {t.label}
                   </span>
                   {type === t.label && (
-                    <motion.div layoutId="active-badge" className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-white shadow-sm" />
+                    <motion.div layoutId="active-badge" className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full border-2 border-white shadow-sm flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    </motion.div>
                   )}
                 </button>
               ))}
             </div>
 
-            <div className="space-y-6 bg-white p-6 rounded-3xl shadow-sm border border-primary/10">
-              <div className="flex justify-between items-end">
+            <div className="space-y-6 bg-white dark:bg-card p-8 rounded-[2rem] shadow-sm border-2 border-primary/10">
+              <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">Session Duration</p>
-                  <p className="text-4xl font-black text-primary">
-                    {duration} <span className="text-lg text-primary/60 font-medium">min</span>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Sync Duration</p>
+                  <p className="text-5xl font-black text-primary">
+                    {duration}<span className="text-lg text-primary/60 font-black ml-1 uppercase">min</span>
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center">
-                  <Timer className="w-6 h-6 text-primary" />
+                <div className="w-16 h-16 bg-secondary/50 rounded-2xl flex items-center justify-center border-2 border-white">
+                  <Timer className="w-8 h-8 text-primary animate-pulse" />
                 </div>
               </div>
-              <Slider 
-                value={[duration]} 
-                onValueChange={(v) => setDuration(v[0])} 
-                min={15} 
-                max={180} 
-                step={5}
-                className="py-4"
-              />
+              <div className="px-2">
+                <Slider 
+                  value={[duration]} 
+                  onValueChange={(v) => setDuration(v[0])} 
+                  min={15} 
+                  max={180} 
+                  step={5}
+                  className="py-6 cursor-pointer"
+                />
+              </div>
+              <div className="flex justify-between text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest px-1">
+                <span>15m</span>
+                <span>90m</span>
+                <span>180m</span>
+              </div>
             </div>
 
-            <div className="bg-primary text-white rounded-[2rem] p-6 shadow-xl shadow-primary/20 space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="bg-primary text-white rounded-[2.5rem] p-8 shadow-2xl shadow-primary/30 space-y-4 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-500" />
               <div className="flex justify-between items-center relative z-10">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  <span className="text-sm font-black uppercase tracking-wider">Earned Today</span>
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-6 h-6 text-yellow-300" />
+                  <span className="text-xs font-black uppercase tracking-[0.1em]">On-Chain Reward</span>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <motion.span 
                     key={preview.reward}
-                    initial={{ scale: 1.2, opacity: 0 }}
+                    initial={{ scale: 1.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="text-4xl font-black"
+                    className="text-5xl font-black italic"
                   >
                     {preview.reward}
                   </motion.span>
-                  <span className="text-sm font-black text-white/70">FIT</span>
+                  <span className="text-sm font-black text-white/80 uppercase">FIT</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 relative z-10">
                 {preview.breakdowns.map((b, i) => (
-                  <span key={i} className="text-[9px] px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg font-black uppercase border border-white/10">
+                  <span key={i} className="text-[9px] px-3 py-1.5 bg-white/20 backdrop-blur-xl rounded-xl font-black uppercase border border-white/20">
                     {b}
                   </span>
                 ))}
@@ -162,23 +176,23 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
             <Button 
               onClick={handleConfirm} 
               disabled={loading} 
-              className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 rounded-2xl shadow-xl shadow-primary/20 group"
+              className="w-full h-20 text-2xl font-black bg-primary hover:bg-primary/90 rounded-[1.5rem] shadow-xl shadow-primary/20 group border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all"
             >
               {loading ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Verifying...
+                <div className="flex items-center gap-4">
+                  <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                  Syncing...
                 </div>
               ) : (
                 <>
-                  Confirm & Earn FIT
-                  <ChevronRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
+                  Earn FIT Tokens
+                  <ChevronRight className="w-7 h-7 ml-2 group-hover:translate-x-2 transition-transform" />
                 </>
               )}
             </Button>
             
-            <p className="text-center text-[9px] text-muted-foreground uppercase font-black tracking-[0.2em]">
-              Transactions secured by Ethereum Sepolia
+            <p className="text-center text-[8px] text-muted-foreground/60 uppercase font-black tracking-[0.3em]">
+              Immutably recorded on the Sepolia Ledger
             </p>
           </div>
         </div>
