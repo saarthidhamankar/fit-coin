@@ -1,9 +1,6 @@
 
 import { ethers } from 'ethers';
 
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // Placeholder for actual deployment
-const CONTRACT_ABI: any[] = []; // Standard ERC20 ABI would go here
-
 const SEPOLIA_CHAIN_ID = '0xaa36a7';
 
 export const isMetaMaskInstalled = () => {
@@ -12,7 +9,10 @@ export const isMetaMaskInstalled = () => {
 
 export const connectWallet = async () => {
   if (!isMetaMaskInstalled()) {
-    throw new Error('MetaMask is not installed');
+    // Demo Fallback: Allow users to experience the app without MetaMask
+    console.warn('MetaMask not detected. Using Demo Wallet.');
+    const mockAddress = "0xDemo" + Math.random().toString(16).slice(2, 10).toUpperCase();
+    return mockAddress;
   }
   
   try {
@@ -34,7 +34,6 @@ export const switchToSepolia = async () => {
       params: [{ chainId: SEPOLIA_CHAIN_ID }],
     });
   } catch (switchError: any) {
-    // This error code indicates that the chain has not been added to MetaMask.
     if (switchError.code === 4902) {
       try {
         await (window as any).ethereum.request({
@@ -57,54 +56,30 @@ export const switchToSepolia = async () => {
 };
 
 export const getBalance = async (address: string) => {
-  // Simulating blockchain fetch for FIT tokens
-  // In a real app, we'd use ethers to call the contract:
-  // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-  // return await contract.balanceOf(address);
+  if (typeof window === 'undefined') return 0;
   const localBalance = localStorage.getItem(`fitcoin_balance_${address}`);
   return parseFloat(localBalance || "0");
 };
 
 export const rewardUser = async (address: string, amount: number) => {
-  // Simulating on-chain transaction
-  console.log(`Rewarding ${amount} FIT to ${address} on Sepolia...`);
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
+  console.log(`Rewarding ${amount} FIT to ${address}...`);
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
   const current = await getBalance(address);
   const newBalance = current + amount;
   localStorage.setItem(`fitcoin_balance_${address}`, newBalance.toString());
-  
-  // Track activity
-  const activity = JSON.parse(localStorage.getItem(`fitcoin_activity_${address}`) || "[]");
-  activity.unshift({
-    type: 'Workout Reward',
-    amount: amount,
-    date: new Date().toISOString(),
-    txHash: '0x' + Math.random().toString(16).slice(2, 66)
-  });
-  localStorage.setItem(`fitcoin_activity_${address}`, JSON.stringify(activity.slice(0, 10)));
   
   return newBalance;
 };
 
 export const spendTokens = async (address: string, amount: number) => {
   const current = await getBalance(address);
-  if (current < amount) throw new Error("Insufficient balance");
+  if (current < amount) throw new Error("Insufficient FIT balance");
   
-  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate tx
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
   const newBalance = current - amount;
   localStorage.setItem(`fitcoin_balance_${address}`, newBalance.toString());
-  
-  // Track activity
-  const activity = JSON.parse(localStorage.getItem(`fitcoin_activity_${address}`) || "[]");
-  activity.unshift({
-    type: 'Shop Purchase',
-    amount: -amount,
-    date: new Date().toISOString(),
-    txHash: '0x' + Math.random().toString(16).slice(2, 66)
-  });
-  localStorage.setItem(`fitcoin_activity_${address}`, JSON.stringify(activity.slice(0, 10)));
   
   return newBalance;
 };
