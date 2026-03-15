@@ -47,10 +47,16 @@ export const calculateWorkoutReward = (duration: number, date: Date, stats: { to
     breakdowns.push(`+${REWARD_RULES.BONUSES.FIRST_WORKOUT} Welcome Bonus`);
   }
 
-  // Streak bonus (Simplified check)
-  if ((stats.currentStreak + 1) % 7 === 0) {
+  // 7-Day Streak bonus
+  if (stats.currentStreak > 0 && (stats.currentStreak + 1) % 7 === 0) {
     reward += REWARD_RULES.BONUSES.SEVEN_DAY_STREAK;
     breakdowns.push(`+${REWARD_RULES.BONUSES.SEVEN_DAY_STREAK} 7-Day Streak!`);
+  }
+
+  // 30-Day Challenge bonus
+  if (stats.totalWorkouts > 0 && (stats.totalWorkouts + 1) % 30 === 0) {
+    reward += REWARD_RULES.BONUSES.THIRTY_DAY_CHALLENGE;
+    breakdowns.push(`+${REWARD_RULES.BONUSES.THIRTY_DAY_CHALLENGE} 30-Day Challenge!`);
   }
 
   return { reward, breakdowns };

@@ -40,37 +40,7 @@ const motivationPrompt = ai.definePrompt({
   name: 'generateMotivationPrompt',
   input: { schema: GenerateMotivationInputSchema },
   output: { schema: GenerateMotivationOutputSchema },
-  prompt: `You are an encouraging and knowledgeable fitness coach for FitCoin, a decentralized gym reward platform. Your goal is to inspire users to stay engaged and achieve their fitness goals.
-
-Analyze the user's workout history and achievements provided below. Then, generate a personalized motivational message and provide 2-3 specific workout suggestions.
-
-Consider the following information:
-
-{{#if workoutHistory}}Recent Workout History:
-{{#each workoutHistory}}
-- Date: {{{date}}}, Type: {{{type}}}, Duration: {{{durationMinutes}}} minutes, Tokens Earned: {{{tokensEarned}}}
-{{/each}}
-{{else}}No recent workout history provided.
-{{/if}}
-
-{{#if achievements}}Unlocked Achievements:
-{{#each achievements}}
-- {{{this}}}
-{{/each}}
-{{else}}No achievements provided.
-{{/if}}
-
-{{#if currentStreak}}Current Workout Streak: {{{currentStreak}}} days
-{{/if}}
-{{#if totalWorkouts}}Total Workouts Logged: {{{totalWorkouts}}}
-{{/if}}
-{{#if totalTokensEarned}}Total FIT Tokens Earned: {{{totalTokensEarned}}}
-{{/if}}
-
-Now, generate a personalized motivational message and specific workout suggestions.
-
-Motivational Message:
-Workout Suggestions:`,
+  prompt: `You are an encouraging and knowledgeable fitness coach for FitCoin, a decentralized gym reward platform. Your goal is to inspire users to stay engaged and achieve their fitness goals.\n\nAnalyze the user\'s workout history and achievements provided below. Then, generate a personalized motivational message and provide 2-3 specific workout suggestions.\n\nConsider the following information:\n\n{{#if workoutHistory}}Recent Workout History:\n{{#each workoutHistory}}\n- Date: {{{date}}}, Type: {{{type}}}, Duration: {{{durationMinutes}}} minutes, Tokens Earned: {{{tokensEarned}}}\n{{/each}}\n{{else}}No recent workout history provided.\n{{/if}}\n\n{{#if achievements}}Unlocked Achievements:\n{{#each achievements}}\n- {{{this}}}\n{{/each}}\n{{else}}No achievements provided.\n{{/if}}\n\n{{#if currentStreak}}Current Workout Streak: {{{currentStreak}}} days\n{{/if}}\n{{#if totalWorkouts}}Total Workouts Logged: {{{totalWorkouts}}}\n{{/if}}\n{{#if totalTokensEarned}}Total FIT Tokens Earned: {{{totalTokensEarned}}}\n{{/if}}\n\nNow, generate a personalized motivational message and specific workout suggestions.\n\nMotivational Message:\nWorkout Suggestions:`,
 });
 
 const generateMotivationFlow = ai.defineFlow(
