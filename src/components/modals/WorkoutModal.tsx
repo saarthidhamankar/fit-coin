@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -70,9 +71,9 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
         
         if (diffDays === 0) {
-          newStreak = profile.currentDailyStreak || 1;
+          newStreak = profile.currentStreakDays || 1;
         } else if (diffDays === 1) {
-          newStreak = (profile.currentDailyStreak || 0) + 1;
+          newStreak = (profile.currentStreakDays || 0) + 1;
         } else {
           newStreak = 1;
         }
@@ -83,13 +84,16 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       
       // 3. Firestore Sync if logged in
       if (user?.uid && db) {
-        const workoutRef = collection(db, "users", user.uid, "workouts");
-        await addDoc(workoutRef, {
+        // Aligned with backend.json schema for WorkoutSession
+        const sessionRef = collection(db, "users", user.uid, "workoutSessions");
+        await addDoc(sessionRef, {
           userId: user.uid,
-          type,
+          workoutType: type,
           durationMinutes: duration,
-          date: new Date().toISOString(),
-          fitCoinsEarnedTotal: preview.reward,
+          startTime: new Date().toISOString(),
+          endTime: new Date(new Date().getTime() + duration * 60000).toISOString(),
+          totalTokensEarned: preview.reward,
+          appliedBonuses: preview.breakdowns,
           timestamp: serverTimestamp()
         });
 
@@ -102,13 +106,14 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
           timestamp: new Date().toISOString()
         });
 
-        // Update profile aggregates
+        // Update profile aggregates as defined in backend.json User entity
         const profileRef = doc(db, "users", user.uid);
         await updateDoc(profileRef, {
-          totalWorkouts: increment(1),
-          totalFitCoinsEarned: increment(preview.reward),
+          totalWorkoutsCompleted: increment(1),
+          totalFitEarned: increment(preview.reward),
           lastWorkoutDate: new Date().toISOString(),
-          currentDailyStreak: newStreak
+          currentStreakDays: newStreak,
+          lastActivityAt: new Date().toISOString()
         });
       }
 

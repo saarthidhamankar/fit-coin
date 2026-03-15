@@ -63,9 +63,9 @@ export default function Dashboard() {
   const workoutQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
-      collection(db, "users", user.uid, "workouts"),
-      orderBy("date", "desc"),
-      limit(50) // Increased limit to ensure we capture the whole week
+      collection(db, "users", user.uid, "workoutSessions"),
+      orderBy("startTime", "desc"),
+      limit(50) 
     );
   }, [db, user?.uid]);
 
@@ -85,14 +85,14 @@ export default function Dashboard() {
       startOfWeek.setHours(0, 0, 0, 0);
 
       workouts.forEach(w => {
-        const workoutDate = new Date(w.date);
-        // Only include workouts from the current week for the distribution chart and consistency ledger
+        const workoutDate = new Date(w.startTime || w.date);
+        // Filter for current week only
         if (workoutDate >= startOfWeek) {
           const dayIdx = (workoutDate.getDay() + 6) % 7; // Mon=0, Sun=6
           if (dayIdx >= 0 && dayIdx < 7) {
             data[dayIdx].duration += w.durationMinutes || 0;
-            data[dayIdx].tokens += w.fitCoinsEarnedTotal || 0;
-            data[dayIdx].intensity += (w.durationMinutes * (w.fitCoinsEarnedTotal || 1)) / 100;
+            data[dayIdx].tokens += w.totalTokensEarned || w.fitCoinsEarnedTotal || 0;
+            data[dayIdx].intensity += (w.durationMinutes * (w.totalTokensEarned || 1)) / 100;
           }
         }
       });
@@ -123,7 +123,7 @@ export default function Dashboard() {
         const userRef = doc(db, "users", user.uid);
         updateDoc(userRef, {
           currentDailyStreak: 0,
-          totalFitCoinsSpent: (currentProfile.totalFitCoinsSpent || 0) + penalty
+          totalFitEarned: (currentProfile.totalFitEarned || 0) - penalty
         });
 
         const logRef = collection(db, "users", user.uid, "activityLogs");
@@ -146,7 +146,7 @@ export default function Dashboard() {
       setAddress(addr);
       refreshData(addr);
     }
-  }, [user, profile, workouts]); // Added workouts to re-trigger if collection updates
+  }, [user, profile, workouts]);
 
   const refreshData = async (addr: string) => {
     const bal = await getBalance(addr);
@@ -154,18 +154,18 @@ export default function Dashboard() {
 
     if (profile) {
       await checkStreakIntegrity(addr, profile);
-      const total = profile.totalWorkouts || 0;
-      const streak = profile.currentDailyStreak || 0;
+      const total = profile.totalWorkoutsCompleted || 0;
+      const streak = profile.currentStreakDays || 0;
       setStats(prev => ({ ...prev, totalWorkouts: total, currentStreak: streak, monthlyProgress: Math.min((total / 30) * 100, 100) }));
 
       if (!motivation && !loadingMotivation) {
         setLoadingMotivation(true);
         generateMotivation({
           workoutHistory: workouts?.slice(0, 3).map((w: any) => ({
-            date: w.date.split('T')[0],
-            type: w.type,
+            date: (w.startTime || w.date).split('T')[0],
+            type: w.workoutType || w.type,
             durationMinutes: w.durationMinutes,
-            tokensEarned: w.fitCoinsEarnedTotal
+            tokensEarned: w.totalTokensEarned || w.fitCoinsEarnedTotal
           })),
           currentStreak: streak,
           totalWorkouts: total,
@@ -446,7 +446,7 @@ export default function Dashboard() {
               <CardContent className="space-y-8 p-8 pt-2">
                 <div className="grid grid-cols-7 gap-3">
                   {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                    const hasWorkout = chartData[i]?.duration > 0;
+                    const hasWorkout = chartData[i]?.duration > 0 || chartData[i]?.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
                         <div className={cn(
