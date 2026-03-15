@@ -65,7 +65,7 @@ export default function Dashboard() {
     return query(
       collection(db, "users", user.uid, "workouts"),
       orderBy("date", "desc"),
-      limit(20)
+      limit(50) // Increased limit to ensure we capture the whole week
     );
   }, [db, user?.uid]);
 
@@ -76,12 +76,25 @@ export default function Dashboard() {
     const data = days.map(day => ({ day, duration: 0, tokens: 0, intensity: 0 }));
     
     if (workouts) {
+      const now = new Date();
+      // Get start of current week (Monday)
+      const startOfWeek = new Date(now);
+      const currentDay = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+      startOfWeek.setDate(diff);
+      startOfWeek.setHours(0, 0, 0, 0);
+
       workouts.forEach(w => {
-        const date = new Date(w.date);
-        const dayIdx = (date.getDay() + 6) % 7; // Mon=0
-        data[dayIdx].duration += w.durationMinutes || 0;
-        data[dayIdx].tokens += w.fitCoinsEarnedTotal || 0;
-        data[dayIdx].intensity += (w.durationMinutes * (w.fitCoinsEarnedTotal || 1)) / 100;
+        const workoutDate = new Date(w.date);
+        // Only include workouts from the current week for the distribution chart and consistency ledger
+        if (workoutDate >= startOfWeek) {
+          const dayIdx = (workoutDate.getDay() + 6) % 7; // Mon=0, Sun=6
+          if (dayIdx >= 0 && dayIdx < 7) {
+            data[dayIdx].duration += w.durationMinutes || 0;
+            data[dayIdx].tokens += w.fitCoinsEarnedTotal || 0;
+            data[dayIdx].intensity += (w.durationMinutes * (w.fitCoinsEarnedTotal || 1)) / 100;
+          }
+        }
       });
     }
     return data;
@@ -133,7 +146,7 @@ export default function Dashboard() {
       setAddress(addr);
       refreshData(addr);
     }
-  }, [user, profile]);
+  }, [user, profile, workouts]); // Added workouts to re-trigger if collection updates
 
   const refreshData = async (addr: string) => {
     const bal = await getBalance(addr);
@@ -272,7 +285,7 @@ export default function Dashboard() {
                       <BarChart3 className="w-6 h-6 text-primary" />
                       Proof of Sweat Distribution
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance criteria analyzer</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance criteria analyzer (Current Week)</p>
                   </div>
                   
                   <div className="flex bg-muted/50 p-1.5 rounded-full border border-border/10">
@@ -427,7 +440,7 @@ export default function Dashboard() {
               <CardHeader className="pb-4 p-8">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                   <CalendarIcon className="w-4 h-4 text-primary" />
-                  Consistency Ledger
+                  Consistency Ledger (Week)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 p-8 pt-2">
@@ -436,7 +449,10 @@ export default function Dashboard() {
                     const hasWorkout = chartData[i]?.duration > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
-                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all ${hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30'}`}>
+                        <div className={cn(
+                          "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all",
+                          hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30'
+                        )}>
                           {hasWorkout ? '✓' : ''}
                         </div>
                         <span className="text-[11px] font-black text-muted-foreground">{day}</span>
@@ -450,7 +466,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Protocol Alert: Integrity Enforcement</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Inactivity exceeding 48 hours triggers an automatic metabolic tax of -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Maintain consistency to secure your assets.
+                      Inactivity exceeding 48 hours triggers an automatic metabolic tax of -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Consistency is rewarded; laziness is taxed.
                     </p>
                   </div>
                 </div>
