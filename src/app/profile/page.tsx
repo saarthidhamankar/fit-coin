@@ -72,7 +72,10 @@ export default function ProfilePage() {
   }, [profile, user, searchParams]);
 
   const handleSaveProfile = async () => {
-    if (!userDocRef) return;
+    if (!userDocRef) {
+      toast({ variant: "destructive", title: "Protocol Error", description: "Ledger reference not initialized." });
+      return;
+    }
     try {
       await updateDoc(userDocRef, {
         username: formData.username,
@@ -81,7 +84,7 @@ export default function ProfilePage() {
       });
       toast({ 
         title: "Identity Committed", 
-        description: "Changes have been successfully synchronized to the athlete ledger.",
+        description: "Your physical identity has been successfully synchronized to the athlete ledger.",
       });
       setEditOpen(false);
     } catch (e) {
@@ -405,4 +408,3 @@ export default function ProfilePage() {
     </motion.div>
   );
 }
-

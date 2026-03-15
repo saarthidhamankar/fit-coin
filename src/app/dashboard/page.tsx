@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, doc, updateDoc, addDoc, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, updateDoc, addDoc } from "firebase/firestore";
 import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
@@ -374,4 +374,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
