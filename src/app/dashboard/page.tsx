@@ -71,7 +71,7 @@ export default function Dashboard() {
     );
   }, [db, user?.uid]);
 
-  const { data: workouts } = useCollection(workoutQuery);
+  const { data: workouts, isLoading: workoutsLoading } = useCollection(workoutQuery);
 
   const chartData = useMemo(() => {
     const today = new Date();
@@ -95,6 +95,7 @@ export default function Dashboard() {
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
           data[dayIdx].tokens += w.totalTokensEarned || 0;
+          // Normalized intensity calculation
           data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
@@ -107,13 +108,14 @@ export default function Dashboard() {
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
     
-    // Aggressive scaling so users see immediate progress (not 0%)
+    // Aggressive scaling for immediate feedback
+    // Target: 20 tokens per week, 45 mins per week, effort is relative
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 30) * 100, 100), fullMark: 100 },
-      { subject: 'Workout Time', A: Math.min((totalDuration / 90) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 20, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 30, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min((stats.currentStreak / 7) * 100, 100), fullMark: 100 },
-      { subject: 'Goal Progress', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
+      { subject: 'Goal', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
     ];
   }, [chartData, stats]);
 
@@ -307,33 +309,40 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-10 h-[400px] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                    <PolarGrid stroke="hsl(var(--muted))" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar
-                      name="Weekly Stats"
-                      dataKey="A"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.6}
-                    />
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
-                              <p className="text-[10px] font-black uppercase text-primary mb-1">{payload[0].payload.subject}</p>
-                              <p className="text-2xl font-black">{Math.round(payload[0].value as number)}%</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+                {workoutsLoading ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Results...</p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                      <PolarGrid stroke="hsl(var(--muted))" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar
+                        name="Weekly Stats"
+                        dataKey="A"
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.6}
+                      />
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
+                                <p className="text-[10px] font-black uppercase text-primary mb-1">{payload[0].payload.subject}</p>
+                                <p className="text-2xl font-black">{Math.round(payload[0].value as number)}%</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
