@@ -74,14 +74,21 @@ export default function ProfilePage() {
       return;
     }
 
-    // Smart Identity Commit: Only sync non-empty strings, preserving existing data if field is blank
+    // Smart Identity Commit: Supports partial updates. If name is entered but URLs are empty,
+    // only the name is updated in the Firestore document.
     const updates: any = {};
-    if (formData.username.trim()) updates.username = formData.username;
-    if (formData.avatarUrl.trim()) updates.avatarUrl = formData.avatarUrl;
-    if (formData.bannerUrl.trim()) updates.bannerUrl = formData.bannerUrl;
+    if (formData.username.trim()) {
+      updates.username = formData.username;
+    }
+    if (formData.avatarUrl.trim()) {
+      updates.avatarUrl = formData.avatarUrl;
+    }
+    if (formData.bannerUrl.trim()) {
+      updates.bannerUrl = formData.bannerUrl;
+    }
 
     if (Object.keys(updates).length === 0) {
-      toast({ title: "No Changes Detected", description: "Fill out at least one field to sync identity." });
+      toast({ title: "No Changes Detected", description: "Fill out the name field to sync identity." });
       setEditOpen(false);
       return;
     }
@@ -294,12 +301,12 @@ export default function ProfilePage() {
                 id="username" 
                 value={formData.username} 
                 onChange={(e) => setFormData({...formData, username: e.target.value})} 
-                placeholder="John Doe..."
+                placeholder="Enter your name..."
                 className="rounded-3xl h-16 border-2 focus:border-primary bg-white/50 dark:bg-black/50 px-6 font-bold"
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="avatar" className="text-[10px] font-black uppercase tracking-widest ml-1">Avatar Ledger URL</Label>
+              <Label htmlFor="avatar" className="text-[10px] font-black uppercase tracking-widest ml-1">Avatar Ledger URL (Optional)</Label>
               <Input 
                 id="avatar" 
                 value={formData.avatarUrl} 
@@ -309,7 +316,7 @@ export default function ProfilePage() {
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="banner" className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Texture URL</Label>
+              <Label htmlFor="banner" className="text-[10px] font-black uppercase tracking-widest ml-1">Banner Texture URL (Optional)</Label>
               <Input 
                 id="banner" 
                 value={formData.bannerUrl} 
@@ -318,7 +325,7 @@ export default function ProfilePage() {
                 className="rounded-3xl h-16 border-2 focus:border-primary bg-white/50 dark:bg-black/50 px-6 font-bold"
               />
             </div>
-            <Button onClick={handleSaveProfile} className="w-full h-20 rounded-[2rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 active:scale-95 transition-all mt-6 border-b-8 border-black/20">
+            <Button onClick={handleSaveProfile} className="w-full h-20 rounded-[2rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 active:scale-95 transition-all mt-6 border-b-8 border-black/20 bg-primary text-white hover:bg-primary/90">
               Commit Changes
             </Button>
           </div>
