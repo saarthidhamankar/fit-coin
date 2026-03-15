@@ -25,12 +25,10 @@ import {
   Smartphone, 
   ChevronRight,
   Loader2,
-  CheckCircle2,
   History,
   ShieldCheck,
   Fingerprint,
   Cpu,
-  X,
   ShoppingBag,
   Dumbbell,
   Palette
@@ -166,6 +164,7 @@ export default function ProfilePage() {
     const selected = THEME_COLORS.find(t => t.value === colorValue);
     if (selected) {
       document.documentElement.style.setProperty('--primary', selected.color);
+      localStorage.setItem('fitcoin_theme_color', selected.color);
       toast({ title: "Aesthetic Updated", description: `Node visual protocol set to ${selected.name}.` });
     }
   };
@@ -183,7 +182,7 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Cinematic Hero Section */}
         <section className="relative">
-          <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-80 w-full bg-gradient-to-br from-primary via-primary/80 to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl border-4 border-white/10">
+          <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-80 w-full bg-gradient-to-br from-primary via-primary/80 to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl border-4 border-white/10 z-0">
             {profile?.bannerUrl ? (
               <img src={profile.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
             ) : (
@@ -195,8 +194,8 @@ export default function ProfilePage() {
             <Button 
               size="sm" 
               variant="secondary" 
-              className="absolute bottom-8 right-8 z-20 rounded-2xl glass-card border-none font-black uppercase text-[10px] tracking-widest hover:scale-110 transition-all shadow-xl active:scale-95" 
-              onClick={() => setEditOpen(true)}
+              className="absolute bottom-8 right-8 z-30 rounded-2xl glass-card border-none font-black uppercase text-[10px] tracking-widest hover:scale-110 transition-all shadow-xl active:scale-95" 
+              onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
             >
               <Camera className="w-4 h-4 mr-2" /> Change Banner
             </Button>

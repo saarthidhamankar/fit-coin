@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
+import ThemeColorSynchronizer from "@/components/ThemeColorSynchronizer";
 
 export const metadata: Metadata = {
   title: 'FitCoin | Decentralized Fitness Rewards',
@@ -23,6 +24,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased selection:bg-primary/30">
         <FirebaseClientProvider>
+          <ThemeColorSynchronizer />
           {children}
           <Toaster />
         </FirebaseClientProvider>

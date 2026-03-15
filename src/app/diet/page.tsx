@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -153,7 +154,7 @@ export default function DietPage() {
 
                 <Card className="rounded-[3rem] border-none shadow-sm glass-card overflow-hidden">
                    <CardHeader className={`bg-muted/30 border-b border-border/10 p-8`}>
-                      <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-muted-foreground'}`}>Expert Protocol Guide</CardTitle>
+                      <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>Expert Protocol Guide</CardTitle>
                    </CardHeader>
                    <CardContent className="p-8">
                       <p className="text-sm font-bold leading-relaxed italic text-muted-foreground">
@@ -210,7 +211,7 @@ export default function DietPage() {
                       <div className={`w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-colors ${dietType === 'NonVeg' ? 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white' : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'}`}>
                         <item.icon className="w-6 h-6" />
                       </div>
-                      <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dietType === 'NonVeg' ? 'text-red-500' : 'text-muted-foreground'}`}>{item.title}</p>
+                      <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>{item.title}</p>
                       <p className="text-[11px] font-black uppercase tracking-tight">{item.text}</p>
                     </Card>
                   ))}
