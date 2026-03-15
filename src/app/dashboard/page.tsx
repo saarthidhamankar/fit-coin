@@ -7,7 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, AlertTriangle, TrendingUp, Layers } from "lucide-react";
+import { 
+  Wallet, 
+  Flame, 
+  Dumbbell, 
+  History, 
+  Sparkles, 
+  Calendar as CalendarIcon, 
+  Info, 
+  Tag, 
+  BarChart3, 
+  ChevronRight, 
+  Activity, 
+  ShieldCheck, 
+  Zap, 
+  AlertTriangle, 
+  TrendingUp, 
+  Layers,
+  Timer
+} from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,9 +35,9 @@ import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell, Area, AreaChart } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
+import { cn } from "@/lib/utils";
 
 type MetricType = 'duration' | 'tokens' | 'intensity';
 
@@ -63,7 +81,6 @@ export default function Dashboard() {
         const dayIdx = (date.getDay() + 6) % 7; // Mon=0
         data[dayIdx].duration += w.durationMinutes || 0;
         data[dayIdx].tokens += w.fitCoinsEarnedTotal || 0;
-        // Derived metabolic intensity score
         data[dayIdx].intensity += (w.durationMinutes * (w.fitCoinsEarnedTotal || 1)) / 100;
       });
     }
