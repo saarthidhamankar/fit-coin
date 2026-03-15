@@ -3,132 +3,143 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * FitCoin Security Rules
-     * 
-     * Core Philosophy:
-     * This ruleset enforces a strict user-ownership model. All sensitive data (workouts, 
-     * purchases, activity ledgers) is nested under a specific user's document path. 
-     * Global data like products and achievements are publicly readable but protected 
-     * from unauthorized modification.
-     * 
-     * Data Structure:
-     * - /users/{userId}: The root for all private user data.
-     * - /users/{userId}/workouts: Private workout logs.
-     * - /users/{userId}/purchases: Private purchase history.
-     * - /users/{userId}/activityLogs: Private chronological ledger of events.
-     * - /products: Global catalog of reward items.
-     * - /achievements: Global catalog of unlockable badges.
-     * 
-     * Key Security Decisions:
-     * 1. Path-Based Authorization: We rely on the {userId} in the path to verify 
-     *    ownership, eliminating the need for expensive cross-document lookups.
-     * 2. Denormalization for Authorization: Sub-documents (Workouts, Purchases, etc.) 
-     *    contain a 'userId' field that is validated against the path parameter 
-     *    to ensure relational integrity.
-     * 3. Prototyping Flexibility: We do not enforce strict data types or schemas for 
-     *    content fields, allowing for rapid front-end iteration.
-     * 4. Admin Restrictions: Collections like /products and /achievements are 
-     *    read-only for standard users.
+     * CORE PHILOSOPHY
+     * This ruleset enforces a strict user-ownership model combined with administrative overrides via a 
+     * dedicated roles collection. By leveraging path-based authorization, the rules minimize external 
+     * document lookups (get() calls), ensuring high performance and clear security boundaries.
+     *
+     * DATA STRUCTURE
+     * 1. Private User Data: Nested under `/users/{userId}/`. All personal profile data, workout sessions, 
+     *    and purchase history are stored here. Access is restricted to the authenticated user whose UID 
+     *    matches the `{userId}` path variable.
+     * 2. Public Catalogs: Top-level collections like `/products` and `/achievements` are globally 
+     *    readable to facilitate shop browsing and achievement tracking, but write-restricted to admins.
+     * 3. Administrative Roles: A dedicated `/roles_admin` collection uses document existence to 
+     *    grant elevated privileges across the database.
+     *
+     * KEY SECURITY DECISIONS
+     * - Authorization Independence: By including the `userId` in the path of subcollections (workouts/purchases), 
+     *   we verify ownership instantly without needing to fetch the parent document.
+     * - Relational Integrity: On creation of user-related documents, we enforce that internal 
+     *   `userId` fields match the path to prevent data spoofing.
+     * - Immutability: Critical relational fields (like `userId` in a workout) are marked as immutable 
+     *   on update to prevent users from "transferring" records to other accounts.
+     * - Prototyping Flexibility: While authorization is strictly enforced, data types and non-relational 
+     *   fields are not validated to allow for rapid frontend iteration.
      */
 
-    // --- HELPER FUNCTIONS ---
+    // --- Helper Functions ---
 
-    /** Checks if the request is from a signed-in user. */
+    /**
+     * @description Checks if the request is coming from an authenticated user.
+     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the authenticated user matches the provided ID. */
+    /**
+     * @description Checks if the authenticated user's UID matches the provided ID.
+     * @param userId The UID to check against the current session.
+     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Verifies the document exists and the user is the owner (used for updates/deletes). */
+    /**
+     * @description Combines ownership check with a check for document existence.
+     * Used for update and delete operations to ensure destructive actions only happen on valid data.
+     */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    // --- COLLECTION RULES ---
+    /**
+     * @description Checks if the authenticated user has administrative privileges.
+     * Relies on the existence of a document in the roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    // --- Collection Rules ---
 
     /**
-     * @description Rules for the primary UserProfile document.
+     * @description User profile documents. Access is restricted to the specific owner.
      * @path /users/{userId}
-     * @allow (get, create, update) if the authenticated user matches the userId.
-     * @deny (list) preventing user enumeration; (delete) user accounts are preserved.
-     * @principle Ownership and Self-Creation.
+     * @allow (create) User '0xABC' creates document '/users/0xABC'.
+     * @deny (get) User '0xDEF' attempts to read '/users/0xABC'.
+     * @principle Self-Creation and Ownership.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Users cannot be listed/enumerated
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if false; // Account deletion is a restricted administrative action
-    }
-
-    /**
-     * @description Rules for a user's workout history.
-     * @path /users/{userId}/workouts/{workoutId}
-     * @allow (get, list, create) if the user owns the parent path.
-     * @deny (create) if the internal 'userId' doesn't match the path.
-     * @principle Nested path ownership with relational integrity checks.
-     */
-    match /users/{userId}/workouts/{workoutId} {
       allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+
+      /**
+       * @description Individual workout logs. Sub-collected under the user for path-based security.
+       * @path /users/{userId}/workoutSessions/{workoutSessionId}
+       * @allow (create) User '0xABC' logs a workout under their own path with 'userId' field set to '0xABC'.
+       * @deny (update) User '0xABC' tries to change the 'userId' field of an existing workout.
+       * @principle Path-based ownership with relational field immutability.
+       */
+      match /workoutSessions/{workoutSessionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Records of shop purchases. Nested for private access.
+       * @path /users/{userId}/purchases/{purchaseId}
+       * @allow (get) User '0xABC' views their own purchase history.
+       * @deny (list) User '0xDEF' attempts to list purchases for user '0xABC'.
+       * @principle Ownership-based access control.
+       */
+      match /purchases/{purchaseId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
     }
 
     /**
-     * @description Rules for a user's purchase history.
-     * @path /users/{userId}/purchases/{purchaseId}
-     * @allow (get, list, create) if the user owns the parent path.
-     * @deny (update) as purchase history is typically immutable.
-     * @principle Nested path ownership for private transactional data.
-     */
-    match /users/{userId}/purchases/{purchaseId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if false; // Purchases are immutable financial records
-      allow delete: if false; // Purchases should not be deleted for audit purposes
-    }
-
-    /**
-     * @description Rules for the Activity Log (The Ledger).
-     * @path /users/{userId}/activityLogs/{activityLogId}
-     * @allow (get, list, create) if the user owns the parent path.
-     * @deny (update, delete) to ensure the integrity of the activity history.
-     * @principle Immutable ledger pattern for user events.
-     */
-    match /users/{userId}/activityLogs/{activityLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if false; // Activity logs are historical records and cannot be edited
-      allow delete: if false; // Activity logs are historical records and cannot be removed
-    }
-
-    /**
-     * @description Global Product catalog for the rewards shop.
+     * @description Catalog of items available in the FitCoin rewards shop.
      * @path /products/{productId}
-     * @allow (get, list) for any authenticated or public user.
-     * @deny (create, update, delete) for all standard users.
-     * @principle Public Read with Admin-Only Writes.
+     * @allow (list) Any user (even unauthenticated) views the product catalog.
+     * @deny (create) An authenticated non-admin user attempts to add a new product.
+     * @principle Public read with admin-restricted writes.
      */
     match /products/{productId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add administrative role check once defined
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Global Achievements and badges.
+     * @description Definitions of earnable achievements.
      * @path /achievements/{achievementId}
-     * @allow (get, list) for any authenticated or public user.
-     * @deny (create, update, delete) for all standard users.
-     * @principle Public Read with Admin-Only Writes.
+     * @allow (get) A user views details of an achievement they want to unlock.
+     * @deny (delete) A user attempts to delete an achievement definition.
+     * @principle Public read with admin-restricted writes.
      */
     match /achievements/{achievementId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add administrative role check once defined
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Internal registry for administrative users.
+     * @path /roles_admin/{adminUid}
+     * @allow (get) An authenticated user checks their own admin status via the existence of this doc.
+     * @deny (create) A user attempts to grant themselves admin rights via the client SDK.
+     * @principle Existence-based Role Access Control (DBAC).
+     */
+    match /roles_admin/{adminUid} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      // Admin creation and deletion is restricted to the Firebase Console or Admin SDK for security.
+      allow create, update, delete: if false;
     }
   }
 }
