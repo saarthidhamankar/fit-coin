@@ -19,7 +19,8 @@ import {
   AlertTriangle, 
   Target,
   Timer,
-  ShieldCheck
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
