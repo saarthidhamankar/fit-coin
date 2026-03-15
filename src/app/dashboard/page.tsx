@@ -75,7 +75,8 @@ export default function Dashboard() {
 
   const chartData = useMemo(() => {
     const today = new Date();
-    const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    // Monday start
+    const start = startOfWeek(today, { weekStartsOn: 1 });
     const end = endOfWeek(today, { weekStartsOn: 1 });
     const daysInterval = eachDayOfInterval({ start, end });
 
@@ -89,13 +90,14 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
-        const workoutDate = new Date(w.startTime || w.date);
+        // Handle both ISO strings and Firestore Timestamps
+        const workoutDate = w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
           data[dayIdx].tokens += w.totalTokensEarned || 0;
-          // Normalized intensity calculation
+          // Normalized effort calculation
           data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
@@ -106,18 +108,18 @@ export default function Dashboard() {
   const radarData = useMemo(() => {
     const totalTokens = chartData.reduce((acc, d) => acc + d.tokens, 0);
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
-    const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
+    const intensityDays = chartData.filter(d => d.intensity > 0).length || 1;
+    const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / intensityDays;
     
-    // Aggressive scaling for immediate feedback
-    // Target: 20 tokens per week, 45 mins per week, effort is relative
+    // Low targets to ensure immediate visual feedback (e.g. 10 tokens, 30 mins per week)
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 30, 100), fullMark: 100 },
-      { subject: 'Streak', A: Math.min((stats.currentStreak / 7) * 100, 100), fullMark: 100 },
-      { subject: 'Goal', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 10) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 30) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 40, 100), fullMark: 100 },
+      { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
+      { subject: 'Goal', A: Math.min(stats.monthlyProgress || ((workouts?.length || 0) / 10) * 100, 100), fullMark: 100 },
     ];
-  }, [chartData, stats]);
+  }, [chartData, stats, workouts]);
 
   const checkStreakIntegrity = async (addr: string, currentProfile: any) => {
     if (!currentProfile?.lastWorkoutDate || currentProfile.currentStreakDays === 0) return;
@@ -186,7 +188,7 @@ export default function Dashboard() {
         setLoadingMotivation(true);
         generateMotivation({
           workoutHistory: workouts?.slice(0, 3).map((w: any) => ({
-            date: (w.startTime || w.date).split('T')[0],
+            date: (w.startTime || w.date)?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
             type: w.workoutType || w.type,
             durationMinutes: w.durationMinutes,
             tokensEarned: w.totalTokensEarned
