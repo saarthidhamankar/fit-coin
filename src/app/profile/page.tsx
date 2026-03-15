@@ -8,7 +8,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Shield, Lock, ExternalLink, Award, Calendar, Camera, Edit2, Zap, LayoutGrid, Database, RefreshCw, Globe, Smartphone, ChevronRight } from "lucide-react";
+import { 
+  Settings, 
+  Shield, 
+  Lock, 
+  ExternalLink, 
+  Award, 
+  Calendar, 
+  Camera, 
+  Edit2, 
+  Zap, 
+  LayoutGrid, 
+  Database, 
+  RefreshCw, 
+  Globe, 
+  Smartphone, 
+  ChevronRight 
+} from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -17,14 +33,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ACHIEVEMENTS = [
-  { id: 1, title: "Early Bird", desc: "5 morning workouts", icon: "🌅", unlocked: true },
-  { id: 2, title: "Iron Soul", desc: "First 10 sessions", icon: "💪", unlocked: true },
-  { id: 3, title: "Weekend Warrior", desc: "Workout on Saturday", icon: "⚔️", unlocked: true },
-  { id: 4, title: "Flame Keeper", desc: "7 day streak", icon: "🔥", unlocked: true },
+  { id: 1, title: "Early Bird", desc: "5 morning sessions", icon: "🌅" },
+  { id: 2, title: "Iron Soul", desc: "10 heavy lifts", icon: "💪" },
+  { id: 3, title: "Weekend Warrior", desc: "Saturday grind", icon: "⚔️" },
+  { id: 4, title: "Flame Keeper", desc: "7 day streak", icon: "🔥" },
 ];
 
 export default function ProfilePage() {
@@ -73,19 +88,19 @@ export default function ProfilePage() {
       toast({ 
         variant: "destructive", 
         title: "Protocol Error", 
-        description: "Athlete ledger not initialized. Ensure wallet is connected." 
+        description: "Athlete ledger not initialized." 
       });
       return;
     }
 
-    // Smart Identity Commit: Partial updates logic
+    // Smart Partial Identity Commit
     const updates: any = {};
     if (formData.username.trim()) updates.username = formData.username;
     if (formData.avatarUrl.trim()) updates.avatarUrl = formData.avatarUrl;
     if (formData.bannerUrl.trim()) updates.bannerUrl = formData.bannerUrl;
 
     if (Object.keys(updates).length === 0) {
-      toast({ title: "No Changes", description: "Identity already synchronized." });
+      toast({ title: "No Changes Detected", description: "Identity already synchronized." });
       setEditOpen(false);
       return;
     }
@@ -94,7 +109,7 @@ export default function ProfilePage() {
       await updateDoc(userDocRef, updates);
       toast({ 
         title: "Identity Committed", 
-        description: "Your athlete profile has been synchronized to the decentralized ledger.",
+        description: "Your athlete name and assets have been synchronized to the ledger.",
       });
       setEditOpen(false);
     } catch (e) {
@@ -121,13 +136,13 @@ export default function ProfilePage() {
     >
       <Navbar />
 
-      <div className="max-w-5xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-12">
         {/* Designer Hero Section */}
         <section className="relative">
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="h-72 w-full bg-gradient-to-br from-primary via-primary/80 to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl border-4 border-white/10"
+            className="h-80 w-full bg-gradient-to-br from-primary via-primary/80 to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl border-4 border-white/10"
           >
             {profile?.bannerUrl ? (
               <img src={profile.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
@@ -179,7 +194,7 @@ export default function ProfilePage() {
             
             <div className="flex gap-4 mb-4">
               <Button size="lg" onClick={() => setEditOpen(true)} className="rounded-[2rem] font-black uppercase text-xs h-16 px-12 shadow-2xl shadow-primary/40 bg-primary hover:bg-primary/90 active:scale-95 transition-all border-b-4 border-black/10">
-                Edit Protocol
+                Edit Identity
               </Button>
               <Button size="lg" variant="outline" onClick={() => setSettingsOpen(true)} className="rounded-[2rem] h-16 w-16 p-0 glass-card border-none hover:bg-primary/10 active:scale-95 transition-all">
                 <Settings className="w-8 h-8 text-primary" />
@@ -244,10 +259,10 @@ export default function ProfilePage() {
               <CardHeader className="flex flex-row items-center justify-between border-b border-border/10 bg-muted/10 p-12">
                 <CardTitle className="flex items-center gap-5 text-4xl font-black uppercase italic tracking-tighter">
                   <Award className="w-12 h-12 text-primary" />
-                  Unlocked Protocols
+                  Achievement Protocols
                 </CardTitle>
                 <Badge className="bg-primary/10 text-primary border-none text-[10px] px-6 py-2 rounded-full font-black uppercase tracking-widest">
-                  Level 4 Athlete
+                  Elite Tier
                 </Badge>
               </CardHeader>
               <CardContent className="p-12">
@@ -272,14 +287,14 @@ export default function ProfilePage() {
 
             <Card className="rounded-[4rem] border-none shadow-xl overflow-hidden glass-card">
               <CardHeader className="bg-muted/10 border-b border-border/10 p-12">
-                <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Privacy & Biometrics</CardTitle>
+                <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Privacy & Security Nodes</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-border/10">
                   {[
-                    { label: "Public Profile Sync", desc: "Allow global leaderboard visibility.", icon: Globe },
-                    { label: "Biometric Protocol", desc: "Secure local face/touch ID auth.", icon: Smartphone },
-                    { label: "Metabolic Alerts", desc: "Notification for 48h streak tax.", icon: Zap }
+                    { label: "Public Profile Sync", desc: "Global visibility for competitive ranking.", icon: Globe },
+                    { label: "Biometric Protocol", desc: "Secure local biometric authentication.", icon: Smartphone },
+                    { label: "Metabolic Alerts", desc: "Notification for 48h streak tax risk.", icon: Zap }
                   ].map((s, i) => (
                     <div key={i} className="flex items-center justify-between p-12 hover:bg-primary/5 cursor-pointer transition-all group">
                       <div className="flex items-center gap-8">
@@ -291,7 +306,7 @@ export default function ProfilePage() {
                           <p className="text-sm text-muted-foreground font-medium">{s.desc}</p>
                         </div>
                       </div>
-                      <Switch defaultChecked onCheckedChange={() => toast({ title: "Settings Updated", description: "Protocol reconfigured." })} />
+                      <Switch defaultChecked onCheckedChange={() => toast({ title: "Protocol Updated", description: "Node settings synchronized." })} />
                     </div>
                   ))}
                 </div>
@@ -307,21 +322,21 @@ export default function ProfilePage() {
           <div className="p-12 space-y-10 bg-gradient-to-br from-primary/10 to-background">
             <DialogHeader className="space-y-4">
               <DialogTitle className="font-headline font-black uppercase text-5xl italic tracking-tighter text-primary">Edit Identity</DialogTitle>
-              <p className="text-muted-foreground text-base font-medium">Re-initialize your athlete name and visual assets on the ledger.</p>
+              <p className="text-muted-foreground text-base font-medium">Commit your athlete name and visual assets to the ledger.</p>
             </DialogHeader>
             <div className="space-y-8">
               <div className="space-y-3">
-                <Label htmlFor="username" className="text-[11px] font-black uppercase tracking-widest ml-2">Name (Athlete Alias)</Label>
+                <Label htmlFor="username" className="text-[11px] font-black uppercase tracking-widest ml-2">Name</Label>
                 <Input 
                   id="username" 
                   value={formData.username} 
                   onChange={(e) => setFormData({...formData, username: e.target.value})} 
-                  placeholder="Enter athlete name..."
+                  placeholder="Athlete Alias"
                   className="rounded-3xl h-18 border-2 border-primary/20 focus:border-primary bg-white/50 dark:bg-black/50 px-8 font-black text-lg"
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="avatar" className="text-[11px] font-black uppercase tracking-widest ml-2">Avatar Ledger URL</Label>
+                <Label htmlFor="avatar" className="text-[11px] font-black uppercase tracking-widest ml-2">Avatar URL (Optional)</Label>
                 <Input 
                   id="avatar" 
                   value={formData.avatarUrl} 
@@ -331,7 +346,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="banner" className="text-[11px] font-black uppercase tracking-widest ml-2">Banner Texture URL</Label>
+                <Label htmlFor="banner" className="text-[11px] font-black uppercase tracking-widest ml-2">Banner URL (Optional)</Label>
                 <Input 
                   id="banner" 
                   value={formData.bannerUrl} 
@@ -355,34 +370,29 @@ export default function ProfilePage() {
             <DialogHeader>
               <DialogTitle className="font-headline font-black uppercase text-6xl italic tracking-tighter flex items-center gap-8">
                 <Settings className="w-16 h-16 text-primary" />
-                Settings
+                Protocol
               </DialogTitle>
-              <p className="text-muted-foreground text-lg font-medium mt-4">Global athlete protocol and security preferences.</p>
+              <p className="text-muted-foreground text-lg font-medium mt-4">Global athlete settings and security nodes.</p>
             </DialogHeader>
 
             <div className="space-y-10">
               <div className="bg-primary/5 rounded-[3.5rem] p-10 border-2 border-primary/10 flex items-start gap-8">
                 <Shield className="w-12 h-12 text-primary shrink-0" />
                 <div className="space-y-4">
-                  <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Protocol Integrity</p>
-                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your performance logs are encrypted via Sepolia-standard hashing and distributed across the decentralized gym mesh.</p>
+                  <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">Node Integrity</p>
+                  <p className="text-sm font-medium text-muted-foreground leading-relaxed">Your data is secured via Sepolia-standard hashing and distributed across the FitCoin mesh.</p>
                 </div>
               </div>
 
               <div className="grid gap-4">
-                 {[
-                   { label: "Account Deletion", icon: Shield, variant: "ghost" as const },
-                   { label: "Export Workout Data", icon: Database, variant: "outline" as const },
-                   { label: "Sync External Wearables", icon: Zap, variant: "primary" as const }
-                 ].map((btn, i) => (
-                   <Button key={i} variant={btn.variant as any} className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8 group">
-                     <span className="flex items-center gap-3">
-                       <btn.icon className="w-4 h-4" />
-                       {btn.label}
-                     </span>
-                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                   </Button>
-                 ))}
+                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => handleInteractiveClick("Export")}>
+                   Export Performance Data
+                   <ChevronRight className="w-4 h-4" />
+                 </Button>
+                 <Button variant="outline" className="h-16 rounded-[1.8rem] font-black uppercase text-xs tracking-widest justify-between px-8" onClick={() => handleInteractiveClick("External Sync")}>
+                   Sync Wearables
+                   <ChevronRight className="w-4 h-4" />
+                 </Button>
               </div>
 
               <Button onClick={() => setSettingsOpen(false)} className="w-full h-24 rounded-[2.5rem] font-black uppercase text-2xl shadow-2xl shadow-primary/30 bg-primary active:scale-95 transition-all">
