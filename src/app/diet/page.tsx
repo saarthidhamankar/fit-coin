@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -54,7 +53,7 @@ const DIET_DATA = {
 
 export default function DietPage() {
   const [activeGoal, setActiveGoal] = useState("MuscleGain");
-  const [dietType, setDietType] = useState<DietType>("NonVeg");
+  const [dietType, setDietType] = useState<DietType>("Veg");
   const { toast } = useToast();
 
   const handleApplyPlan = (goal: string, type: string) => {
