@@ -110,17 +110,16 @@ export default function Dashboard() {
   }, [workouts]);
 
   const radarData = useMemo(() => {
-    // Transform week data into a multi-metric radar format
     const totalTokens = chartData.reduce((acc, d) => acc + d.tokens, 0);
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
     
     return [
-      { subject: 'FIT Yield', A: Math.min(totalTokens / 5, 100), fullMark: 100 },
-      { subject: 'Volume', A: Math.min(totalDuration / 2, 100), fullMark: 100 },
-      { subject: 'Intensity', A: Math.min(avgIntensity * 10, 100), fullMark: 100 },
-      { subject: 'Consistency', A: Math.min(stats.currentStreak * 14, 100), fullMark: 100 },
-      { subject: 'Goal Sync', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min(totalTokens / 5, 100), fullMark: 100 },
+      { subject: 'Workout Time', A: Math.min(totalDuration / 2, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 10, 100), fullMark: 100 },
+      { subject: 'Streak', A: Math.min(stats.currentStreak * 14, 100), fullMark: 100 },
+      { subject: 'Goal Progress', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
     ];
   }, [chartData, stats]);
 
@@ -136,8 +135,8 @@ export default function Dashboard() {
       
       toast({
         variant: "destructive",
-        title: "Protocol Violation: Streak Broken",
-        description: `Metabolic tax applied: -${penalty} FIT tokens.`,
+        title: "Streak Warning: Time Gap",
+        description: `Deduction applied: -${penalty} FIT tokens.`,
       });
 
       const newBalance = await penalizeUser(addr, penalty);
@@ -154,7 +153,7 @@ export default function Dashboard() {
         addDoc(logRef, {
           userId: user.uid,
           activityType: "STREAK_BREAK",
-          description: `Metabolic tax for inactivity (>48h)`,
+          description: `Penalty for missing workout (>48h)`,
           fitCoinsChange: -penalty,
           timestamp: new Date().toISOString()
         });
@@ -202,9 +201,9 @@ export default function Dashboard() {
         }).then(setMotivation).catch(() => {
           const todayString = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
           setMotivation({
-            motivationalMessage: "Protocol update: Consistency is the only path to metabolic dominance.",
-            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayString] || "Intense Cardio Session"],
-            promoCode: streak > 5 ? "GRIND7" : undefined
+            motivationalMessage: "Stay focused: Consistency is the best way to see results.",
+            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayString] || "Daily Workout Session"],
+            promoCode: streak > 5 ? "KEEPGOING" : undefined
           });
         }).finally(() => setLoadingMotivation(false));
       }
@@ -222,11 +221,11 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Tracking metabolic effort on the FitCoin ledger.</p>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Recording your workout progress on FitCoin.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "Asset Sync", description: "Your FIT tokens are cryptographically secured." })}>
+            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "Balance Update", description: "Your FIT balance is safe and secure." })}>
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
@@ -242,13 +241,13 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Assets", value: balance, icon: Wallet, color: "text-primary" },
+            { label: "FIT Total", value: balance, icon: Wallet, color: "text-primary" },
             { label: "Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-primary" },
-            { label: "Grinds", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
-            { label: "Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-primary" }
+            { label: "Workouts", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
+            { label: "Monthly Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-primary" }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
-              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20 cursor-help" onClick={() => toast({ title: stat.label, description: `Protocol status: ${stat.value}${stat.suffix || ''}` })}>
+              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20 cursor-help" onClick={() => toast({ title: stat.label, description: `Current status: ${stat.value}${stat.suffix || ''}` })}>
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -272,8 +271,8 @@ export default function Dashboard() {
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
-                  <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Commit Your Next <span className="text-primary italic">Rep</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax reset.</p>
+                  <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT. Every minute counts. Don't miss more than 2 days to keep your streak alive!</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -281,7 +280,7 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Metabolic Matrix", description: "Real-time performance load synchronization active." })}>
+                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Live View", description: "Your workout history is updating." })}>
                   <div className="grid grid-cols-8 gap-1.5 w-full mb-6">
                     {Array.from({ length: 64 }).map((_, i) => (
                       <div 
@@ -291,9 +290,9 @@ export default function Dashboard() {
                       />
                     ))}
                   </div>
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Protocol Load</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Status</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-primary italic">SYNCING</span>
+                    <span className="text-xl font-black text-primary italic">UPDATING</span>
                     <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest animate-pulse">ACTIVE</Badge>
                   </div>
                 </div>
@@ -306,11 +305,11 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Metabolic Pulse Radar
+                      Weekly Fitness Balance
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Protocol performance benchmark (Active Week)</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">How you're doing this week</p>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Attribute Sync</Badge>
+                  <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Update</Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-10 h-[400px] flex items-center justify-center">
@@ -320,7 +319,7 @@ export default function Dashboard() {
                     <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                     <Radar
-                      name="Protocol Metrics"
+                      name="Weekly Stats"
                       dataKey="A"
                       stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
@@ -351,7 +350,7 @@ export default function Dashboard() {
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
                   <Sparkles className="w-6 h-6 animate-pulse text-white/80" />
-                  AI Performance Coach
+                  AI Fitness Coach
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -368,19 +367,19 @@ export default function Dashboard() {
                     {motivation.promoCode && (
                       <div className="p-4 bg-white/20 text-white rounded-2xl border-2 border-white/50 flex items-center justify-between shadow-xl backdrop-blur-md">
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Protocol Bonus</p>
+                          <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Bonus Code</p>
                           <p className="text-lg font-black tracking-widest">{motivation.promoCode}</p>
                         </div>
                         <Tag className="w-6 h-6" />
                       </div>
                     )}
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Protocol:</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Plan:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <motion.div 
                           key={i} 
                           whileHover={{ x: 8 }}
-                          onClick={() => toast({ title: "Protocol Details", description: s })}
+                          onClick={() => toast({ title: "Workout Details", description: s })}
                           className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
                         >
                           <div className="flex items-center gap-3">
@@ -393,7 +392,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Synchronize a session to unlock your daily performance protocol.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Save a workout to see your daily fitness plan.</p>
                 )}
               </CardContent>
             </Card>
@@ -402,7 +401,7 @@ export default function Dashboard() {
               <CardHeader className="pb-4 p-8">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                   <CalendarIcon className="w-4 h-4 text-primary" />
-                  Consistency Ledger (Week)
+                  Weekly Workout Streak
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 p-8 pt-2">
@@ -453,9 +452,9 @@ export default function Dashboard() {
                 <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
                   <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Protocol Alert: Integrity Enforcement</p>
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Alert: Don't miss a day!</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Inactivity exceeding 48 hours triggers an automatic metabolic tax of -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Consistency is rewarded; laziness is taxed.
+                      Missing your workout for more than 2 days will cost you -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Stay consistent to keep your earnings!
                     </p>
                   </div>
                 </div>
@@ -464,7 +463,7 @@ export default function Dashboard() {
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
                       <Flame className="w-4 h-4 text-primary" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Progress</span>
                     </div>
                     <span className="text-[11px] font-black text-primary bg-white dark:bg-card px-3 py-1 rounded-full border border-primary/20 tracking-widest">
                       {Math.round(stats.monthlyProgress)}%
@@ -473,9 +472,9 @@ export default function Dashboard() {
                   <Progress value={stats.monthlyProgress} className="h-4 rounded-full bg-muted/30" />
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => toast({ title: "Security Node", description: "Your performance data is verified on the Sepolia testnet." })}>
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => toast({ title: "Safe Connection", description: "Your workout data is saved on the secure network." })}>
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Protocol Integrity Sync Active on Sepolia Ledger</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Securely Saving Progress to the Network</p>
                 </div>
               </CardContent>
             </Card>
