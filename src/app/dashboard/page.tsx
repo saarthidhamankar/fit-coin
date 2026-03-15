@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -49,8 +50,6 @@ import {
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
 import { cn } from "@/lib/utils";
 import { startOfWeek, eachDayOfInterval, endOfWeek, isSameDay, startOfDay } from "date-fns";
-
-type MetricType = 'duration' | 'tokens' | 'intensity';
 
 export default function Dashboard() {
   const { user } = useUser();
