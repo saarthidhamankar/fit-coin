@@ -13,7 +13,6 @@ import {
   Dumbbell, 
   Sparkles, 
   Calendar as CalendarIcon, 
-  Tag, 
   ChevronRight, 
   AlertTriangle, 
   Target,
