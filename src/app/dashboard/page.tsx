@@ -38,6 +38,7 @@ import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimest
 import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
 import { cn } from "@/lib/utils";
+import { startOfWeek, eachDayOfInterval, endOfWeek, isSameDay, startOfDay } from "date-fns";
 
 type MetricType = 'duration' | 'tokens' | 'intensity';
 
@@ -65,35 +66,36 @@ export default function Dashboard() {
     return query(
       collection(db, "users", user.uid, "workoutSessions"),
       orderBy("startTime", "desc"),
-      limit(50) 
+      limit(100) 
     );
   }, [db, user?.uid]);
 
   const { data: workouts } = useCollection(workoutQuery);
 
   const chartData = useMemo(() => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const data = days.map(day => ({ day, duration: 0, tokens: 0, intensity: 0 }));
+    const today = new Date();
+    const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    const end = endOfWeek(today, { weekStartsOn: 1 });
+    const daysInterval = eachDayOfInterval({ start, end });
+
+    const data = daysInterval.map(date => ({
+      date: startOfDay(date),
+      day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      duration: 0,
+      tokens: 0,
+      intensity: 0
+    }));
     
     if (workouts) {
-      const now = new Date();
-      // Get start of current week (Monday)
-      const startOfWeek = new Date(now);
-      const currentDay = startOfWeek.getDay();
-      const diff = startOfWeek.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-      startOfWeek.setDate(diff);
-      startOfWeek.setHours(0, 0, 0, 0);
-
       workouts.forEach(w => {
         const workoutDate = new Date(w.startTime || w.date);
-        // Filter for current week only
-        if (workoutDate >= startOfWeek) {
-          const dayIdx = (workoutDate.getDay() + 6) % 7; // Mon=0, Sun=6
-          if (dayIdx >= 0 && dayIdx < 7) {
-            data[dayIdx].duration += w.durationMinutes || 0;
-            data[dayIdx].tokens += w.totalTokensEarned || w.fitCoinsEarnedTotal || 0;
-            data[dayIdx].intensity += (w.durationMinutes * (w.totalTokensEarned || 1)) / 100;
-          }
+        const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
+        
+        if (dayIdx !== -1) {
+          data[dayIdx].duration += w.durationMinutes || 0;
+          data[dayIdx].tokens += w.totalTokensEarned || 0;
+          // Normalized intensity score for visual impact
+          data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
     }
@@ -101,7 +103,7 @@ export default function Dashboard() {
   }, [workouts]);
 
   const checkStreakIntegrity = async (addr: string, currentProfile: any) => {
-    if (!currentProfile?.lastWorkoutDate || currentProfile.currentDailyStreak === 0) return;
+    if (!currentProfile?.lastWorkoutDate || currentProfile.currentStreakDays === 0) return;
 
     const lastWorkout = new Date(currentProfile.lastWorkoutDate);
     const now = new Date();
@@ -122,7 +124,7 @@ export default function Dashboard() {
       if (user?.uid && db) {
         const userRef = doc(db, "users", user.uid);
         updateDoc(userRef, {
-          currentDailyStreak: 0,
+          currentStreakDays: 0,
           totalFitEarned: (currentProfile.totalFitEarned || 0) - penalty
         });
 
@@ -156,7 +158,12 @@ export default function Dashboard() {
       await checkStreakIntegrity(addr, profile);
       const total = profile.totalWorkoutsCompleted || 0;
       const streak = profile.currentStreakDays || 0;
-      setStats(prev => ({ ...prev, totalWorkouts: total, currentStreak: streak, monthlyProgress: Math.min((total / 30) * 100, 100) }));
+      setStats(prev => ({ 
+        ...prev, 
+        totalWorkouts: total, 
+        currentStreak: streak, 
+        monthlyProgress: Math.min((total / 30) * 100, 100) 
+      }));
 
       if (!motivation && !loadingMotivation) {
         setLoadingMotivation(true);
@@ -165,7 +172,7 @@ export default function Dashboard() {
             date: (w.startTime || w.date).split('T')[0],
             type: w.workoutType || w.type,
             durationMinutes: w.durationMinutes,
-            tokensEarned: w.totalTokensEarned || w.fitCoinsEarnedTotal
+            tokensEarned: w.totalTokensEarned
           })),
           currentStreak: streak,
           totalWorkouts: total,
@@ -173,7 +180,7 @@ export default function Dashboard() {
         }).then(setMotivation).catch(() => {
           const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
           setMotivation({
-            motivationalMessage: "Protocol update: Consistency is the only path to the blockchain high-ground.",
+            motivationalMessage: "Protocol update: Consistency is the only path to metabolic dominance.",
             workoutSuggestions: [WEEKLY_PLANS[stats.goal][today] || "Intense Cardio Session"],
             promoCode: streak > 5 ? "GRIND7" : undefined
           });
@@ -285,7 +292,7 @@ export default function Dashboard() {
                       <BarChart3 className="w-6 h-6 text-primary" />
                       Proof of Sweat Distribution
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance criteria analyzer (Current Week)</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance analyzer (Current Week)</p>
                   </div>
                   
                   <div className="flex bg-muted/50 p-1.5 rounded-full border border-border/10">
@@ -445,17 +452,22 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-8 p-8 pt-2">
                 <div className="grid grid-cols-7 gap-3">
-                  {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                    const hasWorkout = chartData[i]?.duration > 0 || chartData[i]?.tokens > 0;
+                  {chartData.map((d, i) => {
+                    const isToday = isSameDay(d.date, new Date());
+                    const hasWorkout = d.duration > 0 || d.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
                         <div className={cn(
-                          "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all",
-                          hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30'
+                          "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all relative",
+                          hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30',
+                          isToday && !hasWorkout && 'border-2 border-primary/30 ring-2 ring-primary/10 animate-pulse'
                         )}>
                           {hasWorkout ? '✓' : ''}
                         </div>
-                        <span className="text-[11px] font-black text-muted-foreground">{day}</span>
+                        <span className={cn(
+                          "text-[11px] font-black uppercase",
+                          isToday ? "text-primary" : "text-muted-foreground"
+                        )}>{d.day[0]}</span>
                       </div>
                     );
                   })}
