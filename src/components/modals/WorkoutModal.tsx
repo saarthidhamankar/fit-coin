@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,6 +11,8 @@ import { rewardUser } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore";
 
 interface WorkoutModalProps {
   onSuccess: () => void;
@@ -17,6 +20,8 @@ interface WorkoutModalProps {
 }
 
 export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps) {
+  const { user } = useUser();
+  const db = useFirestore();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<WorkoutType>('Gym/Strength');
   const [duration, setDuration] = useState(60);
@@ -34,7 +39,6 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   ];
 
   useEffect(() => {
-    // Recalculate FIT rewards as the user "swipes" (slides) the duration slider
     setPreview(calculateWorkoutReward(duration, new Date(), userStats));
   }, [duration, userStats]);
 
@@ -47,8 +51,38 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
 
     setLoading(true);
     try {
+      // 1. Blockchain Reward (Mocked)
       await rewardUser(address, preview.reward);
       
+      // 2. Firestore Sync if logged in
+      if (user?.uid) {
+        const workoutRef = collection(db, "users", user.uid, "workouts");
+        await addDoc(workoutRef, {
+          userId: user.uid,
+          type,
+          durationMinutes: duration,
+          date: new Date().toISOString(),
+          fitCoinsEarnedTotal: preview.reward
+        });
+
+        const logRef = collection(db, "users", user.uid, "activityLogs");
+        await addDoc(logRef, {
+          userId: user.uid,
+          activityType: "WORKOUT_EARN",
+          description: `${type} session for ${duration} mins`,
+          fitCoinsChange: preview.reward,
+          timestamp: new Date().toISOString()
+        });
+
+        // Update profile aggregates
+        const profileRef = doc(db, "users", user.uid);
+        await updateDoc(profileRef, {
+          totalWorkouts: increment(1),
+          totalFitCoinsEarned: increment(preview.reward),
+          lastWorkoutDate: new Date().toISOString()
+        });
+      }
+
       confetti({
         particleCount: 150,
         spread: 70,
@@ -60,7 +94,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       
       const workouts = JSON.parse(localStorage.getItem(`fitcoin_history_${address}`) || "[]");
       workouts.unshift({ 
-        type: type.replace('Gym/', ''), // clean label for history
+        type: type.replace('Gym/', ''),
         duration, 
         date: new Date().toISOString(), 
         tokens: preview.reward 
@@ -79,7 +113,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 animate-glow rounded-[1.5rem] border-2 border-white/50">
+        <Button size="lg" className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 animate-glow rounded-[1.5rem] border-2 border-white/50 transition-all active:scale-95">
           <Dumbbell className="w-7 h-7 mr-2" />
           Log Session
         </Button>
@@ -88,7 +122,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8 max-h-[90vh] overflow-y-auto scroll-smooth">
           <DialogHeader>
             <DialogTitle className="text-3xl font-headline font-black text-foreground uppercase italic tracking-tighter">Verified Grind</DialogTitle>
-            <p className="text-muted-foreground font-medium text-sm">Select your activity and slide the timer to sync your tokens.</p>
+            <p className="text-muted-foreground font-medium text-sm">Select your gym activity and swipe the timer to sync your FIT tokens.</p>
           </DialogHeader>
           
           <div className="space-y-8 pb-4">
@@ -181,7 +215,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               {loading ? (
                 <div className="flex items-center gap-4">
                   <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Syncing...
+                  Verifying...
                 </div>
               ) : (
                 <>
@@ -190,10 +224,6 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
                 </>
               )}
             </Button>
-            
-            <p className="text-center text-[8px] text-muted-foreground/60 uppercase font-black tracking-[0.3em]">
-              Immutably recorded on the Sepolia Ledger
-            </p>
           </div>
         </div>
       </DialogContent>

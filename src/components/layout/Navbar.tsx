@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -9,6 +10,8 @@ import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,9 +22,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
+  const { user, auth } = useUser();
+  const db = useFirestore();
   const [address, setAddress] = useState<string | null>(null);
   const pathname = usePathname();
   const { toast } = useToast();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: profile } = useDoc(userDocRef);
 
   useEffect(() => {
     const saved = localStorage.getItem('fitcoin_wallet_address');
@@ -33,6 +45,26 @@ export default function Navbar() {
       const addr = await connectWallet();
       setAddress(addr);
       localStorage.setItem('fitcoin_wallet_address', addr);
+
+      // Initialize or Update Profile in Firestore
+      if (user?.uid && db) {
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, {
+          walletAddress: addr,
+          lastLoginDate: new Date().toISOString()
+        }, { merge: true });
+
+        // Record Login in Activity Ledger
+        const logRef = doc(db, "users", user.uid, "activityLogs", `login-${Date.now()}`);
+        await setDoc(logRef, {
+          userId: user.uid,
+          activityType: "LOGIN",
+          description: "Athlete synchronization established.",
+          fitCoinsChange: 0,
+          timestamp: new Date().toISOString()
+        });
+      }
+
       toast({ title: "Wallet Connected", description: `Welcome back, athlete!` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Connection Failed", description: e.message });
@@ -42,7 +74,7 @@ export default function Navbar() {
   const handleDisconnect = () => {
     setAddress(null);
     localStorage.removeItem('fitcoin_wallet_address');
-    toast({ title: "Disconnected", description: "Your session has ended." });
+    toast({ title: "Disconnected", description: "Your physical assets are safe." });
   };
 
   const navItems = [
@@ -51,13 +83,6 @@ export default function Navbar() {
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: "Ledger", href: "/leaderboard", icon: Trophy },
   ];
-
-  const handleSettingsClick = () => {
-    toast({
-      title: "Settings",
-      description: "Advanced settings will be available in the next mainnet release.",
-    });
-  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
@@ -96,7 +121,7 @@ export default function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSettingsClick}
+              onClick={() => toast({ title: "Settings", description: "Identity and encryption managed via wallet." })}
               className="rounded-xl h-9 w-9 hover:bg-primary/10 transition-all"
             >
               <Settings className="h-4 w-4 text-muted-foreground" />
@@ -110,7 +135,7 @@ export default function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-10 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest px-4 hover:bg-primary/5 border-primary/20">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
-                  My Account
+                  {profile?.username || "My Account"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
@@ -124,8 +149,8 @@ export default function Navbar() {
                     <Activity className="mr-2 h-4 w-4" /> Performance Stats
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSettingsClick} className="rounded-xl cursor-pointer font-bold">
-                  <Settings className="mr-2 h-4 w-4" /> Preferences
+                <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Encryption layer active." })} className="rounded-xl cursor-pointer font-bold">
+                  <Shield className="mr-2 h-4 w-4" /> Privacy Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl cursor-pointer font-bold">
@@ -134,7 +159,7 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button size="sm" onClick={handleConnect} className="rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-10 px-6">
+            <Button size="sm" onClick={handleConnect} className="rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-10 px-6 active:scale-95 transition-transform">
               <Wallet className="w-4 h-4 mr-2" />
               Connect
             </Button>
