@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
@@ -130,7 +131,6 @@ export default function Dashboard() {
           totalWorkouts: total,
           totalTokensEarned: bal
         }).then(setMotivation).catch(() => {
-          // Fallback if AI quota exceeded
           const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
           setMotivation({
             motivationalMessage: "Protocol update: Consistency is the only path to the blockchain high-ground.",
@@ -213,12 +213,15 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-48 h-48 bg-white dark:bg-card rounded-[2.5rem] shadow-2xl p-6 border-4 border-primary/20 items-center justify-center flex-col text-center">
-                  <Activity className="w-12 h-12 text-primary mb-2 animate-pulse" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground">Pulse Sync</p>
-                  <p className="text-xl font-black text-primary uppercase">Protocol Online</p>
+                <div className="hidden md:flex w-48 h-48 bg-white dark:bg-card rounded-[2.5rem] shadow-2xl p-6 border-4 border-primary/20 items-center justify-center flex-col text-center group">
+                  <Activity className="w-12 h-12 text-primary mb-2 animate-pulse group-hover:scale-110 transition-transform" />
+                  <p className="text-[10px] font-black uppercase text-muted-foreground">Metabolic Load</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xl font-black text-primary">88%</span>
+                    <Badge className="bg-primary/20 text-primary border-none text-[8px]">Peak</Badge>
+                  </div>
                   <div className="mt-4 flex gap-1">
-                    {[1,2,3,4].map(i => <div key={i} className="w-1 h-4 bg-primary/20 rounded-full animate-bounce" style={{animationDelay: `${i*0.1}s`}} />)}
+                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-1.5 h-6 bg-primary/20 rounded-full animate-bounce" style={{animationDelay: `${i*0.1}s` }} />)}
                   </div>
                 </div>
               </div>

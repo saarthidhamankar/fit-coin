@@ -67,7 +67,11 @@ export default function DietPage() {
   const meals = currentPlan[dietType];
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden"
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 -z-10" />
       <Navbar />
 
@@ -198,7 +202,7 @@ export default function DietPage() {
 
                 <div className="grid md:grid-cols-4 gap-4 mt-8">
                   {[
-                    { title: "Hydration", text: "4L H2O daily", icon: Waves },
+                    { title: "Hydration", text: "4-5L H2O daily", icon: Waves },
                     { title: "Micros", text: "Green Veggies", icon: Leaf },
                     { title: "Timing", text: "Pre-Workout", icon: Zap },
                     { title: "Vitamins", text: "Multi-Stash", icon: HeartPulse }
@@ -217,6 +221,6 @@ export default function DietPage() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

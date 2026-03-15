@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Settings, Shield, Lock, ExternalLink, Award, Milestone, Calendar, Camera, Edit2, Bell, Smartphone, Globe, Ruler } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
 
 const ACHIEVEMENTS = [
   { id: 1, title: "Early Bird", desc: "5 morning workouts", icon: "🌅", unlocked: true },
@@ -88,7 +90,11 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-background pt-24 pb-12 px-4"
+    >
       <Navbar />
 
       <div className="max-w-4xl mx-auto space-y-8">
@@ -173,7 +179,7 @@ export default function ProfilePage() {
             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
               <CardContent className="p-6 space-y-4">
                 {[
-                  { label: "Sessions", value: profile?.totalWorkouts || "24", icon: Milestone, color: "text-blue-500" },
+                  { label: "Sessions", value: profile?.totalWorkouts || "0", icon: Milestone, color: "text-blue-500" },
                   { label: "Joined", value: "Feb 2025", icon: Calendar, color: "text-orange-500" },
                   { label: "Badges", value: "5/12", icon: Award, color: "text-yellow-500" }
                 ].map((s, i) => (
@@ -368,6 +374,6 @@ export default function ProfilePage() {
           animation: spin-slow 8s linear infinite;
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
