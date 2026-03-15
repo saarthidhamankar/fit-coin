@@ -1,15 +1,15 @@
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Wallet, Shield, Zap, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Wallet, Shield, Zap, TrendingUp, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import ThreeFitLogo from "@/components/ThreeFitLogo";
 import { connectWallet } from "@/blockchain";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import Navbar from "@/components/layout/Navbar";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -21,19 +21,27 @@ export default function LandingPage() {
     try {
       const addr = await connectWallet();
       localStorage.setItem('fitcoin_wallet_address', addr);
-      toast({ title: "Connected", description: "Taking you to your dashboard..." });
+      toast({ title: "Success", description: "Wallet connected! Redirecting..." });
       router.push("/dashboard");
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e.message });
+      toast({ variant: "destructive", title: "Connection Failed", description: e.message || "Please install MetaMask" });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleHowItWorks = () => {
+    const section = document.getElementById('how-it-works');
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
+    toast({ title: "Exploring", description: "Scrolling to mission details..." });
+  };
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
+      <Navbar />
+      
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 flex flex-col items-center justify-center text-center px-4">
+      <section className="relative pt-32 pb-32 flex flex-col items-center justify-center text-center px-4">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10" />
         
         <motion.div 
@@ -48,7 +56,7 @@ export default function LandingPage() {
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-5xl md:text-7xl font-headline font-bold text-foreground max-w-4xl leading-tight"
+          className="text-5xl md:text-7xl font-headline font-black text-foreground max-w-4xl leading-tight"
         >
           Every <span className="text-primary italic">Rep</span> Earns.<br />
           Every <span className="text-accent italic">Set</span> Pays.
@@ -58,7 +66,7 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-6 text-xl text-muted-foreground max-w-2xl"
+          className="mt-6 text-xl text-muted-foreground max-w-2xl font-medium"
         >
           The world's first decentralized gym reward platform. Turn your sweat into FIT tokens on the Ethereum Sepolia network.
         </motion.p>
@@ -69,18 +77,19 @@ export default function LandingPage() {
           transition={{ delay: 0.4 }}
           className="mt-10 flex flex-col sm:flex-row gap-4"
         >
-          <Button size="lg" onClick={handleConnect} disabled={loading} className="h-14 px-8 text-lg font-bold bg-primary hover:bg-primary/90 shadow-xl animate-glow">
+          <Button size="lg" onClick={handleConnect} disabled={loading} className="h-14 px-8 text-lg font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20 animate-glow rounded-2xl">
             <Wallet className="w-5 h-5 mr-2" />
             {loading ? "Connecting..." : "Connect Wallet"}
           </Button>
-          <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-bold border-2" asChild>
-            <Link href="#how-it-works">How it Works</Link>
+          <Button size="lg" variant="outline" onClick={handleHowItWorks} className="h-14 px-8 text-lg font-black border-2 rounded-2xl">
+            <Info className="w-5 h-5 mr-2" />
+            How it Works
           </Button>
         </motion.div>
       </section>
 
       {/* Feature Cards */}
-      <section className="py-24 bg-white/50 backdrop-blur-sm">
+      <section className="py-24 bg-white/50 dark:bg-black/10 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: Shield, title: "Tamper Proof", text: "Your workout logs and rewards are stored on-chain, ensuring complete transparency and security." },
@@ -93,22 +102,23 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-8 rounded-3xl glass-morphism border hover:scale-105 transition-transform"
+              className="p-8 rounded-[2.5rem] glass-morphism border hover:scale-105 transition-all cursor-default"
+              onClick={() => toast({ title: feature.title, description: "Protocol security feature is active." })}
             >
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
                 <feature.icon className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-2xl font-headline font-bold mb-4">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{feature.text}</p>
+              <h3 className="text-2xl font-headline font-black mb-4">{feature.title}</h3>
+              <p className="text-muted-foreground leading-relaxed font-medium">{feature.text}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* How it Works Section */}
-      <section id="how-it-works" className="py-24 px-4 overflow-hidden">
+      <section id="how-it-works" className="py-24 px-4 overflow-hidden bg-background">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-headline font-bold text-center mb-16">Proof of Sweat in 4 Steps</h2>
+          <h2 className="text-4xl font-headline font-black text-center mb-16 uppercase tracking-tight">Proof of Sweat Protocol</h2>
           <div className="space-y-12 relative">
             <div className="absolute left-8 top-8 bottom-8 w-1 bg-primary/20 hidden md:block" />
             {[
@@ -122,14 +132,15 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="flex gap-8 items-start relative"
+                className="flex gap-8 items-start relative group"
+                onClick={() => toast({ title: `Step ${item.step}`, description: "Click 'Connect' above to get started." })}
               >
-                <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center font-headline font-bold text-2xl shadow-lg shrink-0 z-10">
+                <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center font-headline font-black text-2xl shadow-lg shadow-primary/20 shrink-0 z-10 group-hover:scale-110 transition-transform">
                   {item.step}
                 </div>
-                <div>
-                  <h4 className="text-2xl font-bold mb-2">{item.title}</h4>
-                  <p className="text-muted-foreground text-lg">{item.desc}</p>
+                <div className="pt-2">
+                  <h4 className="text-2xl font-black mb-2">{item.title}</h4>
+                  <p className="text-muted-foreground text-lg font-medium">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -138,8 +149,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t text-center text-muted-foreground">
-        <p>© 2024 FitCoin Decentralized Gym Rewards. Powered by Sepolia Testnet.</p>
+      <footer className="py-12 border-t text-center text-muted-foreground bg-secondary/20">
+        <p className="font-bold uppercase tracking-widest text-[10px]">© 2024 FitCoin DAO • Powered by Sepolia</p>
       </footer>
     </div>
   );
