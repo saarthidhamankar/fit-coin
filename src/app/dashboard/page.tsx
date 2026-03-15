@@ -1,12 +1,13 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, AlertTriangle } from "lucide-react";
+import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, AlertTriangle, TrendingUp, Layers } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,9 +17,11 @@ import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell, Area, AreaChart } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
+
+type MetricType = 'duration' | 'tokens' | 'intensity';
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -29,6 +32,7 @@ export default function Dashboard() {
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [matrixDelays, setMatrixDelays] = useState<number[]>([]);
+  const [activeMetric, setActiveMetric] = useState<MetricType>('tokens');
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
@@ -49,15 +53,18 @@ export default function Dashboard() {
 
   const { data: workouts } = useCollection(workoutQuery);
 
-  const chartData = useMemoFirebase(() => {
+  const chartData = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const data = days.map(day => ({ day, duration: 0 }));
+    const data = days.map(day => ({ day, duration: 0, tokens: 0, intensity: 0 }));
     
     if (workouts) {
       workouts.forEach(w => {
         const date = new Date(w.date);
-        const dayIdx = (date.getDay() + 6) % 7;
-        data[dayIdx].duration += w.durationMinutes;
+        const dayIdx = (date.getDay() + 6) % 7; // Mon=0
+        data[dayIdx].duration += w.durationMinutes || 0;
+        data[dayIdx].tokens += w.fitCoinsEarnedTotal || 0;
+        // Derived metabolic intensity score
+        data[dayIdx].intensity += (w.durationMinutes * (w.fitCoinsEarnedTotal || 1)) / 100;
       });
     }
     return data;
@@ -145,6 +152,12 @@ export default function Dashboard() {
     }
   };
 
+  const METRIC_CONFIG = {
+    tokens: { label: "FIT Yield", color: "hsl(var(--primary))", unit: "FIT" },
+    duration: { label: "Session Volume", color: "hsl(var(--primary))", unit: "min" },
+    intensity: { label: "Metabolic Load", color: "hsl(var(--accent))", unit: "PTS" }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background overflow-hidden">
       <Navbar />
@@ -156,7 +169,7 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Tracking metabolic effort on the FitCoin ledger.</p>
           </div>
           <div className="flex items-center gap-4">
@@ -206,7 +219,7 @@ export default function Dashboard() {
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
-                  <h2 className="text-5xl font-headline font-black leading-tight uppercase">Commit Your Next <span className="text-primary italic">Rep</span></h2>
+                  <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Commit Your Next <span className="text-primary italic">Rep</span></h2>
                   <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax reset.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
@@ -235,43 +248,103 @@ export default function Dashboard() {
             </motion.div>
 
             <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden glass-card">
-              <CardHeader className="bg-muted/30 border-b border-border/10 flex flex-row items-center justify-between p-8">
-                <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
-                  <BarChart3 className="w-6 h-6 text-primary" />
-                  Proof of Sweat Distribution
-                </CardTitle>
-                <div className="flex gap-2">
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "FatLoss"}))} className={`text-[9px] font-black uppercase rounded-full tracking-widest px-4 ${stats.goal === 'FatLoss' ? 'bg-primary text-white shadow-lg' : ''}`}>Fat Loss</Button>
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "MuscleGain"}))} className={`text-[9px] font-black uppercase rounded-full tracking-widest px-4 ${stats.goal === 'MuscleGain' ? 'bg-primary text-white shadow-lg' : ''}`}>Gain</Button>
+              <CardHeader className="bg-muted/30 border-b border-border/10 p-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
+                      <BarChart3 className="w-6 h-6 text-primary" />
+                      Proof of Sweat Distribution
+                    </CardTitle>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance criteria analyzer</p>
+                  </div>
+                  
+                  <div className="flex bg-muted/50 p-1.5 rounded-full border border-border/10">
+                    {[
+                      { id: 'tokens', icon: Wallet },
+                      { id: 'duration', icon: Timer },
+                      { id: 'intensity', icon: Zap }
+                    ].map((m) => (
+                      <Button
+                        key={m.id}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveMetric(m.id as MetricType)}
+                        className={cn(
+                          "rounded-full px-4 h-9 text-[9px] font-black uppercase tracking-widest transition-all",
+                          activeMetric === m.id ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-muted-foreground hover:bg-white/10"
+                        )}
+                      >
+                        <m.icon className="w-3.5 h-3.5 mr-2" />
+                        {m.id}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-10 h-[350px]">
+              <CardContent className="p-10 h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.5} />
+                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.3} />
                     <XAxis 
                       dataKey="day" 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 900 }} 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} 
+                      dy={10}
                     />
                     <Tooltip 
-                      cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
+                      cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05, radius: 10 }}
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
+                          const config = METRIC_CONFIG[activeMetric];
                           return (
-                            <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl">
-                              <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">{payload[0].payload.day}</p>
-                              <p className="text-2xl font-black text-primary">{payload[0].value} <span className="text-xs uppercase">mins</span></p>
-                            </div>
+                            <motion.div 
+                              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              className="glass-card border-2 border-primary/20 p-5 rounded-[2rem] shadow-2xl backdrop-blur-xl min-w-[150px]"
+                            >
+                              <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 tracking-[0.2em]">{payload[0].payload.day} Protocol</p>
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-4">
+                                  <span className="text-[9px] font-black uppercase opacity-60">Status</span>
+                                  <Badge className="bg-primary/20 text-primary border-none text-[8px] h-4">VERIFIED</Badge>
+                                </div>
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-3xl font-black text-primary italic">{payload[0].value}</span>
+                                  <span className="text-xs font-black uppercase opacity-60">{config.unit}</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                                  <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: '100%' }}
+                                    className="h-full bg-primary"
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
                           );
                         }
                         return null;
                       }}
                     />
-                    <Bar dataKey="duration" radius={[10, 10, 0, 0]}>
+                    <Bar 
+                      dataKey={activeMetric} 
+                      radius={[15, 15, 5, 5]} 
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                    >
                       {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.duration > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted))'} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry[activeMetric] > 0 ? "url(#barGradient)" : 'hsl(var(--muted))'} 
+                          className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+                        />
                       ))}
                     </Bar>
                   </BarChart>
