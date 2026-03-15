@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -80,11 +81,11 @@ export default function LandingPage() {
           transition={{ delay: 0.4 }}
           className="mt-12 flex flex-col sm:flex-row gap-6"
         >
-          <Button size="lg" onClick={handleConnect} disabled={loading} className="h-16 px-12 text-xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 animate-glow rounded-2xl border-b-4 border-black/10">
+          <Button size="lg" onClick={handleConnect} disabled={loading} className="h-16 px-12 text-xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 animate-glow rounded-2xl border-b-4 border-black/10 active:scale-95">
             <Wallet className="w-6 h-6 mr-3" />
             {loading ? "Connecting..." : "Get Started"}
           </Button>
-          <Button size="lg" variant="outline" onClick={handleHowItWorks} className="h-16 px-12 text-xl font-black border-2 rounded-2xl bg-white/50 backdrop-blur-sm">
+          <Button size="lg" variant="outline" onClick={handleHowItWorks} className="h-16 px-12 text-xl font-black border-2 rounded-2xl bg-white/50 backdrop-blur-sm active:scale-95">
             <Info className="w-6 h-6 mr-3" />
             Learn More
           </Button>

@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight } from "lucide-react";
+import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight, Tag } from "lucide-react";
 import { getBalance, spendTokens } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,7 +46,8 @@ export default function ShopPage() {
     address: "",
     city: "",
     pincode: "",
-    phone: ""
+    phone: "",
+    promoCode: ""
   });
 
   useEffect(() => {
@@ -147,7 +148,7 @@ export default function ShopPage() {
             <p className="text-muted-foreground mt-2 text-lg font-medium">Redeem your hard-earned FIT tokens for premium fitness hardware.</p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest bg-white dark:bg-card border-2">
+            <Button variant="ghost" className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest bg-white dark:bg-card border-2 active:scale-95">
               <Heart className="w-5 h-5 mr-2 text-primary" /> Wishlist ({wishlist.length})
             </Button>
             <div className="px-8 py-4 bg-primary text-white rounded-[2rem] font-black flex items-center gap-3 shadow-2xl shadow-primary/30 border-b-4 border-black/10">
@@ -194,7 +195,7 @@ export default function ShopPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="bg-white/80 dark:bg-black/80 rounded-full h-10 w-10 backdrop-blur-sm"
+                            className="bg-white/80 dark:bg-black/80 rounded-full h-10 w-10 backdrop-blur-sm active:scale-95"
                             onClick={() => toggleWishlist(product.id)}
                           >
                             <Heart className={`w-5 h-5 ${wishlist.includes(product.id) ? "fill-primary text-primary" : ""}`} />
@@ -208,7 +209,7 @@ export default function ShopPage() {
                       <CardHeader className="flex-1 pb-2">
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-2xl font-black">{product.name}</CardTitle>
-                          <Button variant="ghost" size="icon" onClick={() => toast({ title: "Info", description: "Premium gym equipment verified by FitCoin Protocol." })}>
+                          <Button variant="ghost" size="icon" onClick={() => toast({ title: "Info", description: "Premium gym equipment verified by FitCoin Protocol." })} className="active:scale-95">
                             <Info className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </div>
@@ -225,8 +226,7 @@ export default function ShopPage() {
                           </div>
                           <Button 
                             onClick={() => handleRedeemInitiate(product)} 
-                            whileTap={{ scale: 0.95 }}
-                            className={`rounded-2xl h-14 px-8 font-black transition-all group ${
+                            className={`rounded-2xl h-14 px-8 font-black transition-all active:scale-95 group ${
                               balance >= product.price 
                                 ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20' 
                                 : 'bg-muted text-muted-foreground cursor-not-allowed'
@@ -318,6 +318,17 @@ export default function ShopPage() {
                       className="rounded-xl h-12 border-2 focus:border-primary transition-all"
                     />
                   </div>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                      <Tag className="w-3 h-3" /> Promo Code
+                    </Label>
+                    <Input 
+                      placeholder="Enter code..." 
+                      value={shipping.promoCode} 
+                      onChange={(e) => setShipping({...shipping, promoCode: e.target.value})}
+                      className="rounded-xl h-12 border-2 border-dashed focus:border-primary transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -362,7 +373,7 @@ export default function ShopPage() {
               <h2 className="text-3xl font-headline font-black uppercase italic tracking-tighter">Order <span className="text-primary not-italic">Deployed</span></h2>
               <p className="text-muted-foreground font-medium">Your <span className="text-foreground font-black">{successProduct?.name}</span> is being prepared for transit. Check your activity ledger for tracking updates.</p>
             </div>
-            <Button className="w-full h-16 bg-primary text-lg font-black rounded-2xl shadow-xl shadow-primary/20" onClick={() => setSuccessProduct(null)}>
+            <Button className="w-full h-16 bg-primary text-lg font-black rounded-2xl shadow-xl shadow-primary/20 active:scale-95" onClick={() => setSuccessProduct(null)}>
               Return to Vault
             </Button>
           </div>
@@ -371,4 +382,3 @@ export default function ShopPage() {
     </div>
   );
 }
-
