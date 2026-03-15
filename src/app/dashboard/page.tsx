@@ -114,11 +114,12 @@ export default function Dashboard() {
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
     
+    // Scaling metrics to be more "visible" even with low initial counts
     return [
-      { subject: 'Earnings', A: Math.min(totalTokens / 5, 100), fullMark: 100 },
-      { subject: 'Workout Time', A: Math.min(totalDuration / 2, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 10, 100), fullMark: 100 },
-      { subject: 'Streak', A: Math.min(stats.currentStreak * 14, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
+      { subject: 'Workout Time', A: Math.min((totalDuration / 120) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 15, 100), fullMark: 100 },
+      { subject: 'Streak', A: Math.min((stats.currentStreak / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goal Progress', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
     ];
   }, [chartData, stats]);
@@ -350,7 +351,7 @@ export default function Dashboard() {
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
                   <Sparkles className="w-6 h-6 animate-pulse text-white/80" />
-                  AI Fitness Coach
+                  Fitness Coach
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -452,7 +453,7 @@ export default function Dashboard() {
                 <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
                   <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Alert: Don't miss a day!</p>
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning: Don't miss a day!</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
                       Missing your workout for more than 2 days will cost you -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Stay consistent to keep your earnings!
                     </p>
