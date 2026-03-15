@@ -80,10 +80,10 @@ export default function DietPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-6"
         >
-          <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-[10px] uppercase tracking-[0.3em]">
+          <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full border font-black text-[10px] uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-primary/10 border-primary/20 text-primary'}`}>
             <Apple className="w-4 h-4" /> Nutri-Protocol v4.0
           </div>
-          <h1 className="text-6xl font-headline font-black uppercase tracking-tighter italic">Dietary <span className="text-primary not-italic">Fuel</span></h1>
+          <h1 className="text-6xl font-headline font-black uppercase tracking-tighter italic">Dietary <span className={`${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'} not-italic`}>Fuel</span></h1>
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium leading-relaxed">Precision benchmarks for metabolic dominance. High-density protein, zero beef, maximum rep recovery.</p>
         </motion.div>
 
@@ -91,10 +91,10 @@ export default function DietPage() {
           <div className="flex flex-col md:flex-row justify-center items-center gap-6">
             <Tabs value={activeGoal} onValueChange={setActiveGoal} className="w-full max-w-md">
               <TabsList className="bg-white/40 dark:bg-card/40 p-1.5 rounded-[2.5rem] shadow-xl border-2 border-primary/10 h-18 w-full backdrop-blur-md">
-                <TabsTrigger value="FatLoss" className="flex-1 h-14 rounded-[1.8rem] text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white shadow-sm">
+                <TabsTrigger value="FatLoss" className={`flex-1 h-14 rounded-[1.8rem] text-xs font-black uppercase tracking-widest data-[state=active]:text-white shadow-sm ${dietType === 'NonVeg' ? 'data-[state=active]:bg-red-500' : 'data-[state=active]:bg-primary'}`}>
                   <Flame className="w-4 h-4 mr-2" /> Fat Loss
                 </TabsTrigger>
-                <TabsTrigger value="MuscleGain" className="flex-1 h-14 rounded-[1.8rem] text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white shadow-sm">
+                <TabsTrigger value="MuscleGain" className={`flex-1 h-14 rounded-[1.8rem] text-xs font-black uppercase tracking-widest data-[state=active]:text-white shadow-sm ${dietType === 'NonVeg' ? 'data-[state=active]:bg-red-500' : 'data-[state=active]:bg-primary'}`}>
                   <Dumbbell className="w-4 h-4 mr-2" /> Muscle Gain
                 </TabsTrigger>
               </TabsList>
@@ -144,7 +144,7 @@ export default function DietPage() {
                     <Button 
                       variant="secondary" 
                       onClick={() => handleApplyPlan(activeGoal, dietType)}
-                      className="w-full h-20 rounded-[1.8rem] font-black uppercase text-sm tracking-[0.2em] bg-white text-foreground hover:bg-white/90 shadow-xl border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all"
+                      className={`w-full h-20 rounded-[1.8rem] font-black uppercase text-sm tracking-[0.2em] bg-white hover:bg-white/90 shadow-xl border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}
                     >
                       <CheckCircle2 className="w-5 h-5 mr-3" /> Commit Plan
                     </Button>
@@ -152,8 +152,8 @@ export default function DietPage() {
                 </Card>
 
                 <Card className="rounded-[3rem] border-none shadow-sm glass-card overflow-hidden">
-                   <CardHeader className="bg-muted/30 border-b border-border/10 p-8">
-                      <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Expert Protocol Guide</CardTitle>
+                   <CardHeader className={`bg-muted/30 border-b border-border/10 p-8`}>
+                      <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-muted-foreground'}`}>Expert Protocol Guide</CardTitle>
                    </CardHeader>
                    <CardContent className="p-8">
                       <p className="text-sm font-bold leading-relaxed italic text-muted-foreground">
@@ -174,19 +174,19 @@ export default function DietPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.1 }}
                     >
-                      <Card className="rounded-[2.5rem] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden glass-card">
+                      <Card className={`rounded-[2.5rem] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden glass-card hover:border-${dietType === 'NonVeg' ? 'red-500/20' : 'primary/20'}`}>
                         <CardContent className="p-8 flex items-center gap-8">
                           <div className={`w-20 h-20 rounded-3xl flex items-center justify-center border-2 transition-all group-hover:scale-110 ${
                             dietType === 'NonVeg' 
-                              ? 'bg-red-50 border-red-100 group-hover:bg-red-500 group-hover:text-white' 
-                              : 'bg-primary/5 border-primary/10 group-hover:bg-primary group-hover:text-white'
+                              ? 'bg-red-50 border-red-100 group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 text-red-500' 
+                              : 'bg-primary/5 border-primary/10 group-hover:bg-primary group-hover:text-white group-hover:border-primary text-primary'
                           }`}>
                             <meal.icon className="w-10 h-10" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                                <p className={`text-[10px] font-black uppercase tracking-widest ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>{meal.time}</p>
-                               <Badge variant="outline" className={`text-[9px] font-black uppercase px-3 py-0.5 ${dietType === 'NonVeg' ? 'text-red-500 border-red-200' : 'text-primary border-primary/20'}`}>
+                               <Badge variant="outline" className={`text-[9px] font-black uppercase px-3 py-0.5 ${dietType === 'NonVeg' ? 'text-red-500 border-red-200 bg-red-50/50' : 'text-primary border-primary/20 bg-primary/5'}`}>
                                  Verified Protocol
                                </Badge>
                             </div>
@@ -207,10 +207,10 @@ export default function DietPage() {
                     { title: "Vitamins", text: "Multistack Daily", icon: HeartPulse }
                   ].map((item, i) => (
                     <Card key={i} className="rounded-[2.5rem] border-none glass-card p-6 text-center group hover:-translate-y-2 transition-all">
-                      <div className="w-12 h-12 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <div className={`w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-colors ${dietType === 'NonVeg' ? 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white' : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'}`}>
                         <item.icon className="w-6 h-6" />
                       </div>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">{item.title}</p>
+                      <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${dietType === 'NonVeg' ? 'text-red-500' : 'text-muted-foreground'}`}>{item.title}</p>
                       <p className="text-[11px] font-black uppercase tracking-tight">{item.text}</p>
                     </Card>
                   ))}
