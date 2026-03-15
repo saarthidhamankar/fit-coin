@@ -72,6 +72,7 @@ export default function Dashboard() {
 
   const { data: workouts, isLoading: workoutsLoading } = useCollection(workoutQuery);
 
+  // Re-engineered chart data to start the week on Sunday (weekStartsOn: 0)
   const chartData = useMemo(() => {
     const today = new Date();
     // Sunday start (weekStartsOn: 0) to ensure Sunday and Monday show together
@@ -89,6 +90,7 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
+        // Robust date parsing for Sunday detection
         const workoutDate = w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
@@ -108,9 +110,10 @@ export default function Dashboard() {
     const intensityDays = chartData.filter(d => d.intensity > 0).length || 1;
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / intensityDays;
     
-    // Aggressive scaling targets: 20 tokens, 60 mins per week
+    // Aggressive scaling targets for the Radar chart:
+    // 20 tokens per week, 60 mins per week, effort factor 2
     return [
-      { subject: 'Tokens', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
       { subject: 'Effort', A: Math.min(avgIntensity * 50, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
