@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Shield, Lock, ExternalLink, Award, Milestone, Calendar, Camera, Edit2, Bell, Smartphone, Globe, Ruler } from "lucide-react";
+import { Settings, Shield, Lock, ExternalLink, Award, Milestone, Calendar, Camera, Edit2, Bell, Smartphone, Globe, Ruler, CheckCircle2 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -78,26 +79,45 @@ export default function ProfilePage() {
         avatarUrl: formData.avatarUrl,
         bannerUrl: formData.bannerUrl
       });
-      toast({ title: "Profile Updated", description: "Changes synced to blockchain." });
+      toast({ 
+        title: "Identity Committed", 
+        description: "Changes have been successfully synchronized to the athlete ledger.",
+      });
       setEditOpen(false);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Could not update profile." });
+      toast({ 
+        variant: "destructive", 
+        title: "Protocol Error", 
+        description: "Failed to synchronize identity changes. Check network connection." 
+      });
     }
   };
 
   const handleSettingChange = (label: string) => {
-    toast({ title: "Preference Saved", description: `${label} has been updated in your profile.` });
+    toast({ 
+      title: "Protocol Updated", 
+      description: `${label} has been reconfigured for your profile.` 
+    });
+  };
+
+  const handleInteractiveClick = (label: string) => {
+    toast({
+      title: "Interactive Ledger",
+      description: `Accessing ${label} protocol. Verification in progress...`,
+    });
   };
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-background pt-24 pb-12 px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden"
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 -z-10" />
       <Navbar />
 
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Banner Section */}
         <div className="relative group">
           <div className="h-56 w-full bg-gradient-to-r from-primary to-accent rounded-[2.5rem] overflow-hidden relative shadow-2xl">
             {formData.bannerUrl ? (
@@ -109,12 +129,13 @@ export default function ProfilePage() {
             <Button 
               size="sm" 
               variant="secondary" 
-              className="absolute bottom-6 right-6 rounded-2xl bg-white/80 dark:bg-card/80 backdrop-blur-md font-black uppercase text-[10px]"
+              className="absolute bottom-6 right-6 rounded-2xl bg-white/80 dark:bg-card/80 backdrop-blur-md font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-transform"
               onClick={() => setEditOpen(true)}
             >
               <Camera className="w-4 h-4 mr-2" /> Update Cover
             </Button>
           </div>
+          
           <div className="px-8 -mt-20 flex flex-col md:flex-row md:items-end gap-6 relative z-10">
             <div className="relative group/avatar">
               <Avatar className="w-40 h-40 border-8 border-background shadow-2xl transition-transform group-hover/avatar:scale-105">
@@ -125,33 +146,38 @@ export default function ProfilePage() {
                 className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center cursor-pointer transition-opacity border-8 border-transparent"
                 onClick={() => setEditOpen(true)}
               >
-                <Camera className="w-8 h-8 text-white" />
+                <Edit2 className="w-8 h-8 text-white" />
               </div>
               <div className="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-2xl border-4 border-background flex items-center justify-center text-white shadow-xl">
                 <Shield className="w-5 h-5" />
               </div>
             </div>
+            
             <div className="flex-1 pb-4">
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter">
-                  {profile?.username || "My Account"}
+                  {profile?.username || "Athlete"}
                 </h1>
-                <Badge className="bg-primary text-[10px] font-black uppercase">Verified Pro</Badge>
+                <Badge className="bg-primary text-[10px] font-black uppercase tracking-widest">Verified Pro</Badge>
               </div>
               <p className="text-muted-foreground font-code text-xs flex items-center gap-2 mt-2 bg-muted/50 w-fit px-3 py-1 rounded-full border border-border">
                 {address ? `${address.slice(0, 8)}...${address.slice(-8)}` : "Not Connected"}
-                <ExternalLink className="w-3 h-3 text-primary cursor-pointer" />
+                <ExternalLink className="w-3 h-3 text-primary cursor-pointer hover:scale-110 transition-transform" onClick={() => handleInteractiveClick("Blockchain Explorer")} />
               </p>
             </div>
+            
             <div className="flex gap-3 mb-4">
-              <Button size="lg" onClick={() => setEditOpen(true)} className="rounded-2xl font-black uppercase text-xs h-14 px-8 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90">Edit Identity</Button>
-              <Button size="lg" variant="outline" onClick={() => setSettingsOpen(true)} className="rounded-2xl h-14 w-14 p-0 bg-white/50 dark:bg-card/50 border-2 active:scale-95 transition-all">
+              <Button size="lg" onClick={() => setEditOpen(true)} className="rounded-2xl font-black uppercase text-xs h-14 px-8 shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 active:scale-95 transition-all">
+                Edit Identity
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => setSettingsOpen(true)} className="rounded-2xl h-14 w-14 p-0 bg-white/50 dark:bg-card/50 border-2 active:scale-95 transition-all hover:bg-primary/10">
                 <Settings className="w-6 h-6 text-primary" />
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Content Grid */}
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-1 space-y-8">
             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
@@ -159,18 +185,18 @@ export default function ProfilePage() {
                 <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">FIT Ledger</CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-4">
-                <div className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-3xl border-2 border-primary/20">
-                  <p className="text-[10px] font-black uppercase text-primary mb-1">Total Assets</p>
+                <div className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-3xl border-2 border-primary/20 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => handleInteractiveClick("Asset Sync")}>
+                  <p className="text-[10px] font-black uppercase text-primary mb-1 tracking-widest">Total Assets</p>
                   <p className="text-5xl font-black text-primary tracking-tighter">{balance.toLocaleString()} <span className="text-lg">FIT</span></p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-muted/30 rounded-2xl text-center">
-                    <p className="text-[8px] font-black uppercase text-muted-foreground">Network</p>
-                    <p className="text-[10px] font-black text-green-500">Online</p>
+                  <div className="p-4 bg-muted/30 rounded-2xl text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleInteractiveClick("Network Status")}>
+                    <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest mb-1">Network</p>
+                    <p className="text-[10px] font-black text-green-500 uppercase">Online</p>
                   </div>
-                  <div className="p-4 bg-muted/30 rounded-2xl text-center">
-                    <p className="text-[8px] font-black uppercase text-muted-foreground">Sync</p>
-                    <p className="text-[10px] font-black text-primary">Live</p>
+                  <div className="p-4 bg-muted/30 rounded-2xl text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleInteractiveClick("Ledger Sync")}>
+                    <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest mb-1">Sync</p>
+                    <p className="text-[10px] font-black text-primary uppercase">Live</p>
                   </div>
                 </div>
               </CardContent>
@@ -183,12 +209,12 @@ export default function ProfilePage() {
                   { label: "Joined", value: "Feb 2025", icon: Calendar, color: "text-orange-500" },
                   { label: "Badges", value: "5/12", icon: Award, color: "text-yellow-500" }
                 ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-4 group cursor-pointer p-3 rounded-2xl hover:bg-muted/30 transition-all">
+                  <div key={i} className="flex items-center gap-4 group cursor-pointer p-3 rounded-2xl hover:bg-muted/30 transition-all" onClick={() => handleInteractiveClick(s.label)}>
                     <div className={`w-12 h-12 rounded-2xl bg-secondary dark:bg-secondary/20 flex items-center justify-center group-hover:scale-110 transition-transform`}>
                       <s.icon className={`w-6 h-6 ${s.color}`} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground leading-none mb-1">{s.label}</p>
+                      <p className="text-[10px] font-black uppercase text-muted-foreground leading-none mb-1 tracking-widest">{s.label}</p>
                       <p className="font-black text-base">{s.value}</p>
                     </div>
                   </div>
@@ -218,7 +244,7 @@ export default function ProfilePage() {
                         {a.icon}
                       </div>
                       <p className="text-[10px] font-black uppercase leading-tight tracking-widest mb-1">{a.title}</p>
-                      <p className="text-[8px] text-muted-foreground font-medium uppercase">{a.unlocked ? 'Unlocked' : 'Locked'}</p>
+                      <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-widest">{a.unlocked ? 'Unlocked' : 'Locked'}</p>
                     </div>
                   ))}
                 </div>
@@ -253,6 +279,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Edit Identity Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-md p-8 border-none shadow-2xl overflow-hidden bg-gradient-to-b from-primary/5 to-background">
           <DialogHeader className="mb-6">
@@ -297,6 +324,7 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
+      {/* Settings Modal */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-lg p-0 overflow-hidden border-none shadow-2xl">
           <div className="p-8 space-y-8 bg-gradient-to-br from-secondary/50 to-background">
@@ -352,12 +380,12 @@ export default function ProfilePage() {
               <div className="bg-primary/5 rounded-[2.5rem] p-6 border-2 border-primary/20 flex items-start gap-4">
                 <Shield className="w-6 h-6 text-primary shrink-0 mt-1" />
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase text-primary">Protocol Integrity</p>
+                  <p className="text-[10px] font-black uppercase text-primary tracking-widest">Protocol Integrity</p>
                   <p className="text-xs font-medium text-muted-foreground leading-relaxed">Your data is secured using military-grade encryption and synchronized across all Sepolia-compliant physical hardware nodes.</p>
                 </div>
               </div>
 
-              <Button onClick={() => { setSettingsOpen(false); toast({ title: "Configuration Updated", description: "Global state refreshed." }); }} className="w-full h-16 rounded-[1.5rem] font-black uppercase text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90">
+              <Button onClick={() => { setSettingsOpen(false); toast({ title: "Configuration Updated", description: "Global state refreshed." }); }} className="w-full h-16 rounded-[1.5rem] font-black uppercase text-lg shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 active:scale-95 transition-all">
                 Done
               </Button>
             </div>
@@ -377,3 +405,4 @@ export default function ProfilePage() {
     </motion.div>
   );
 }
+

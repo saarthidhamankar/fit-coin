@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -155,7 +156,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium">Tracking metabolic effort on the FitCoin ledger.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Tracking metabolic effort on the FitCoin ledger.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white dark:bg-card p-4 rounded-[2rem] shadow-xl border-2 border-primary/20 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group">
@@ -185,7 +186,7 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
                   </div>
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</p>
                   <p className="text-2xl font-black">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </p>
@@ -205,7 +206,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
                 <div className="flex-1 space-y-6 text-center md:text-left">
                   <h2 className="text-4xl font-headline font-black leading-tight uppercase">Commit Your Next <span className="text-primary italic">Rep</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -214,14 +215,18 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="hidden md:flex w-48 h-48 bg-white dark:bg-card rounded-[2.5rem] shadow-2xl p-6 border-4 border-primary/20 items-center justify-center flex-col text-center group">
-                  <Activity className="w-12 h-12 text-primary mb-2 animate-pulse group-hover:scale-110 transition-transform" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground">Metabolic Load</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xl font-black text-primary">88%</span>
-                    <Badge className="bg-primary/20 text-primary border-none text-[8px]">Peak</Badge>
+                  <div className="grid grid-cols-4 gap-1 w-full mb-4">
+                    {[1,2,3,4,5,6,7,8].map(i => (
+                      <div key={i} className="h-4 bg-primary/20 rounded-sm animate-pulse" style={{ animationDelay: `${i*0.1}s` }} />
+                    ))}
                   </div>
-                  <div className="mt-4 flex gap-1">
-                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-1.5 h-6 bg-primary/20 rounded-full animate-bounce" style={{animationDelay: `${i*0.1}s` }} />)}
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Protocol Load</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-black text-primary">88.5%</span>
+                    <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">STABLE</Badge>
+                  </div>
+                  <div className="mt-4 flex gap-1 items-end h-8 w-full">
+                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-2 bg-primary/40 rounded-full animate-bounce" style={{ height: `${Math.random()*100}%`, animationDelay: `${i*0.1}s` }} />)}
                   </div>
                 </div>
               </div>
@@ -229,13 +234,13 @@ export default function Dashboard() {
 
             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
               <CardHeader className="bg-muted/30 border-b flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black">
+                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black italic">
                   <BarChart3 className="w-5 h-5 text-primary" />
                   Proof of Sweat Distribution
                 </CardTitle>
                 <div className="flex gap-2">
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "FatLoss"}))} className={`text-[8px] font-black uppercase rounded-full ${stats.goal === 'FatLoss' ? 'bg-primary text-white' : ''}`}>Fat Loss</Button>
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "MuscleGain"}))} className={`text-[8px] font-black uppercase rounded-full ${stats.goal === 'MuscleGain' ? 'bg-primary text-white' : ''}`}>Gain</Button>
+                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "FatLoss"}))} className={`text-[8px] font-black uppercase rounded-full tracking-widest ${stats.goal === 'FatLoss' ? 'bg-primary text-white' : ''}`}>Fat Loss</Button>
+                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "MuscleGain"}))} className={`text-[8px] font-black uppercase rounded-full tracking-widest ${stats.goal === 'MuscleGain' ? 'bg-primary text-white' : ''}`}>Gain</Button>
                 </div>
               </CardHeader>
               <CardContent className="p-8 h-[300px]">
@@ -254,7 +259,7 @@ export default function Dashboard() {
                         if (active && payload && payload.length) {
                           return (
                             <div className="bg-card border-2 border-primary/20 p-3 rounded-2xl shadow-xl">
-                              <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{payload[0].payload.day}</p>
+                              <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">{payload[0].payload.day}</p>
                               <p className="text-xl font-black text-primary">{payload[0].value} <span className="text-xs">mins</span></p>
                             </div>
                           );
@@ -277,8 +282,8 @@ export default function Dashboard() {
             <Card className="rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-primary to-accent text-white overflow-hidden relative group">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
               <CardHeader className="relative z-10 pb-0">
-                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black">
-                  <Sparkles className="w-5 h-5 animate-pulse" />
+                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black italic">
+                  <Sparkles className="w-5 h-5 animate-pulse text-yellow-300" />
                   AI Daily Protocol
                 </CardTitle>
               </CardHeader>
@@ -291,27 +296,27 @@ export default function Dashboard() {
                 ) : motivation ? (
                   <>
                     <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-                      <p className="text-sm leading-relaxed font-bold italic">"{motivation.motivationalMessage}"</p>
+                      <p className="text-sm leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
                     {motivation.promoCode && (
                       <div className="p-3 bg-yellow-400 text-black rounded-xl border-2 border-white/50 flex items-center justify-between">
                         <div>
-                          <p className="text-[8px] font-black uppercase">Protocol Bonus Unlocked</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest">Protocol Bonus</p>
                           <p className="text-sm font-black tracking-widest">{motivation.promoCode}</p>
                         </div>
                         <Tag className="w-5 h-5" />
                       </div>
                     )}
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Today's Exercises:</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Today's Protocol:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <motion.div 
                           key={i} 
                           whileHover={{ x: 5 }}
-                          className="p-3 bg-white/20 rounded-xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all"
+                          className="p-3 bg-white/20 rounded-xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
                         >
                           <div className="flex items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                             <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                              {s}
                           </div>
                           <ChevronRight className="w-3 h-3 opacity-50" />
@@ -320,14 +325,14 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold">Synchronize a session to unlock your daily AI protocol.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Synchronize a session to unlock your daily protocol.</p>
                 )}
               </CardContent>
             </Card>
 
             <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                   <CalendarIcon className="w-3 h-3" />
                   Consistency Ledger
                 </CardTitle>
@@ -349,8 +354,8 @@ export default function Dashboard() {
                 
                 <div className="p-5 bg-primary/5 rounded-[2rem] border border-primary/10">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-black uppercase text-muted-foreground">Monthly Protocol</span>
-                    <span className="text-xs font-black text-primary bg-white px-2 py-0.5 rounded-full border border-primary/20">
+                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
+                    <span className="text-xs font-black text-primary bg-white px-2 py-0.5 rounded-full border border-primary/20 tracking-widest">
                       {Math.round(stats.monthlyProgress)}%
                     </span>
                   </div>
@@ -359,7 +364,7 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
                    <ShieldCheck className="w-4 h-4 text-primary" />
-                   <p className="text-[8px] font-black uppercase text-muted-foreground">Admin verified ledger sync active</p>
+                   <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Protocol Integrity Sync Active</p>
                 </div>
               </CardContent>
             </Card>
@@ -369,3 +374,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
