@@ -55,11 +55,6 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased selection:bg-primary/30;
-    background: 
-      radial-gradient(circle at 0% 0%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, hsl(var(--accent) / 0.12) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
-    background-attachment: fixed;
     position: relative;
     overflow-x: hidden;
   }
@@ -71,27 +66,41 @@
     left: 0;
     width: 100%;
     height: 100%;
+    background: 
+      radial-gradient(circle at 10% 10%, hsl(var(--primary) / 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, hsl(var(--accent) / 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
+    z-index: -2;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-    opacity: 0.03;
+    opacity: 0.04;
     pointer-events: none;
     z-index: -1;
   }
 }
 
-.glass-card {
-  @apply bg-white/40 dark:bg-black/40 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
+.pro-glass {
+  @apply bg-white/40 dark:bg-black/40 backdrop-blur-3xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)];
+}
+
+.mesh-background {
+  background: linear-gradient(-45deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.1), hsl(var(--background)), hsl(var(--primary) / 0.1));
+  background-size: 400% 400%;
+  animation: mesh-float 20s ease infinite;
 }
 
 @keyframes mesh-float {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
-}
-
-.mesh-background {
-  background: linear-gradient(-45deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08), hsl(var(--background)), hsl(var(--primary) / 0.08));
-  background-size: 400% 400%;
-  animation: mesh-float 15s ease infinite;
 }
 
 @keyframes pulse-matrix {
@@ -110,4 +119,15 @@
 
 .animate-glow {
   animation: glow 2s infinite ease-in-out;
+}
+
+/* Custom scrollbar for pro look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30 transition-colors;
 }

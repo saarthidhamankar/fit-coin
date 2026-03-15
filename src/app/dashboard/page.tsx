@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -19,9 +18,10 @@ import {
   AlertTriangle, 
   Target,
   ShieldCheck,
-  Zap
+  Zap,
+  Activity
 } from "lucide-react";
-import { getBalance, penalizeUser } from "@/blockchain";
+import { getBalance } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion } from "framer-motion";
 import { generateMotivation, GenerateMotivationOutput } from "@/ai/flows/generate-motivation";
@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, doc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc } from "firebase/firestore";
 import { 
   Radar, 
   RadarChart, 
@@ -39,7 +39,7 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from "recharts";
-import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
+import { WEEKLY_PLANS } from "@/lib/workout-rules";
 import { cn } from "@/lib/utils";
 import { startOfWeek, eachDayOfInterval, endOfWeek, isSameDay, startOfDay } from "date-fns";
 
@@ -51,14 +51,15 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ totalWorkouts: 0, currentStreak: 0, monthlyProgress: 0, goal: "MuscleGain" as "MuscleGain" | "FatLoss" });
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
-  const [matrixDelays, setMatrixDelays] = useState<number[]>([]);
   const [todayDate, setTodayDate] = useState<Date | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
-  // Handle Hydration: set "today" only on client
   useEffect(() => {
+    setIsClient(true);
     setTodayDate(new Date());
-    setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
+    const addr = localStorage.getItem('fitcoin_wallet_address');
+    if (addr) setAddress(addr);
   }, []);
 
   const userDocRef = useMemoFirebase(() => {
@@ -79,12 +80,12 @@ export default function Dashboard() {
 
   const { data: workouts, isLoading: workoutsLoading } = useCollection(workoutQuery);
 
-  // History data starting on Sunday
   const chartData = useMemo(() => {
-    // Default to current date if not set yet (ssr)
-    const referenceDate = todayDate || new Date();
-    const start = startOfWeek(referenceDate, { weekStartsOn: 0 });
-    const end = endOfWeek(referenceDate, { weekStartsOn: 0 });
+    if (!isClient || !todayDate) return [];
+    
+    // START ON SUNDAY
+    const start = startOfWeek(todayDate, { weekStartsOn: 0 });
+    const end = endOfWeek(todayDate, { weekStartsOn: 0 });
     const daysInterval = eachDayOfInterval({ start, end });
 
     const data = daysInterval.map(date => ({
@@ -108,7 +109,7 @@ export default function Dashboard() {
       });
     }
     return data;
-  }, [workouts, todayDate]);
+  }, [workouts, todayDate, isClient]);
 
   const radarData = useMemo(() => {
     const totalTokens = chartData.reduce((acc, d) => acc + d.tokens, 0);
@@ -117,64 +118,56 @@ export default function Dashboard() {
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
     // Aggressive scaling for visual impact:
-    // Goals: 20 tokens per week, 60 mins per week, effort factor 2
+    // Low targets (e.g., 20 tokens, 60 mins) to ensure 0% isn't shown after work
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgEffort * 50, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
+      { subject: 'Workout Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgEffort * 60, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goal', A: Math.min(stats.monthlyProgress || ((workouts?.length || 0) / 10) * 100, 100), fullMark: 100 },
     ];
   }, [chartData, stats, workouts]);
 
   useEffect(() => {
-    const addr = localStorage.getItem('fitcoin_wallet_address');
-    if (addr) {
-      setAddress(addr);
-      refreshData(addr);
+    if (address) {
+      getBalance(address).then(setBalance);
     }
-  }, [user, profile, workouts]);
-
-  const refreshData = async (addr: string) => {
-    const bal = await getBalance(addr);
-    setBalance(bal);
-
     if (profile) {
-      const total = profile.totalWorkoutsCompleted || 0;
-      const streak = profile.currentStreakDays || 0;
       setStats(prev => ({ 
         ...prev, 
-        totalWorkouts: total, 
-        currentStreak: streak, 
-        monthlyProgress: Math.min((total / 30) * 100, 100) 
+        totalWorkouts: profile.totalWorkoutsCompleted || 0, 
+        currentStreak: profile.currentStreakDays || 0, 
+        monthlyProgress: Math.min(((profile.totalWorkoutsCompleted || 0) / 30) * 100, 100) 
       }));
 
-      if (!motivation && !loadingMotivation) {
+      if (!motivation && !loadingMotivation && workouts) {
         setLoadingMotivation(true);
         generateMotivation({
-          workoutHistory: workouts?.slice(0, 3).map((w: any) => ({
+          workoutHistory: workouts.slice(0, 3).map((w: any) => ({
             date: (w.startTime || w.date)?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
             type: w.workoutType || w.type,
             durationMinutes: w.durationMinutes,
             tokensEarned: w.totalTokensEarned
           })),
-          currentStreak: streak,
-          totalWorkouts: total,
-          totalTokensEarned: bal
+          currentStreak: profile.currentStreakDays || 0,
+          totalWorkouts: profile.totalWorkoutsCompleted || 0,
+          totalTokensEarned: balance
         }).then(setMotivation).catch(() => {
-          const todayString = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
+          const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
           setMotivation({
-            motivationalMessage: "Stay focused: Consistency is the best way to see results.",
-            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayString] || "Daily Workout Session"],
-            promoCode: streak > 5 ? "KEEPGOING" : undefined
+            motivationalMessage: "Keep it up! Small steps lead to big changes.",
+            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayStr] || "Stay Active Today"],
+            promoCode: (profile.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
           });
         }).finally(() => setLoadingMotivation(false));
       }
     }
-  };
+  }, [profile, address, balance, workouts]);
+
+  if (!isClient) return null;
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background overflow-hidden">
+    <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
       <Navbar />
       
       <div className="max-w-7xl mx-auto space-y-8">
@@ -185,15 +178,15 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your daily workout history.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "My FIT Balance", description: "Your tokens are safe and secure." })}>
+            <div className="pro-glass p-4 rounded-[2rem] flex items-center gap-4 group hover:scale-105 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">My FIT Balance</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">My Wallet</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -204,16 +197,16 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "My FIT Total", value: balance, icon: Wallet, color: "text-primary" },
-            { label: "Day Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-primary" },
-            { label: "Total Workouts", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
-            { label: "Monthly Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-primary" }
+            { label: "Total FIT", value: balance, icon: Wallet },
+            { label: "Day Streak", value: stats.currentStreak, suffix: " Days", icon: Flame },
+            { label: "Workouts", value: stats.totalWorkouts, icon: Dumbbell },
+            { label: "Goal Progress", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
-              <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20 cursor-help" onClick={() => toast({ title: stat.label, description: `Current status: ${stat.value}${stat.suffix || ''}` })}>
+              <Card className="rounded-[2.5rem] border-none pro-glass hover:shadow-xl transition-all group overflow-hidden">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                    <stat.icon className="w-6 h-6 text-primary" />
                   </div>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</p>
                   <p className="text-2xl font-black">
@@ -230,39 +223,28 @@ export default function Dashboard() {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-[3rem] p-10 md:p-14 border-2 border-white/20 relative overflow-hidden group shadow-2xl glass-card"
+              className="pro-glass rounded-[3rem] p-10 md:p-14 relative overflow-hidden group shadow-2xl"
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT tokens. Every session counts.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is key.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
-                      onSuccess={() => address && refreshData(address)} 
+                      onSuccess={() => address && getBalance(address).then(setBalance)} 
                       userStats={stats} 
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Live Sync", description: "Your workout history is updating." })}>
-                  <div className="grid grid-cols-8 gap-1.5 w-full mb-6">
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div 
-                        key={i} 
-                        className="h-2 w-2 bg-primary/20 rounded-full animate-matrix-dot" 
-                        style={{ animationDelay: matrixDelays[i] ? `${matrixDelays[i]}s` : '0s' }} 
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Sync</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-primary italic">UPDATING</span>
-                    <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest animate-pulse">ACTIVE</Badge>
-                  </div>
+                <div className="hidden md:flex w-64 h-64 pro-glass rounded-[3rem] p-8 items-center justify-center flex-col text-center">
+                  <Activity className="w-16 h-16 text-primary animate-pulse mb-4" />
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Tracker</p>
+                  <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">ACTIVE</Badge>
                 </div>
               </div>
             </motion.div>
 
-            <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden glass-card">
+            <Card className="rounded-[3rem] border-none pro-glass overflow-hidden">
               <CardHeader className="bg-muted/30 border-b border-border/10 p-8">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-1">
@@ -270,16 +252,15 @@ export default function Dashboard() {
                       <Target className="w-6 h-6 text-primary" />
                       Weekly Fitness Balance
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">How you're doing this week</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance attribute map</p>
                   </div>
-                  <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Update</Badge>
+                  <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Sync</Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-10 h-[400px] flex items-center justify-center">
+              <CardContent className="p-10 h-[400px]">
                 {workoutsLoading ? (
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col h-full items-center justify-center gap-4">
                     <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Syncing Results...</p>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -298,7 +279,7 @@ export default function Dashboard() {
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
-                              <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
+                              <div className="pro-glass p-4 rounded-2xl shadow-2xl">
                                 <p className="text-[10px] font-black uppercase text-primary mb-1">{payload[0].payload.subject}</p>
                                 <p className="text-2xl font-black">{Math.round(payload[0].value as number)}%</p>
                               </div>
@@ -315,59 +296,42 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-8">
-            <Card className="rounded-[3rem] border-none shadow-2xl bg-gradient-to-br from-primary to-primary/80 text-white overflow-hidden relative group">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+            <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden relative group">
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
-                  <Sparkles className="w-6 h-6 animate-pulse text-white/80" />
-                  Fitness Coach
+                  <Sparkles className="w-6 h-6 text-white/80" />
+                  Personal Plan
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
                 {loadingMotivation ? (
                   <div className="space-y-6">
                     <Skeleton className="h-28 w-full bg-white/20 rounded-3xl" />
-                    <Skeleton className="h-12 w-full bg-white/20 rounded-2xl" />
                   </div>
                 ) : motivation ? (
                   <>
-                    <div className="p-6 bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-inner">
+                    <div className="p-6 bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20">
                       <p className="text-base leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
-                    {motivation.promoCode && (
-                      <div className="p-4 bg-white/20 text-white rounded-2xl border-2 border-white/50 flex items-center justify-between shadow-xl backdrop-blur-md">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Bonus Code</p>
-                          <p className="text-lg font-black tracking-widest">{motivation.promoCode}</p>
-                        </div>
-                        <Tag className="w-6 h-6" />
-                      </div>
-                    )}
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Plan:</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Goals:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
-                        <motion.div 
-                          key={i} 
-                          whileHover={{ x: 8 }}
-                          onClick={() => toast({ title: "Workout Details", description: s })}
-                          className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
-                        >
+                        <div key={i} className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                              {s}
                           </div>
-                          <ChevronRight className="w-4 h-4 opacity-50" />
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Save a workout to see your daily plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Log a workout to unlock your daily plan.</p>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden glass-card">
+            <Card className="rounded-[3rem] border-none pro-glass overflow-hidden">
               <CardHeader className="pb-4 p-8">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                   <CalendarIcon className="w-4 h-4 text-primary" />
@@ -377,23 +341,19 @@ export default function Dashboard() {
               <CardContent className="space-y-8 p-8 pt-2">
                 <div className="grid grid-cols-7 gap-3">
                   {chartData.map((d, i) => {
-                    // Hydration safe check
                     const isToday = todayDate ? isSameDay(d.date, todayDate) : false;
                     const hasWorkout = d.duration > 0 || d.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
-                        <motion.div 
-                          whileHover={{ scale: 1.15 }}
-                          className={cn(
-                            "w-12 h-12 flex items-center justify-center transition-all relative group",
-                            isToday && !hasWorkout && "ring-4 ring-primary/20 rounded-2xl"
-                          )}
-                        >
+                        <div className={cn(
+                          "w-12 h-12 flex items-center justify-center transition-all relative",
+                          isToday && !hasWorkout && "ring-2 ring-primary/20 rounded-2xl"
+                        )}>
                           {hasWorkout ? (
-                            <Avatar className="w-12 h-12 border-2 border-primary shadow-xl shadow-primary/30 scale-110">
-                              <AvatarFallback className="bg-gradient-to-br from-orange-500 via-primary to-accent relative overflow-visible">
-                                <Flame className="w-6 h-6 text-white fill-white animate-pulse" />
-                                <span className="absolute -top-3 -right-3 text-xl filter drop-shadow-md animate-bounce">🔥</span>
+                            <Avatar className="w-12 h-12 border-2 border-primary shadow-lg scale-110">
+                              <AvatarFallback className="bg-primary relative overflow-visible">
+                                <Flame className="w-6 h-6 text-white fill-white" />
+                                <span className="absolute -top-3 -right-3 text-xl animate-bounce">🔥</span>
                               </AvatarFallback>
                             </Avatar>
                           ) : (
@@ -401,19 +361,13 @@ export default function Dashboard() {
                               "w-12 h-12 rounded-2xl flex items-center justify-center bg-muted/50 border border-muted",
                               isToday && "border-primary/40 bg-primary/5"
                             )}>
-                              {isToday && (
-                                <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                              )}
+                              {isToday && <div className="w-2 h-2 rounded-full bg-primary animate-ping" />}
                             </div>
                           )}
-                          
-                          {isToday && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white shadow-sm" />
-                          )}
-                        </motion.div>
+                        </div>
                         <span className={cn(
                           "text-[10px] font-black uppercase tracking-widest",
-                          isToday ? "text-primary scale-110 font-black" : "text-muted-foreground opacity-60"
+                          isToday ? "text-primary scale-110" : "text-muted-foreground opacity-60"
                         )}>{d.day[0]}</span>
                       </div>
                     );
@@ -421,31 +375,26 @@ export default function Dashboard() {
                 </div>
 
                 <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
-                  <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
+                  <AlertTriangle className="w-6 h-6 text-destructive shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning: Don't miss a day!</p>
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay consistent!
+                      Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay active!
                     </p>
                   </div>
                 </div>
                 
                 <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                   <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                      <Flame className="w-4 h-4 text-primary" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Progress</span>
-                    </div>
-                    <span className="text-[11px] font-black text-primary bg-white dark:bg-card px-3 py-1 rounded-full border border-primary/20 tracking-widest">
-                      {Math.round(stats.monthlyProgress)}%
-                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Goal</span>
+                    <span className="text-[11px] font-black text-primary">{Math.round(stats.monthlyProgress)}%</span>
                   </div>
                   <Progress value={stats.monthlyProgress} className="h-4 rounded-full bg-muted/30" />
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => toast({ title: "Safe Connection", description: "Your workout data is saved on the secure network." })}>
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Securely Saving Progress</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Secure History</p>
                 </div>
               </CardContent>
             </Card>
