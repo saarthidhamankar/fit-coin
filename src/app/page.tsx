@@ -10,18 +10,30 @@ import { connectWallet } from "@/blockchain";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
+import { useAuth } from "@/firebase";
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 
 export default function LandingPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const auth = useAuth();
 
   const handleConnect = async () => {
     setLoading(true);
     try {
       const addr = await connectWallet();
       localStorage.setItem('fitcoin_wallet_address', addr);
-      toast({ title: "Connected", description: addr.startsWith('0xDemo') ? "Demo Mode Active - Welcome!" : "Wallet connected successfully!" });
+      
+      // Connect to Firebase Backend
+      if (auth) {
+        initiateAnonymousSignIn(auth);
+      }
+
+      toast({ 
+        title: "Protocol Connected", 
+        description: addr.startsWith('0xDemo') ? "Demo Mode Active - Welcome!" : "Wallet and Backend synchronized successfully!" 
+      });
       router.push("/dashboard");
     } catch (e: any) {
       toast({ variant: "destructive", title: "Connection Failed", description: e.message || "Please check your wallet." });

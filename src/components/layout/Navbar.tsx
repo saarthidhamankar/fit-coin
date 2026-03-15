@@ -1,16 +1,18 @@
+
 "use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield, User, Apple } from "lucide-react";
+import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield, User, Apple, Crown } from "lucide-react";
 import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +21,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export default function Navbar() {
   const { user } = useUser();
   const db = useFirestore();
+  const auth = useAuth();
   const [address, setAddress] = useState<string | null>(null);
   const pathname = usePathname();
   const { toast } = useToast();
@@ -34,6 +38,15 @@ export default function Navbar() {
 
   const { data: profile } = useDoc(userDocRef);
 
+  // Admin Role Check
+  const adminDocRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "roles_admin", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: adminRole } = useDoc(adminDocRef);
+  const isAdmin = !!adminRole;
+
   useEffect(() => {
     const saved = localStorage.getItem('fitcoin_wallet_address');
     if (saved) setAddress(saved);
@@ -44,6 +57,11 @@ export default function Navbar() {
       const addr = await connectWallet();
       setAddress(addr);
       localStorage.setItem('fitcoin_wallet_address', addr);
+
+      // Sign in to Firebase Backend
+      if (auth) {
+        initiateAnonymousSignIn(auth);
+      }
 
       if (user?.uid && db) {
         const userRef = doc(db, "users", user.uid);
@@ -113,11 +131,15 @@ export default function Navbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="h-10 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest px-4 hover:bg-primary/5 border-primary/20 bg-white/50 dark:bg-card/50">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
+                  {isAdmin && <Crown className="w-3 h-3 text-yellow-500 mr-2" />}
                   My Account
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-2xl w-64 p-2 shadow-2xl border-2">
-                <DropdownMenuLabel className="font-headline font-black uppercase text-xs p-3">Athlete Profile</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-headline font-black uppercase text-xs p-3 flex items-center justify-between">
+                  Athlete Profile
+                  {isAdmin && <Badge className="bg-yellow-500 text-[8px] font-black uppercase rounded-full">Admin</Badge>}
+                </DropdownMenuLabel>
                 <div className="px-3 pb-3 text-[10px] font-code text-muted-foreground truncate border-b mb-2">
                   {address}
                 </div>
@@ -134,6 +156,14 @@ export default function Navbar() {
                 <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Encryption layer active." })} className="rounded-xl cursor-pointer font-bold p-3 focus:bg-primary/10">
                   <Shield className="mr-3 h-4 w-4 text-primary" /> On-Chain Security
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="rounded-xl cursor-pointer font-bold p-3 focus:bg-yellow-500/10 text-yellow-600">
+                      <Crown className="mr-3 h-4 w-4" /> System Admin Console
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl cursor-pointer font-bold p-3 hover:bg-destructive/10">
                   <LogOut className="mr-3 h-4 w-4" /> Disconnect Wallet
