@@ -95,6 +95,7 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
+        // Use startTime fallback for immediate Sunday/Monday streak detection
         const workoutDate = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
@@ -116,11 +117,11 @@ export default function Dashboard() {
     
     // Entry-level scaling: Lower denominators to make progress visible early
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgEffort * 60, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 10) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 30) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgEffort * 80, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((profile?.currentStreakDays || 0) / 7) * 100, 100), fullMark: 100 },
-      { subject: 'Goals', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 10) * 100, 100), fullMark: 100 },
+      { subject: 'Goals', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 5) * 100, 100), fullMark: 100 },
     ];
   }, [chartData, profile]);
 
@@ -159,7 +160,7 @@ export default function Dashboard() {
 
   const currentStreak = profile?.currentStreakDays || 0;
   const totalWorkouts = profile?.totalWorkoutsCompleted || 0;
-  const monthlyProgress = Math.min((totalWorkouts / 30) * 100, 100);
+  const monthlyProgress = Math.min((totalWorkouts / 20) * 100, 100);
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
@@ -172,7 +173,7 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active Rewards: <span className="text-primary not-italic">ON ⚡</span></h1>
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly history and earnings summary.</p>
           </div>
           <div className="flex items-center gap-4">
@@ -233,7 +234,7 @@ export default function Dashboard() {
                 </div>
                 <div className="hidden md:flex w-64 h-64 pro-glass rounded-[3rem] p-8 items-center justify-center flex-col text-center">
                   <Activity className="w-16 h-16 text-primary animate-pulse mb-4" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Tracker</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Workout Tracker</p>
                   <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">ACTIVE</Badge>
                 </div>
               </div>
@@ -245,7 +246,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Weekly Progress Chart
+                      My Weekly Stats
                     </CardTitle>
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map for the current week</p>
                   </div>
@@ -295,7 +296,7 @@ export default function Dashboard() {
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
                   <Sparkles className="w-6 h-6 text-white/80" />
-                  Daily Plan
+                  Today's Plan
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -330,7 +331,7 @@ export default function Dashboard() {
               <CardHeader className="pb-4 p-8">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                   <CalendarIcon className="w-4 h-4 text-primary" />
-                  Weekly Workout History
+                  My Streak
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 p-8 pt-2">
@@ -371,7 +372,7 @@ export default function Dashboard() {
                 <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
                   <AlertTriangle className="w-6 h-6 text-destructive shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning</p>
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Consistency Warning</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
                       Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay active!
                     </p>

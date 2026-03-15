@@ -4,10 +4,10 @@ A high-end fitness tracking application built with Next.js, Firebase, and GenAI.
 
 ## 🚀 How to Connect to GitHub
 
-Follow these steps to push your project to a new GitHub repository:
+Follow these steps to push your project to your GitHub account:
 
 1. **Initialize Git**:
-   Open your terminal and run:
+   Open your terminal in the project root and run:
    ```bash
    git init
    ```
@@ -39,8 +39,8 @@ Follow these steps to push your project to a new GitHub repository:
 
 - **Professional Dashboard**: Glassmorphism UI with real-time fitness charts.
 - **On-Chain Rewards**: Earn FIT tokens based on workout intensity and duration.
-- **Smart Diet Plans**: Personalized nutrition protocols for muscle gain or fat loss.
-- **Motivational AI**: GenAI-powered coach providing daily tasks and tips.
+- **Easy Fitness Plans**: Personalized nutrition and workout plans.
+- **Motivational AI Coach**: Daily tasks and tips powered by Gemini.
 - **Reward Shop**: Spend your earned FIT tokens on fitness equipment.
 
 ## 🛠️ Tech Stack
@@ -49,4 +49,3 @@ Follow these steps to push your project to a new GitHub repository:
 - **Styling**: Tailwind CSS & ShadCN UI
 - **Backend**: Firebase Auth & Firestore
 - **AI**: Google Genkit (Gemini 2.5 Flash)
-- **3D**: Three.js for interactive logos

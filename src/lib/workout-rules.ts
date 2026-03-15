@@ -5,7 +5,8 @@ export const REWARD_RULES = {
     { min: 90, reward: 25 },
     { min: 60, reward: 15 },
     { min: 30, reward: 8 },
-    { min: 15, reward: 4 }
+    { min: 15, reward: 4 },
+    { min: 1, reward: 1 } // Entry level reward for instant feedback
   ],
   BONUSES: {
     SEVEN_DAY_STREAK: 50,
@@ -15,7 +16,7 @@ export const REWARD_RULES = {
     FIRST_WORKOUT: 20
   },
   PENALTIES: {
-    STREAK_BREAK: 20 // Deducted if more than 48h since last workout
+    STREAK_BREAK: 20
   }
 };
 
