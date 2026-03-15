@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Wallet, Flame, Dumbbell, History, Sparkles, Trophy, Calendar as CalendarIcon, Info } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
