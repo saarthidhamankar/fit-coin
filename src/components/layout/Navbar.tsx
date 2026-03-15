@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -6,9 +5,10 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Wallet, Activity, Trophy, ShoppingBag, User, LogOut } from "lucide-react";
-import { connectWallet, isMetaMaskInstalled } from "@/blockchain";
+import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const [address, setAddress] = useState<string | null>(null);
@@ -71,6 +71,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {address ? (
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex flex-col items-end mr-2">

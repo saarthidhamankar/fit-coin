@@ -1,17 +1,17 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, Medal, Crown, Star, ArrowUp } from "lucide-react";
+import { Trophy, Medal, Crown, Flame, ArrowUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-const MOCK_LEADERBOARD = [
+const INITIAL_MOCK_DATA = [
   { address: "0x742d...444e", username: "IronGains", tokens: 15400, streak: 45, rank: 1 },
   { address: "0x3f1a...9e21", username: "FitQueen", tokens: 12100, streak: 32, rank: 2 },
   { address: "0xab90...8811", username: "DegenLifts", tokens: 10500, streak: 28, rank: 3 },
@@ -22,12 +22,28 @@ const MOCK_LEADERBOARD = [
   { address: "0x5678...dead", username: "HIIT_King", tokens: 4200, streak: 7, rank: 8 },
 ];
 
+const ADDITIONAL_DATA = [
+  { address: "0x1111...2222", username: "LiftLife", tokens: 3800, streak: 5, rank: 9 },
+  { address: "0x3333...4444", username: "ChainGains", tokens: 3500, streak: 4, rank: 10 },
+  { address: "0x5555...6666", username: "MetaFit", tokens: 3100, streak: 3, rank: 11 },
+];
+
 export default function LeaderboardPage() {
   const [address, setAddress] = useState<string | null>(null);
+  const [athletes, setAthletes] = useState(INITIAL_MOCK_DATA);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     setAddress(localStorage.getItem('fitcoin_wallet_address'));
   }, []);
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setAthletes((prev) => [...prev, ...ADDITIONAL_DATA]);
+      setLoadingMore(false);
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-12 px-4">
@@ -48,7 +64,7 @@ export default function LeaderboardPage() {
 
         <Tabs defaultValue="Weekly" className="w-full">
           <div className="flex justify-center mb-16">
-            <TabsList className="bg-white p-1 rounded-[2rem] shadow-sm border-2 border-primary/10 h-16 w-full max-w-md">
+            <TabsList className="bg-white dark:bg-card p-1 rounded-[2rem] shadow-sm border-2 border-primary/10 h-16 w-full max-w-md">
               {["Weekly", "Monthly", "AllTime"].map(tab => (
                 <TabsTrigger key={tab} value={tab} className="flex-1 h-12 rounded-[1.5rem] text-sm font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg">
                   {tab === "AllTime" ? "All Time" : tab}
@@ -74,7 +90,7 @@ export default function LeaderboardPage() {
                   </Avatar>
                   <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-10 h-10 bg-gray-400 rounded-2xl flex items-center justify-center text-white font-black border-4 border-white shadow-lg">2</div>
                 </div>
-                <div className="h-28 w-40 bg-white rounded-[2rem] shadow-xl flex flex-col items-center justify-center p-4 border-t-8 border-gray-300">
+                <div className="h-28 w-40 bg-white dark:bg-card rounded-[2rem] shadow-xl flex flex-col items-center justify-center p-4 border-t-8 border-gray-300">
                   <p className="font-black text-sm">FitQueen</p>
                   <p className="text-xs font-bold text-gray-500">12.1k FIT</p>
                 </div>
@@ -100,7 +116,7 @@ export default function LeaderboardPage() {
                   </Avatar>
                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-14 h-14 bg-yellow-500 rounded-3xl flex items-center justify-center text-white font-black text-xl border-4 border-white shadow-xl">1</div>
                 </div>
-                <div className="h-44 w-52 bg-white rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center p-6 border-t-[12px] border-yellow-400">
+                <div className="h-44 w-52 bg-white dark:bg-card rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center p-6 border-t-[12px] border-yellow-400">
                   <p className="font-black text-xl">IronGains</p>
                   <p className="font-black text-yellow-600">15.4k FIT</p>
                 </div>
@@ -120,7 +136,7 @@ export default function LeaderboardPage() {
                   </Avatar>
                   <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-orange-500 rounded-2xl flex items-center justify-center text-white font-black border-4 border-white shadow-lg">3</div>
                 </div>
-                <div className="h-24 w-36 bg-white rounded-[2rem] shadow-xl flex flex-col items-center justify-center p-4 border-t-8 border-orange-400">
+                <div className="h-24 w-36 bg-white dark:bg-card rounded-[2rem] shadow-xl flex flex-col items-center justify-center p-4 border-t-8 border-orange-400">
                   <p className="font-black text-sm">DegenLifts</p>
                   <p className="text-xs font-bold text-orange-600">10.5k FIT</p>
                 </div>
@@ -128,7 +144,7 @@ export default function LeaderboardPage() {
             </div>
 
             {/* Rankings Table */}
-            <Card className="rounded-[3rem] border-none shadow-xl overflow-hidden bg-white">
+            <Card className="rounded-[3rem] border-none shadow-xl overflow-hidden bg-white dark:bg-card">
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-none">
@@ -140,9 +156,9 @@ export default function LeaderboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {MOCK_LEADERBOARD.map((user, idx) => (
+                  {athletes.map((user, idx) => (
                     <TableRow 
-                      key={user.rank} 
+                      key={`${user.rank}-${idx}`} 
                       className={`
                         h-20 transition-all border-b border-muted/50 last:border-none
                         ${address && address.toLowerCase().includes(user.address.toLowerCase()) ? "bg-primary/5 shadow-inner" : "hover:bg-muted/10"}
@@ -174,7 +190,7 @@ export default function LeaderboardPage() {
                         {user.tokens.toLocaleString()} <span className="text-[10px] text-primary/50">FIT</span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 text-orange-600 rounded-full w-fit">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 rounded-full w-fit">
                           <Flame className="w-3.5 h-3.5 fill-current" />
                           <span className="text-xs font-black">{user.streak} d</span>
                         </div>
@@ -189,7 +205,14 @@ export default function LeaderboardPage() {
                 </TableBody>
               </Table>
               <div className="p-8 bg-muted/20 text-center">
-                <Button variant="ghost" className="font-black uppercase text-xs tracking-widest text-primary hover:text-primary hover:bg-white">Load more athletes</Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleLoadMore}
+                  disabled={loadingMore || athletes.length > 10}
+                  className="font-black uppercase text-xs tracking-widest text-primary hover:text-primary hover:bg-white dark:hover:bg-white/5"
+                >
+                  {athletes.length > 10 ? "No more athletes" : loadingMore ? "Syncing..." : "Load more athletes"}
+                </Button>
               </div>
             </Card>
           </div>
