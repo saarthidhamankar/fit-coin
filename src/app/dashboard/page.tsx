@@ -18,7 +18,6 @@ import {
   ChevronRight, 
   AlertTriangle, 
   Target,
-  Timer,
   ShieldCheck,
   Zap
 } from "lucide-react";
