@@ -30,7 +30,9 @@ import {
   ShieldCheck,
   Fingerprint,
   Cpu,
-  X
+  X,
+  ShoppingBag,
+  Dumbbell
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +63,6 @@ export default function ProfilePage() {
   const [logsOpen, setLogsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
