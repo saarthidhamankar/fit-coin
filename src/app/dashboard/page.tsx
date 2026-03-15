@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap } from "lucide-react";
+import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, LayoutGrid } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -145,7 +144,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-12 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 -z-10" />
       <Navbar />
       
       <div className="max-w-7xl mx-auto space-y-8">
@@ -159,7 +157,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Tracking metabolic effort on the FitCoin ledger.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="bg-white dark:bg-card p-4 rounded-[2rem] shadow-xl border-2 border-primary/20 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group">
+            <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group">
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
@@ -181,7 +179,7 @@ export default function Dashboard() {
             { label: "Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-accent" }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
-              <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group bg-white dark:bg-card border-2 border-transparent hover:border-primary/20">
+              <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -201,12 +199,12 @@ export default function Dashboard() {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-[2.5rem] p-8 md:p-12 border-2 border-white dark:border-white/5 relative overflow-hidden group shadow-2xl"
+              className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-[3rem] p-10 md:p-14 border-2 border-white/20 relative overflow-hidden group shadow-2xl glass-card"
             >
-              <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
-                <div className="flex-1 space-y-6 text-center md:text-left">
-                  <h2 className="text-4xl font-headline font-black leading-tight uppercase">Commit Your Next <span className="text-primary italic">Rep</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax.</p>
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
+                <div className="flex-1 space-y-8 text-center md:text-left">
+                  <h2 className="text-5xl font-headline font-black leading-tight uppercase">Commit Your Next <span className="text-primary italic">Rep</span></h2>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Log your effort to mint FIT. Every minute counts. 48-hour inactivity triggers the metabolic tax reset.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -214,60 +212,60 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="hidden md:flex w-48 h-48 bg-white dark:bg-card rounded-[2.5rem] shadow-2xl p-6 border-4 border-primary/20 items-center justify-center flex-col text-center group">
-                  <div className="grid grid-cols-4 gap-1 w-full mb-4">
+                <div className="hidden md:flex w-56 h-56 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group">
+                  <div className="grid grid-cols-4 gap-2 w-full mb-6">
                     {[1,2,3,4,5,6,7,8].map(i => (
-                      <div key={i} className="h-4 bg-primary/20 rounded-sm animate-pulse" style={{ animationDelay: `${i*0.1}s` }} />
+                      <div key={i} className="h-6 bg-primary/20 rounded-md animate-pulse" style={{ animationDelay: `${i*0.1}s` }} />
                     ))}
                   </div>
                   <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Protocol Load</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-black text-primary">88.5%</span>
-                    <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">STABLE</Badge>
+                    <span className="text-2xl font-black text-primary">SYNCING</span>
+                    <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest animate-pulse">ACTIVE</Badge>
                   </div>
-                  <div className="mt-4 flex gap-1 items-end h-8 w-full">
-                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-2 bg-primary/40 rounded-full animate-bounce" style={{ height: `${Math.random()*100}%`, animationDelay: `${i*0.1}s` }} />)}
+                  <div className="mt-6 flex gap-1.5 items-end h-10 w-full">
+                    {[1,2,3,4,5,6].map(i => <div key={i} className="w-2.5 bg-primary/40 rounded-full animate-bounce" style={{ height: `${20 + Math.random()*80}%`, animationDelay: `${i*0.1}s` }} />)}
                   </div>
                 </div>
               </div>
             </motion.div>
 
-            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
-              <CardHeader className="bg-muted/30 border-b flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black italic">
-                  <BarChart3 className="w-5 h-5 text-primary" />
+            <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden glass-card">
+              <CardHeader className="bg-muted/30 border-b border-border/10 flex flex-row items-center justify-between p-8">
+                <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
+                  <BarChart3 className="w-6 h-6 text-primary" />
                   Proof of Sweat Distribution
                 </CardTitle>
                 <div className="flex gap-2">
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "FatLoss"}))} className={`text-[8px] font-black uppercase rounded-full tracking-widest ${stats.goal === 'FatLoss' ? 'bg-primary text-white' : ''}`}>Fat Loss</Button>
-                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "MuscleGain"}))} className={`text-[8px] font-black uppercase rounded-full tracking-widest ${stats.goal === 'MuscleGain' ? 'bg-primary text-white' : ''}`}>Gain</Button>
+                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "FatLoss"}))} className={`text-[9px] font-black uppercase rounded-full tracking-widest px-4 ${stats.goal === 'FatLoss' ? 'bg-primary text-white shadow-lg' : ''}`}>Fat Loss</Button>
+                   <Button variant="ghost" size="sm" onClick={() => setStats(prev => ({...prev, goal: "MuscleGain"}))} className={`text-[9px] font-black uppercase rounded-full tracking-widest px-4 ${stats.goal === 'MuscleGain' ? 'bg-primary text-white shadow-lg' : ''}`}>Gain</Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-8 h-[300px]">
+              <CardContent className="p-10 h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.5} />
                     <XAxis 
                       dataKey="day" 
                       axisLine={false} 
                       tickLine={false} 
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 800 }} 
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 900 }} 
                     />
                     <Tooltip 
                       cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           return (
-                            <div className="bg-card border-2 border-primary/20 p-3 rounded-2xl shadow-xl">
+                            <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl">
                               <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-widest">{payload[0].payload.day}</p>
-                              <p className="text-xl font-black text-primary">{payload[0].value} <span className="text-xs">mins</span></p>
+                              <p className="text-2xl font-black text-primary">{payload[0].value} <span className="text-xs uppercase">mins</span></p>
                             </div>
                           );
                         }
                         return null;
                       }}
                     />
-                    <Bar dataKey="duration" radius={[8, 8, 0, 0]}>
+                    <Bar dataKey="duration" radius={[10, 10, 0, 0]}>
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.duration > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted))'} />
                       ))}
@@ -279,92 +277,92 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-8">
-            <Card className="rounded-[2.5rem] border-none shadow-xl bg-gradient-to-br from-primary to-accent text-white overflow-hidden relative group">
+            <Card className="rounded-[3rem] border-none shadow-2xl bg-gradient-to-br from-primary to-accent text-white overflow-hidden relative group">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-              <CardHeader className="relative z-10 pb-0">
-                <CardTitle className="flex items-center gap-2 text-lg uppercase font-black italic">
-                  <Sparkles className="w-5 h-5 animate-pulse text-yellow-300" />
-                  AI Daily Protocol
+              <CardHeader className="relative z-10 pb-2 p-8">
+                <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
+                  <Sparkles className="w-6 h-6 animate-pulse text-yellow-300" />
+                  AI Performance Coach
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6 relative z-10 pt-4">
+              <CardContent className="space-y-6 relative z-10 p-8 pt-4">
                 {loadingMotivation ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-24 w-full bg-white/20 rounded-2xl" />
-                    <Skeleton className="h-10 w-full bg-white/20 rounded-2xl" />
+                  <div className="space-y-6">
+                    <Skeleton className="h-28 w-full bg-white/20 rounded-3xl" />
+                    <Skeleton className="h-12 w-full bg-white/20 rounded-2xl" />
                   </div>
                 ) : motivation ? (
                   <>
-                    <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-                      <p className="text-sm leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
+                    <div className="p-6 bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-inner">
+                      <p className="text-base leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
                     {motivation.promoCode && (
-                      <div className="p-3 bg-yellow-400 text-black rounded-xl border-2 border-white/50 flex items-center justify-between">
+                      <div className="p-4 bg-yellow-400 text-black rounded-2xl border-2 border-white/50 flex items-center justify-between shadow-xl">
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest">Protocol Bonus</p>
-                          <p className="text-sm font-black tracking-widest">{motivation.promoCode}</p>
+                          <p className="text-[9px] font-black uppercase tracking-widest">Protocol Bonus</p>
+                          <p className="text-lg font-black tracking-widest">{motivation.promoCode}</p>
                         </div>
-                        <Tag className="w-5 h-5" />
+                        <Tag className="w-6 h-6" />
                       </div>
                     )}
-                    <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Today's Protocol:</p>
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Today's Protocol:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <motion.div 
                           key={i} 
-                          whileHover={{ x: 5 }}
-                          className="p-3 bg-white/20 rounded-xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
+                          whileHover={{ x: 8 }}
+                          className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between cursor-pointer transition-all hover:bg-white/30"
                         >
-                          <div className="flex items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          <div className="flex items-center gap-3">
+                             <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                              {s}
                           </div>
-                          <ChevronRight className="w-3 h-3 opacity-50" />
+                          <ChevronRight className="w-4 h-4 opacity-50" />
                         </motion.div>
                       ))}
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Synchronize a session to unlock your daily protocol.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Synchronize a session to unlock your daily performance protocol.</p>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                  <CalendarIcon className="w-3 h-3" />
+            <Card className="rounded-[3rem] border-none shadow-sm overflow-hidden glass-card">
+              <CardHeader className="pb-4 p-8">
+                <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
+                  <CalendarIcon className="w-4 h-4 text-primary" />
                   Consistency Ledger
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-7 gap-2">
+              <CardContent className="space-y-8 p-8 pt-2">
+                <div className="grid grid-cols-7 gap-3">
                   {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
                     const hasWorkout = chartData[i]?.duration > 0;
                     return (
-                      <div key={i} className="flex flex-col items-center gap-2">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${hasWorkout ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105' : 'bg-muted text-muted-foreground'}`}>
+                      <div key={i} className="flex flex-col items-center gap-3">
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all ${hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30'}`}>
                           {hasWorkout ? '✓' : ''}
                         </div>
-                        <span className="text-[10px] font-black text-muted-foreground">{day}</span>
+                        <span className="text-[11px] font-black text-muted-foreground">{day}</span>
                       </div>
                     );
                   })}
                 </div>
                 
-                <div className="p-5 bg-primary/5 rounded-[2rem] border border-primary/10">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
-                    <span className="text-xs font-black text-primary bg-white px-2 py-0.5 rounded-full border border-primary/20 tracking-widest">
+                <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
+                    <span className="text-[11px] font-black text-primary bg-white dark:bg-card px-3 py-1 rounded-full border border-primary/20 tracking-widest">
                       {Math.round(stats.monthlyProgress)}%
                     </span>
                   </div>
-                  <Progress value={stats.monthlyProgress} className="h-3 rounded-full bg-muted" />
+                  <Progress value={stats.monthlyProgress} className="h-4 rounded-full bg-muted/30" />
                 </div>
 
-                <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
-                   <ShieldCheck className="w-4 h-4 text-primary" />
-                   <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Protocol Integrity Sync Active</p>
+                <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
+                   <ShieldCheck className="w-5 h-5 text-primary" />
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Protocol Integrity Sync Active on Sepolia Ledger</p>
                 </div>
               </CardContent>
             </Card>
