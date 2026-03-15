@@ -19,6 +19,27 @@ export const REWARD_RULES = {
   }
 };
 
+export const WEEKLY_PLANS = {
+  MuscleGain: {
+    Mon: "Chest & Triceps: Bench Press, Incline DB Press, Cable Flys, Skull Crushers",
+    Tue: "Back & Biceps: Pull-ups, Rows, Deadlifts, Hammer Curls",
+    Wed: "Active Recovery: Low-intensity cardio or mobility work",
+    Thu: "Shoulders & Abs: Military Press, Lateral Raises, Planks, Leg Raises",
+    Fri: "Legs: Squats, Leg Press, Extensions, Calf Raises",
+    Sat: "Full Body Hypertrophy: Compound movements focus",
+    Sun: "Rest & Nutrients: High protein intake and rest"
+  },
+  FatLoss: {
+    Mon: "HIIT Session: 30m intervals + Core finisher",
+    Tue: "Strength Circuit: High reps, low rest (Whole Body)",
+    Wed: "Steady State Cardio: 45m brisk walk or light cycle",
+    Thu: "HIIT + Functional: Kettlebell swings, burpees, mountain climbers",
+    Fri: "Metabolic Conditioning: EMOM 20m + Stretching",
+    Sat: "Outdoor Adventure: Hiking, Swimming or Long Cycle",
+    Sun: "Mobility & Prep: Foam rolling and meal prep"
+  }
+};
+
 export const calculateWorkoutReward = (duration: number, date: Date, stats: { totalWorkouts: number, currentStreak: number }) => {
   let reward = 0;
   let breakdowns: string[] = [];
@@ -48,11 +69,6 @@ export const calculateWorkoutReward = (duration: number, date: Date, stats: { to
   if (stats.currentStreak > 0 && (stats.currentStreak + 1) % 7 === 0) {
     reward += REWARD_RULES.BONUSES.SEVEN_DAY_STREAK;
     breakdowns.push(`+${REWARD_RULES.BONUSES.SEVEN_DAY_STREAK} FIT: 7-Day Fire`);
-  }
-
-  if (stats.totalWorkouts > 0 && (stats.totalWorkouts + 1) % 30 === 0) {
-    reward += REWARD_RULES.BONUSES.THIRTY_DAY_CHALLENGE;
-    breakdowns.push(`+${REWARD_RULES.BONUSES.THIRTY_DAY_CHALLENGE} FIT: Monthly King`);
   }
 
   return { reward, breakdowns };
