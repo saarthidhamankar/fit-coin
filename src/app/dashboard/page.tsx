@@ -75,9 +75,9 @@ export default function Dashboard() {
 
   const chartData = useMemo(() => {
     const today = new Date();
-    // Monday start
-    const start = startOfWeek(today, { weekStartsOn: 1 });
-    const end = endOfWeek(today, { weekStartsOn: 1 });
+    // Sunday start (weekStartsOn: 0) to ensure Sunday and Monday show together
+    const start = startOfWeek(today, { weekStartsOn: 0 });
+    const end = endOfWeek(today, { weekStartsOn: 0 });
     const daysInterval = eachDayOfInterval({ start, end });
 
     const data = daysInterval.map(date => ({
@@ -90,14 +90,12 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
-        // Handle both ISO strings and Firestore Timestamps
         const workoutDate = w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
           data[dayIdx].tokens += w.totalTokensEarned || 0;
-          // Normalized effort calculation
           data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
@@ -111,11 +109,11 @@ export default function Dashboard() {
     const intensityDays = chartData.filter(d => d.intensity > 0).length || 1;
     const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / intensityDays;
     
-    // Low targets to ensure immediate visual feedback (e.g. 10 tokens, 30 mins per week)
+    // Aggressive scaling targets: 20 tokens, 60 mins per week
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 10) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 30) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 40, 100), fullMark: 100 },
+      { subject: 'Tokens', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgIntensity * 50, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goal', A: Math.min(stats.monthlyProgress || ((workouts?.length || 0) / 10) * 100, 100), fullMark: 100 },
     ];
@@ -220,7 +218,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness progress on the network.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history on the network.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "My FIT Balance", description: "Your tokens are safe and secure." })}>
