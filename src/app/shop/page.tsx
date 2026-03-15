@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight, Tag } from "lucide-react";
+import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight, Tag, Loader2 } from "lucide-react";
 import { getBalance, spendTokens } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -50,6 +49,8 @@ export default function ShopPage() {
     promoCode: ""
   });
 
+  const [validatingCode, setValidatingCode] = useState(false);
+
   useEffect(() => {
     const addr = localStorage.getItem('fitcoin_wallet_address');
     if (addr) {
@@ -70,11 +71,20 @@ export default function ShopPage() {
     setCheckoutProduct(product);
   };
 
-  const handleConfirmRedeem = async () => {
-    if (!user?.uid || !checkoutProduct || !address) return;
+  const handleValidateCode = () => {
+    if (!shipping.promoCode) return;
+    setValidatingCode(true);
+    setTimeout(() => {
+      setValidatingCode(false);
+      toast({ title: "Code Applied", description: "You've unlocked a special achievement discount!" });
+    }, 1000);
+  };
 
-    if (!shipping.fullName || !shipping.address || !shipping.pincode) {
-      toast({ variant: "destructive", title: "Missing Info", description: "Please provide shipping details for your gear." });
+  const handleConfirmRedeem = async () => {
+    if (!checkoutProduct || !address) return;
+
+    if (!shipping.fullName || !shipping.address || !shipping.pincode || !shipping.phone) {
+      toast({ variant: "destructive", title: "Missing Info", description: "All shipping details are required for gear delivery." });
       return;
     }
 
@@ -84,27 +94,30 @@ export default function ShopPage() {
       const newBalance = await spendTokens(address, checkoutProduct.price);
       setBalance(newBalance);
 
-      // 2. Log purchase in Firestore
-      const purchaseRef = collection(db, "users", user.uid, "purchases");
-      await addDoc(purchaseRef, {
-        userId: user.uid,
-        productId: checkoutProduct.id,
-        productName: checkoutProduct.name,
-        purchaseDate: new Date().toISOString(),
-        fitCoinsSpent: checkoutProduct.price,
-        shippingDetails: shipping,
-        status: 'order_confirmed'
-      });
+      // 2. Log purchase in Firestore if user is logged in
+      if (user?.uid && db) {
+        const purchaseRef = collection(db, "users", user.uid, "purchases");
+        await addDoc(purchaseRef, {
+          userId: user.uid,
+          productId: checkoutProduct.id,
+          productName: checkoutProduct.name,
+          purchaseDate: new Date().toISOString(),
+          fitCoinsSpent: checkoutProduct.price,
+          shippingDetails: shipping,
+          status: 'order_confirmed',
+          timestamp: serverTimestamp()
+        });
 
-      // 3. Log to activity ledger
-      const logRef = collection(db, "users", user.uid, "activityLogs");
-      await addDoc(logRef, {
-        userId: user.uid,
-        activityType: "PURCHASE_SPEND",
-        description: `Redeemed: ${checkoutProduct.name}`,
-        fitCoinsChange: -checkoutProduct.price,
-        timestamp: new Date().toISOString()
-      });
+        // 3. Log to activity ledger
+        const logRef = collection(db, "users", user.uid, "activityLogs");
+        await addDoc(logRef, {
+          userId: user.uid,
+          activityType: "PURCHASE_SPEND",
+          description: `Redeemed: ${checkoutProduct.name}`,
+          fitCoinsChange: -checkoutProduct.price,
+          timestamp: new Date().toISOString()
+        });
+      }
 
       confetti({
         particleCount: 150,
@@ -117,7 +130,7 @@ export default function ShopPage() {
       setCheckoutProduct(null);
       toast({ title: "Purchase Complete!", description: "Order confirmed. Your gear is on the way!" });
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Transaction Error", description: e.message });
+      toast({ variant: "destructive", title: "Transaction Error", description: e.message || "Failed to process order." });
     } finally {
       setLoading(false);
     }
@@ -196,7 +209,7 @@ export default function ShopPage() {
                             variant="ghost" 
                             size="icon" 
                             className="bg-white/80 dark:bg-black/80 rounded-full h-10 w-10 backdrop-blur-sm active:scale-95"
-                            onClick={() => toggleWishlist(product.id)}
+                            onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
                           >
                             <Heart className={`w-5 h-5 ${wishlist.includes(product.id) ? "fill-primary text-primary" : ""}`} />
                           </Button>
@@ -229,7 +242,7 @@ export default function ShopPage() {
                             className={`rounded-2xl h-14 px-8 font-black transition-all active:scale-95 group ${
                               balance >= product.price 
                                 ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20' 
-                                : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
                             }`}
                           >
                             Redeem <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -246,9 +259,9 @@ export default function ShopPage() {
       </div>
 
       {/* Checkout Modal */}
-      <Dialog open={!!checkoutProduct} onOpenChange={() => !loading && setCheckoutProduct(null)}>
+      <Dialog open={!!checkoutProduct} onOpenChange={(open) => { if (!open && !loading) setCheckoutProduct(null); }}>
         <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
-          <div className="max-h-[90vh] overflow-y-auto scroll-smooth p-8 bg-gradient-to-b from-primary/10 to-background space-y-8">
+          <div className="max-h-[85vh] overflow-y-auto scroll-smooth p-8 bg-gradient-to-b from-primary/10 to-background flex flex-col gap-8">
             <DialogHeader>
               <DialogTitle className="font-headline font-black uppercase text-2xl flex items-center gap-2">
                 <Truck className="w-6 h-6 text-primary" /> Delivery Logistics
@@ -256,7 +269,7 @@ export default function ShopPage() {
               <p className="text-sm text-muted-foreground font-medium">Verify your shipping details for physical redemption.</p>
             </DialogHeader>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="p-6 bg-white dark:bg-card rounded-[2rem] border-2 border-primary/10 flex justify-between items-center shadow-sm">
                 <div>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Selected Item</p>
@@ -264,15 +277,15 @@ export default function ShopPage() {
                   <p className="text-xs text-primary font-bold">{checkoutProduct?.category}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Protocol Cost</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cost</p>
                   <p className="text-2xl font-black text-primary">{checkoutProduct?.price} FIT</p>
                 </div>
               </div>
 
-              <div className="space-y-4 bg-white dark:bg-card p-8 rounded-[2rem] shadow-sm border-2 border-primary/10">
-                <div className="space-y-3">
+              <div className="space-y-4 bg-white dark:bg-card p-6 rounded-[2rem] shadow-sm border-2 border-primary/10">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Athlete Name</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
                     <Input 
                       placeholder="e.g. John Doe" 
                       value={shipping.fullName} 
@@ -310,7 +323,7 @@ export default function ShopPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Contact Phone</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</Label>
                     <Input 
                       placeholder="+1 (555) 000-0000" 
                       value={shipping.phone} 
@@ -322,12 +335,23 @@ export default function ShopPage() {
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                       <Tag className="w-3 h-3" /> Promo Code
                     </Label>
-                    <Input 
-                      placeholder="Enter code..." 
-                      value={shipping.promoCode} 
-                      onChange={(e) => setShipping({...shipping, promoCode: e.target.value})}
-                      className="rounded-xl h-12 border-2 border-dashed focus:border-primary transition-all"
-                    />
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Enter code..." 
+                        value={shipping.promoCode} 
+                        onChange={(e) => setShipping({...shipping, promoCode: e.target.value})}
+                        className="rounded-xl h-12 border-2 border-dashed focus:border-primary transition-all flex-1"
+                      />
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        disabled={!shipping.promoCode || validatingCode}
+                        onClick={handleValidateCode}
+                        className="rounded-xl font-black uppercase text-[10px] h-12 px-4"
+                      >
+                        {validatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -335,18 +359,18 @@ export default function ShopPage() {
               <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20">
                 <div className="flex items-start gap-3">
                   <Package className="w-5 h-5 text-primary shrink-0 mt-1" />
-                  <p className="text-xs font-medium text-muted-foreground leading-relaxed">By finalizing, your FIT tokens will be burned from your wallet and an immutable shipping record will be created on-chain.</p>
+                  <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">By finalizing, your FIT tokens will be burned and an immutable order record will be synchronized with your account.</p>
                 </div>
               </div>
 
               <Button 
                 onClick={handleConfirmRedeem} 
                 disabled={loading}
-                className="w-full h-20 rounded-[1.5rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all"
+                className="w-full h-20 rounded-[1.5rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all mt-4"
               >
                 {loading ? (
                   <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                    <Loader2 className="w-6 h-6 animate-spin" />
                     Finalizing...
                   </div>
                 ) : (
@@ -370,8 +394,8 @@ export default function ShopPage() {
               <Check className="w-12 h-12" />
             </motion.div>
             <div className="space-y-3">
-              <h2 className="text-3xl font-headline font-black uppercase italic tracking-tighter">Order <span className="text-primary not-italic">Deployed</span></h2>
-              <p className="text-muted-foreground font-medium">Your <span className="text-foreground font-black">{successProduct?.name}</span> is being prepared for transit. Check your activity ledger for tracking updates.</p>
+              <h2 className="text-3xl font-headline font-black uppercase italic tracking-tighter">Order <span className="text-primary not-italic">Confirmed</span></h2>
+              <p className="text-muted-foreground font-medium">Your <span className="text-foreground font-black">{successProduct?.name}</span> is being prepared for transit. Check your activity ledger for updates.</p>
             </div>
             <Button className="w-full h-16 bg-primary text-lg font-black rounded-2xl shadow-xl shadow-primary/20 active:scale-95" onClick={() => setSuccessProduct(null)}>
               Return to Vault

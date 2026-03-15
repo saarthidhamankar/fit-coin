@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,11 +5,11 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info } from "lucide-react";
+import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion } from "framer-motion";
-import { generateMotivation } from "@/ai/flows/generate-motivation";
+import { generateMotivation, GenerateMotivationOutput } from "@/ai/flows/generate-motivation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import CountUp from "@/components/CountUp";
@@ -24,11 +23,10 @@ export default function Dashboard() {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
   const [stats, setStats] = useState({ totalWorkouts: 0, currentStreak: 0, monthlyProgress: 0, weeklyTokens: 0 });
-  const [motivation, setMotivation] = useState<any>(null);
+  const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const { toast } = useToast();
 
-  // Fetch real Firestore activity logs
   const activityQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -52,7 +50,6 @@ export default function Dashboard() {
     const bal = await getBalance(addr);
     setBalance(bal);
 
-    // Fallback/Legacy local stats for demo if needed, but we'll prefer Firestore if available
     const workouts = JSON.parse(localStorage.getItem(`fitcoin_history_${addr}`) || "[]");
     
     const total = workouts.length;
@@ -93,7 +90,7 @@ export default function Dashboard() {
   const handleStatClick = (label: string) => {
     toast({
       title: label,
-      description: `Your fitness progress is being synchronized with the blockchain.`,
+      description: `Your fitness progress is synchronized with the FitCoin protocol.`,
     });
   };
 
@@ -108,8 +105,8 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase">Earn Mode: Active ⚡</h1>
-            <p className="text-muted-foreground mt-1 font-medium">Tracking your gains on Sepolia and Firestore.</p>
+            <h1 className="text-4xl font-headline font-black uppercase italic">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
+            <p className="text-muted-foreground mt-1 font-medium">Tracking your gains on the FitCoin network.</p>
           </div>
           <div 
             onClick={() => handleStatClick("Wallet Info")}
@@ -142,7 +139,7 @@ export default function Dashboard() {
               onClick={() => handleStatClick(stat.label)}
               className="cursor-pointer"
             >
-              <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
+              <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-shadow group bg-white dark:bg-card">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                   <div className={`w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -186,7 +183,7 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden">
+            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
               <CardHeader className="bg-muted/30 border-b flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg uppercase font-black">
                   <History className="w-5 h-5 text-primary" />
@@ -260,6 +257,16 @@ export default function Dashboard() {
                     <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
                       <p className="text-sm leading-relaxed font-bold italic">"{motivation.motivationalMessage}"</p>
                     </div>
+                    {motivation.promoCode && (
+                      <div className="p-4 bg-accent/20 backdrop-blur-sm rounded-2xl border-2 border-accent border-dashed flex flex-col items-center gap-2 animate-in zoom-in-95 duration-500">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-accent-foreground">Achievement Reward Unlocked!</p>
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-accent" />
+                          <span className="text-xl font-black tracking-tighter uppercase">{motivation.promoCode}</span>
+                        </div>
+                        <p className="text-[8px] opacity-70">Use this code in the Reward Vault.</p>
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Suggested for today:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
@@ -281,7 +288,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden">
+            <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden bg-white dark:bg-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <CalendarIcon className="w-3 h-3" />
