@@ -71,11 +71,11 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="flex-1 pb-2">
-              <h1 className="text-2xl font-headline font-black uppercase tracking-tight">
-                {address ? `My Account: ${address.slice(0, 6)}...${address.slice(-4)}` : "Wallet Not Connected"}
+              <h1 className="text-3xl font-headline font-black uppercase tracking-tight">
+                My Account
               </h1>
               <p className="text-muted-foreground font-code text-xs flex items-center gap-2 mt-1">
-                {address || "Please connect your wallet"}
+                {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "Wallet Not Connected"}
                 {address && <ExternalLink className="w-3 h-3 cursor-pointer text-primary" />}
               </p>
             </div>

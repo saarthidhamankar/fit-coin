@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut } from "lucide-react";
+import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell } from "lucide-react";
 import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -62,9 +62,13 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">F</div>
-          <span className="font-headline text-xl font-bold tracking-tight text-primary hidden sm:block">FitCoin</span>
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 group-hover:scale-110 group-hover:rotate-12 transition-all">
+            <Dumbbell className="w-6 h-6" />
+          </div>
+          <span className="font-headline text-2xl font-black tracking-tighter text-primary hidden sm:block italic uppercase">
+            Fit<span className="text-foreground not-italic">Coin</span>
+          </span>
         </Link>
 
         {/* Tab-style Navigation */}
@@ -104,23 +108,27 @@ export default function Navbar() {
           {address ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-10 rounded-2xl border-2 font-code px-3 hover:bg-primary/5">
-                  {address.slice(0, 4)}...{address.slice(-4)}
+                <Button variant="outline" className="h-10 rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest px-4 hover:bg-primary/5 border-primary/20">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
+                  My Account
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="rounded-2xl w-56 p-2">
-                <DropdownMenuLabel className="font-headline">My Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-headline font-black uppercase text-xs">Athlete Profile</DropdownMenuLabel>
+                <div className="px-2 pb-2 text-[10px] font-code text-muted-foreground truncate">
+                  {address}
+                </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="rounded-xl">
-                  <Link href="/profile" className="w-full flex items-center">
-                    <Activity className="mr-2 h-4 w-4" /> Profile Stats
+                <DropdownMenuItem asChild className="rounded-xl cursor-pointer">
+                  <Link href="/profile" className="w-full flex items-center font-bold">
+                    <Activity className="mr-2 h-4 w-4" /> Performance Stats
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSettingsClick} className="rounded-xl">
+                <DropdownMenuItem onClick={handleSettingsClick} className="rounded-xl cursor-pointer font-bold">
                   <Settings className="mr-2 h-4 w-4" /> Preferences
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl">
+                <DropdownMenuItem onClick={handleDisconnect} className="text-destructive rounded-xl cursor-pointer font-bold">
                   <LogOut className="mr-2 h-4 w-4" /> Disconnect
                 </DropdownMenuItem>
               </DropdownMenuContent>
