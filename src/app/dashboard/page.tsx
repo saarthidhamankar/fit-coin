@@ -52,7 +52,14 @@ export default function Dashboard() {
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [matrixDelays, setMatrixDelays] = useState<number[]>([]);
+  const [todayDate, setTodayDate] = useState<Date | null>(null);
   const { toast } = useToast();
+
+  // Handle Hydration: set "today" only on client
+  useEffect(() => {
+    setTodayDate(new Date());
+    setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
+  }, []);
 
   const userDocRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -72,12 +79,12 @@ export default function Dashboard() {
 
   const { data: workouts, isLoading: workoutsLoading } = useCollection(workoutQuery);
 
-  // Re-engineered chart data to start the week on Sunday (weekStartsOn: 0)
+  // History data starting on Sunday
   const chartData = useMemo(() => {
-    const today = new Date();
-    // Sunday start (weekStartsOn: 0) to ensure Sunday and Monday show together
-    const start = startOfWeek(today, { weekStartsOn: 0 });
-    const end = endOfWeek(today, { weekStartsOn: 0 });
+    // Default to current date if not set yet (ssr)
+    const referenceDate = todayDate || new Date();
+    const start = startOfWeek(referenceDate, { weekStartsOn: 0 });
+    const end = endOfWeek(referenceDate, { weekStartsOn: 0 });
     const daysInterval = eachDayOfInterval({ start, end });
 
     const data = daysInterval.map(date => ({
@@ -85,83 +92,42 @@ export default function Dashboard() {
       day: date.toLocaleDateString('en-US', { weekday: 'short' }),
       duration: 0,
       tokens: 0,
-      intensity: 0
+      effort: 0
     }));
     
     if (workouts) {
       workouts.forEach(w => {
-        // Robust date parsing for Sunday detection
         const workoutDate = w.startTime?.toDate ? w.startTime.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
           data[dayIdx].tokens += w.totalTokensEarned || 0;
-          data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
+          data[dayIdx].effort += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
     }
     return data;
-  }, [workouts]);
+  }, [workouts, todayDate]);
 
   const radarData = useMemo(() => {
     const totalTokens = chartData.reduce((acc, d) => acc + d.tokens, 0);
     const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
-    const intensityDays = chartData.filter(d => d.intensity > 0).length || 1;
-    const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / intensityDays;
+    const effortDays = chartData.filter(d => d.effort > 0).length || 1;
+    const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Aggressive scaling targets for the Radar chart:
-    // 20 tokens per week, 60 mins per week, effort factor 2
+    // Aggressive scaling for visual impact:
+    // Goals: 20 tokens per week, 60 mins per week, effort factor 2
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgIntensity * 50, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgEffort * 50, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goal', A: Math.min(stats.monthlyProgress || ((workouts?.length || 0) / 10) * 100, 100), fullMark: 100 },
     ];
   }, [chartData, stats, workouts]);
 
-  const checkStreakIntegrity = async (addr: string, currentProfile: any) => {
-    if (!currentProfile?.lastWorkoutDate || currentProfile.currentStreakDays === 0) return;
-
-    const lastWorkout = new Date(currentProfile.lastWorkoutDate);
-    const now = new Date();
-    const diffHours = (now.getTime() - lastWorkout.getTime()) / (1000 * 60 * 60);
-
-    if (diffHours > 48) {
-      const penalty = REWARD_RULES.PENALTIES.STREAK_BREAK;
-      
-      toast({
-        variant: "destructive",
-        title: "Streak Warning!",
-        description: `Deduction applied for inactivity: -${penalty} FIT tokens.`,
-      });
-
-      const newBalance = await penalizeUser(addr, penalty);
-      setBalance(newBalance);
-
-      if (user?.uid && db) {
-        const userRef = doc(db, "users", user.uid);
-        updateDoc(userRef, {
-          currentStreakDays: 0,
-          totalFitEarned: (currentProfile.totalFitEarned || 0) - penalty
-        });
-
-        const logRef = collection(db, "users", user.uid, "activityLogs");
-        addDoc(logRef, {
-          userId: user.uid,
-          activityType: "STREAK_BREAK",
-          description: `Penalty for missing workout (>48h)`,
-          fitCoinsChange: -penalty,
-          timestamp: new Date().toISOString()
-        });
-      }
-    }
-  };
-
   useEffect(() => {
-    setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
-    
     const addr = localStorage.getItem('fitcoin_wallet_address');
     if (addr) {
       setAddress(addr);
@@ -174,7 +140,6 @@ export default function Dashboard() {
     setBalance(bal);
 
     if (profile) {
-      await checkStreakIntegrity(addr, profile);
       const total = profile.totalWorkoutsCompleted || 0;
       const streak = profile.currentStreakDays || 0;
       setStats(prev => ({ 
@@ -220,7 +185,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history on the network.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-4 rounded-[2rem] shadow-xl border border-white/20 dark:border-white/5 flex items-center gap-4 hover:scale-105 transition-all cursor-pointer group" onClick={() => toast({ title: "My FIT Balance", description: "Your tokens are safe and secure." })}>
@@ -270,7 +235,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT tokens. Every session counts. Don't miss more than 2 days to keep your streak alive!</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Save your workout to earn FIT tokens. Every session counts.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -397,7 +362,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Save a workout to see your daily fitness plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Save a workout to see your daily plan.</p>
                 )}
               </CardContent>
             </Card>
@@ -406,13 +371,14 @@ export default function Dashboard() {
               <CardHeader className="pb-4 p-8">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                   <CalendarIcon className="w-4 h-4 text-primary" />
-                  Weekly Workout Streak
+                  Weekly Workout History
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 p-8 pt-2">
                 <div className="grid grid-cols-7 gap-3">
                   {chartData.map((d, i) => {
-                    const isToday = isSameDay(d.date, new Date());
+                    // Hydration safe check
+                    const isToday = todayDate ? isSameDay(d.date, todayDate) : false;
                     const hasWorkout = d.duration > 0 || d.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
@@ -459,7 +425,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Streak Warning: Don't miss a day!</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay consistent to keep your earnings!
+                      Missing your workout for more than 2 days will cost you -20 FIT tokens. Stay consistent!
                     </p>
                   </div>
                 </div>
@@ -479,7 +445,7 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20 cursor-pointer hover:bg-muted/40 transition-colors" onClick={() => toast({ title: "Safe Connection", description: "Your workout data is saved on the secure network." })}>
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Securely Saving Progress to the Network</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-tight">Securely Saving Progress</p>
                 </div>
               </CardContent>
             </Card>
