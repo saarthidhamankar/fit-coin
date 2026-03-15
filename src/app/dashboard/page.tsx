@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, LayoutGrid } from "lucide-react";
+import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, Activity, ShieldCheck, Zap, AlertTriangle } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, doc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
@@ -93,7 +93,7 @@ export default function Dashboard() {
         addDoc(logRef, {
           userId: user.uid,
           activityType: "STREAK_BREAK",
-          description: `Penalty for breaking streak (>48h)`,
+          description: `Metabolic tax for inactivity (>48h)`,
           fitCoinsChange: -penalty,
           timestamp: new Date().toISOString()
         });
@@ -102,7 +102,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Generate delays on client to avoid hydration mismatch
     setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
     
     const addr = localStorage.getItem('fitcoin_wallet_address');
@@ -216,7 +215,6 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                {/* Interactive Metabolic Matrix */}
                 <div className="hidden md:flex w-64 h-64 bg-white/20 dark:bg-card/40 backdrop-blur-xl rounded-[3rem] shadow-2xl p-8 border-4 border-primary/20 items-center justify-center flex-col text-center group cursor-pointer" onClick={() => toast({ title: "Metabolic Matrix", description: "Real-time performance load synchronization active." })}>
                   <div className="grid grid-cols-8 gap-1.5 w-full mb-6">
                     {Array.from({ length: 64 }).map((_, i) => (
@@ -355,6 +353,16 @@ export default function Dashboard() {
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
+                  <AlertTriangle className="w-6 h-6 text-destructive shrink-0 mt-1" />
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Protocol Alert: Integrity Enforcement</p>
+                    <p className="text-[11px] font-medium leading-tight text-destructive/80">
+                      Inactivity exceeding 48 hours triggers an automatic metabolic tax of -{REWARD_RULES.PENALTIES.STREAK_BREAK} FIT tokens. Maintain consistency to secure your assets.
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">

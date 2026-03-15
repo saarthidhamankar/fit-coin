@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,8 +10,8 @@ import { rewardUser } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
-import { useUser, useFirestore } from "@/firebase";
-import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 
 interface WorkoutModalProps {
   onSuccess: () => void;
@@ -28,6 +27,13 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   const [preview, setPreview] = useState<{ reward: number; breakdowns: string[] }>({ reward: 0, breakdowns: [] });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: profile } = useDoc(userDocRef);
 
   const types: { icon: any; label: WorkoutType }[] = [
     { icon: Dumbbell, label: 'Gym/Strength' },
@@ -51,25 +57,47 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
 
     setLoading(true);
     try {
-      // 1. Blockchain Reward (Mocked)
+      // 1. Calculate new streak logic
+      let newStreak = 1;
+      if (profile?.lastWorkoutDate) {
+        const lastWorkout = new Date(profile.lastWorkoutDate);
+        const today = new Date();
+        
+        // Normalize dates to check day difference
+        const lastDate = new Date(lastWorkout.getFullYear(), lastWorkout.getMonth(), lastWorkout.getDate());
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+          newStreak = profile.currentDailyStreak || 1;
+        } else if (diffDays === 1) {
+          newStreak = (profile.currentDailyStreak || 0) + 1;
+        } else {
+          newStreak = 1;
+        }
+      }
+
+      // 2. Blockchain Reward (Mocked)
       await rewardUser(address, preview.reward);
       
-      // 2. Firestore Sync if logged in
-      if (user?.uid) {
+      // 3. Firestore Sync if logged in
+      if (user?.uid && db) {
         const workoutRef = collection(db, "users", user.uid, "workouts");
         await addDoc(workoutRef, {
           userId: user.uid,
           type,
           durationMinutes: duration,
           date: new Date().toISOString(),
-          fitCoinsEarnedTotal: preview.reward
+          fitCoinsEarnedTotal: preview.reward,
+          timestamp: serverTimestamp()
         });
 
         const logRef = collection(db, "users", user.uid, "activityLogs");
         await addDoc(logRef, {
           userId: user.uid,
           activityType: "WORKOUT_EARN",
-          description: `${type} session for ${duration} mins`,
+          description: `${type} session completed (${duration} mins)`,
           fitCoinsChange: preview.reward,
           timestamp: new Date().toISOString()
         });
@@ -79,7 +107,8 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         await updateDoc(profileRef, {
           totalWorkouts: increment(1),
           totalFitCoinsEarned: increment(preview.reward),
-          lastWorkoutDate: new Date().toISOString()
+          lastWorkoutDate: new Date().toISOString(),
+          currentDailyStreak: newStreak
         });
       }
 
@@ -90,16 +119,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         colors: ['#18D156', '#BCFA22', '#ffffff']
       });
 
-      toast({ title: "Session Verified", description: `You earned ${preview.reward} FIT tokens. Keep grinding!` });
-      
-      const workouts = JSON.parse(localStorage.getItem(`fitcoin_history_${address}`) || "[]");
-      workouts.unshift({ 
-        type: type.replace('Gym/', ''),
-        duration, 
-        date: new Date().toISOString(), 
-        tokens: preview.reward 
-      });
-      localStorage.setItem(`fitcoin_history_${address}`, JSON.stringify(workouts.slice(0, 50)));
+      toast({ title: "Session Verified", description: `You earned ${preview.reward} FIT tokens. Streak: ${newStreak} Days!` });
       
       setOpen(false);
       onSuccess();
