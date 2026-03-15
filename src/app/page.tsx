@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -33,6 +32,13 @@ export default function LandingPage() {
   const handleHowItWorks = () => {
     const section = document.getElementById('how-it-works');
     if (section) section.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleFeatureClick = (title: string) => {
+    toast({
+      title: title,
+      description: "Our protocol ensures all fitness data is verified and immutable on the blockchain.",
+    });
   };
 
   return (
@@ -98,7 +104,8 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-10 rounded-[3rem] glass-morphism border hover:scale-105 transition-all cursor-default group"
+              onClick={() => handleFeatureClick(feature.title)}
+              className="p-10 rounded-[3rem] glass-morphism border hover:scale-105 transition-all cursor-pointer group"
             >
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-colors">
                 <feature.icon className="w-10 h-10 text-primary group-hover:text-white" />
@@ -125,9 +132,10 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="flex gap-8 items-center"
+                onClick={() => handleFeatureClick(item.title)}
+                className="flex gap-8 items-center cursor-pointer group"
               >
-                <div className="w-20 h-20 rounded-3xl bg-primary text-white flex items-center justify-center font-headline font-black text-3xl shadow-xl shadow-primary/20 shrink-0">
+                <div className="w-20 h-20 rounded-3xl bg-primary text-white flex items-center justify-center font-headline font-black text-3xl shadow-xl shadow-primary/20 shrink-0 group-hover:scale-110 transition-transform">
                   {item.step}
                 </div>
                 <div>
