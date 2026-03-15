@@ -25,7 +25,8 @@ import {
   TrendingUp, 
   Layers,
   Timer,
-  Check
+  Check,
+  Target
 } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
@@ -36,7 +37,15 @@ import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
-import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { 
+  Radar, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
+  ResponsiveContainer, 
+  Tooltip 
+} from "recharts";
 import { REWARD_RULES, WEEKLY_PLANS } from "@/lib/workout-rules";
 import { cn } from "@/lib/utils";
 import { startOfWeek, eachDayOfInterval, endOfWeek, isSameDay, startOfDay } from "date-fns";
@@ -52,7 +61,6 @@ export default function Dashboard() {
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [matrixDelays, setMatrixDelays] = useState<number[]>([]);
-  const [activeMetric, setActiveMetric] = useState<MetricType>('tokens');
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
@@ -101,6 +109,21 @@ export default function Dashboard() {
     }
     return data;
   }, [workouts]);
+
+  const radarData = useMemo(() => {
+    // Transform week data into a multi-metric radar format
+    const totalTokens = chartData.reduce((acc, d) => acc + d.tokens, 0);
+    const totalDuration = chartData.reduce((acc, d) => acc + d.duration, 0);
+    const avgIntensity = chartData.reduce((acc, d) => acc + d.intensity, 0) / (chartData.filter(d => d.intensity > 0).length || 1);
+    
+    return [
+      { subject: 'FIT Yield', A: Math.min(totalTokens / 5, 100), fullMark: 100 },
+      { subject: 'Volume', A: Math.min(totalDuration / 2, 100), fullMark: 100 },
+      { subject: 'Intensity', A: Math.min(avgIntensity * 10, 100), fullMark: 100 },
+      { subject: 'Consistency', A: Math.min(stats.currentStreak * 14, 100), fullMark: 100 },
+      { subject: 'Goal Sync', A: Math.min(stats.monthlyProgress, 100), fullMark: 100 },
+    ];
+  }, [chartData, stats]);
 
   const checkStreakIntegrity = async (addr: string, currentProfile: any) => {
     if (!currentProfile?.lastWorkoutDate || currentProfile.currentStreakDays === 0) return;
@@ -178,21 +201,15 @@ export default function Dashboard() {
           totalWorkouts: total,
           totalTokensEarned: bal
         }).then(setMotivation).catch(() => {
-          const today = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
+          const todayString = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
           setMotivation({
             motivationalMessage: "Protocol update: Consistency is the only path to metabolic dominance.",
-            workoutSuggestions: [WEEKLY_PLANS[stats.goal][today] || "Intense Cardio Session"],
+            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayString] || "Intense Cardio Session"],
             promoCode: streak > 5 ? "GRIND7" : undefined
           });
         }).finally(() => setLoadingMotivation(false));
       }
     }
-  };
-
-  const METRIC_CONFIG = {
-    tokens: { label: "FIT Yield", color: "hsl(var(--primary))", unit: "FIT" },
-    duration: { label: "Session Volume", color: "hsl(var(--primary))", unit: "min" },
-    intensity: { label: "Metabolic Load", color: "hsl(var(--accent))", unit: "PTS" }
   };
 
   return (
@@ -289,102 +306,41 @@ export default function Dashboard() {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
-                      <BarChart3 className="w-6 h-6 text-primary" />
-                      Proof of Sweat Distribution
+                      <Target className="w-6 h-6 text-primary" />
+                      Metabolic Pulse Radar
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Metabolic performance analyzer (Current Week)</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Protocol performance benchmark (Active Week)</p>
                   </div>
-                  
-                  <div className="flex bg-muted/50 p-1.5 rounded-full border border-border/10">
-                    {[
-                      { id: 'tokens', icon: Wallet },
-                      { id: 'duration', icon: Timer },
-                      { id: 'intensity', icon: Zap }
-                    ].map((m) => (
-                      <Button
-                        key={m.id}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setActiveMetric(m.id as MetricType)}
-                        className={cn(
-                          "rounded-full px-4 h-9 text-[9px] font-black uppercase tracking-widest transition-all",
-                          activeMetric === m.id ? "bg-primary text-white shadow-xl shadow-primary/20" : "text-muted-foreground hover:bg-white/10"
-                        )}
-                      >
-                        <m.icon className="w-3.5 h-3.5 mr-2" />
-                        {m.id}
-                      </Button>
-                    ))}
-                  </div>
+                  <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Attribute Sync</Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-10 h-[400px]">
+              <CardContent className="p-10 h-[400px] flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" opacity={0.3} />
-                    <XAxis 
-                      dataKey="day" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} 
-                      dy={10}
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                    <PolarGrid stroke="hsl(var(--muted))" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 900 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Protocol Metrics"
+                      dataKey="A"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.6}
                     />
                     <Tooltip 
-                      cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05, radius: 10 }}
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
-                          const config = METRIC_CONFIG[activeMetric];
                           return (
-                            <motion.div 
-                              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              className="glass-card border-2 border-primary/20 p-5 rounded-[2rem] shadow-2xl backdrop-blur-xl min-w-[150px]"
-                            >
-                              <p className="text-[10px] font-black uppercase text-muted-foreground mb-2 tracking-[0.2em]">{payload[0].payload.day} Protocol</p>
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between gap-4">
-                                  <span className="text-[9px] font-black uppercase opacity-60">Status</span>
-                                  <Badge className="bg-primary/20 text-primary border-none text-[8px] h-4">VERIFIED</Badge>
-                                </div>
-                                <div className="flex items-baseline gap-2">
-                                  <span className="text-3xl font-black text-primary italic">{payload[0].value}</span>
-                                  <span className="text-xs font-black uppercase opacity-60">{config.unit}</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
-                                  <motion.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: '100%' }}
-                                    className="h-full bg-primary"
-                                  />
-                                </div>
-                              </div>
-                            </motion.div>
+                            <div className="glass-card border-2 border-primary/20 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
+                              <p className="text-[10px] font-black uppercase text-primary mb-1">{payload[0].payload.subject}</p>
+                              <p className="text-2xl font-black">{Math.round(payload[0].value as number)}%</p>
+                            </div>
                           );
                         }
                         return null;
                       }}
                     />
-                    <Bar 
-                      dataKey={activeMetric} 
-                      radius={[15, 15, 5, 5]} 
-                      animationDuration={1500}
-                      animationEasing="ease-out"
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry[activeMetric] > 0 ? "url(#barGradient)" : 'hsl(var(--muted))'} 
-                          className="transition-all duration-300 hover:opacity-80 cursor-pointer"
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
+                  </RadarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -466,8 +422,11 @@ export default function Dashboard() {
                         >
                           {hasWorkout ? (
                             <Avatar className="w-12 h-12 border-2 border-primary shadow-xl shadow-primary/30 scale-110">
-                              <AvatarFallback className="bg-gradient-to-br from-orange-500 via-primary to-accent">
+                              <AvatarFallback className="bg-gradient-to-br from-orange-500 via-primary to-accent relative overflow-visible">
                                 <Flame className="w-6 h-6 text-white fill-white animate-pulse" />
+                                {d.day === 'Sun' && (
+                                  <span className="absolute -top-3 -right-3 text-xl filter drop-shadow-md animate-bounce">🔥</span>
+                                )}
                               </AvatarFallback>
                             </Avatar>
                           ) : (
