@@ -22,7 +22,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   const { user } = useUser();
   const db = useFirestore();
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<WorkoutType>('Gym/Strength');
+  const [type, setType] = useState<WorkoutType>('Strength');
   const [duration, setDuration] = useState(60);
   const [preview, setPreview] = useState<{ reward: number; breakdowns: string[] }>({ reward: 0, breakdowns: [] });
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
   const { data: profile } = useDoc(userDocRef);
 
   const types: { icon: any; label: WorkoutType }[] = [
-    { icon: Dumbbell, label: 'Gym/Strength' },
+    { icon: Dumbbell, label: 'Strength' },
     { icon: Flame, label: 'HIIT' },
     { icon: Timer, label: 'Cardio' },
     { icon: Bike, label: 'Cycling' },

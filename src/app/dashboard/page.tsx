@@ -46,7 +46,6 @@ export default function Dashboard() {
   const db = useFirestore();
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState(0);
-  const [stats, setStats] = useState({ totalWorkouts: 0, currentStreak: 0, monthlyProgress: 0, goal: "MuscleGain" as "MuscleGain" | "FatLoss" });
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [todayDate, setTodayDate] = useState<Date | null>(null);
@@ -81,7 +80,7 @@ export default function Dashboard() {
   const chartData = useMemo(() => {
     if (!isClient || !todayDate) return [];
     
-    // START ON SUNDAY
+    // START ON SUNDAY (weekStartsOn: 0)
     const start = startOfWeek(todayDate, { weekStartsOn: 0 });
     const end = endOfWeek(todayDate, { weekStartsOn: 0 });
     const daysInterval = eachDayOfInterval({ start, end });
@@ -115,49 +114,40 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Aggressive scaling so 0% isn't shown after work
+    // Aggressive scaling for immediate feedback
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
-      { subject: 'Workout Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
       { subject: 'Effort', A: Math.min(avgEffort * 60, 100), fullMark: 100 },
-      { subject: 'Streak', A: Math.min(((stats.currentStreak || (workouts?.length ? 1 : 0)) / 7) * 100, 100), fullMark: 100 },
-      { subject: 'Goal', A: Math.min(stats.monthlyProgress || ((workouts?.length || 0) / 10) * 100, 100), fullMark: 100 },
+      { subject: 'Streak', A: Math.min(((profile?.currentStreakDays || 0) / 7) * 100, 100), fullMark: 100 },
+      { subject: 'Goals', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 10) * 100, 100), fullMark: 100 },
     ];
-  }, [chartData, stats, workouts]);
+  }, [chartData, profile]);
 
   useEffect(() => {
     if (address) {
       getBalance(address).then(setBalance);
     }
-    if (profile) {
-      setStats(prev => ({ 
-        ...prev, 
-        totalWorkouts: profile.totalWorkoutsCompleted || 0, 
-        currentStreak: profile.currentStreakDays || 0, 
-        monthlyProgress: Math.min(((profile.totalWorkoutsCompleted || 0) / 30) * 100, 100) 
-      }));
-
-      if (!motivation && !loadingMotivation && workouts) {
-        setLoadingMotivation(true);
-        generateMotivation({
-          workoutHistory: workouts.slice(0, 3).map((w: any) => ({
-            date: (w.startTime || w.date)?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
-            type: w.workoutType || w.type,
-            durationMinutes: w.durationMinutes,
-            tokensEarned: w.totalTokensEarned
-          })),
-          currentStreak: profile.currentStreakDays || 0,
-          totalWorkouts: profile.totalWorkoutsCompleted || 0,
-          totalTokensEarned: balance
-        }).then(setMotivation).catch(() => {
-          const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
-          setMotivation({
-            motivationalMessage: "Keep it up! Small steps lead to big changes.",
-            workoutSuggestions: [WEEKLY_PLANS[stats.goal][todayStr] || "Stay Active Today"],
-            promoCode: (profile.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
-          });
-        }).finally(() => setLoadingMotivation(false));
-      }
+    if (profile && !motivation && !loadingMotivation && workouts) {
+      setLoadingMotivation(true);
+      generateMotivation({
+        workoutHistory: workouts.slice(0, 3).map((w: any) => ({
+          date: (w.startTime || w.date)?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
+          type: w.workoutType || w.type,
+          durationMinutes: w.durationMinutes,
+          tokensEarned: w.totalTokensEarned
+        })),
+        currentStreak: profile.currentStreakDays || 0,
+        totalWorkouts: profile.totalWorkoutsCompleted || 0,
+        totalTokensEarned: balance
+      }).then(setMotivation).catch(() => {
+        const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
+        setMotivation({
+          motivationalMessage: "Keep it up! Small steps lead to big changes.",
+          workoutSuggestions: [WEEKLY_PLANS.MuscleGain[todayStr] || "Stay Active Today"],
+          promoCode: (profile.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
+        });
+      }).finally(() => setLoadingMotivation(false));
     }
   }, [profile, address, balance, workouts]);
 
@@ -166,6 +156,10 @@ export default function Dashboard() {
   };
 
   if (!isClient) return null;
+
+  const currentStreak = profile?.currentStreakDays || 0;
+  const totalWorkouts = profile?.totalWorkoutsCompleted || 0;
+  const monthlyProgress = Math.min((totalWorkouts / 30) * 100, 100);
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
@@ -178,8 +172,8 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">On ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your daily workout history.</p>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Earn Mode: <span className="text-primary not-italic">Active ⚡</span></h1>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly workout history and earnings.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="pro-glass p-4 rounded-[2rem] flex items-center gap-4 group hover:scale-105 transition-all">
@@ -198,10 +192,10 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total FIT", value: balance, icon: Wallet },
-            { label: "Day Streak", value: stats.currentStreak, suffix: " Days", icon: Flame },
-            { label: "Total Workouts", value: stats.totalWorkouts, icon: Dumbbell },
-            { label: "Goal Progress", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap }
+            { label: "Total FIT", value: balance, icon: Wallet, suffix: "" },
+            { label: "Day Streak", value: currentStreak, suffix: " Days", icon: Flame },
+            { label: "Total Workouts", value: totalWorkouts, suffix: "", icon: Dumbbell },
+            { label: "Goal Progress", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
               <Card className="rounded-[2.5rem] border-none pro-glass hover:shadow-xl transition-all group overflow-hidden">
@@ -229,11 +223,11 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Workout</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is key.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is key to your success.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={handleWorkoutSuccess} 
-                      userStats={stats} 
+                      userStats={{ totalWorkouts, currentStreak }} 
                     />
                   </div>
                 </div>
@@ -253,7 +247,7 @@ export default function Dashboard() {
                       <Target className="w-6 h-6 text-primary" />
                       Weekly Fitness Balance
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map across all metrics</p>
                   </div>
                   <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Sync</Badge>
                 </div>
@@ -327,7 +321,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Log a workout to unlock your daily plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first workout to unlock your daily fitness plan.</p>
                 )}
               </CardContent>
             </Card>
@@ -386,15 +380,15 @@ export default function Dashboard() {
                 
                 <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Goal</span>
-                    <span className="text-[11px] font-black text-primary">{Math.round(stats.monthlyProgress)}%</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Progress</span>
+                    <span className="text-[11px] font-black text-primary">{Math.round(monthlyProgress)}%</span>
                   </div>
-                  <Progress value={stats.monthlyProgress} className="h-4 rounded-full bg-muted/30" />
+                  <Progress value={monthlyProgress} className="h-4 rounded-full bg-muted/30" />
                 </div>
 
                 <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Secure History</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Verified History</p>
                 </div>
               </CardContent>
             </Card>
