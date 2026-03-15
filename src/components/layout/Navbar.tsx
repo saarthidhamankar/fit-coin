@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield, User } from "lucide-react";
+import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield, User, Apple } from "lucide-react";
 import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -51,15 +51,6 @@ export default function Navbar() {
           walletAddress: addr,
           lastLoginDate: new Date().toISOString()
         }, { merge: true });
-
-        const logRef = doc(db, "users", user.uid, "activityLogs", `login-${Date.now()}`);
-        await setDoc(logRef, {
-          userId: user.uid,
-          activityType: "LOGIN",
-          description: "Athlete synchronization established.",
-          fitCoinsChange: 0,
-          timestamp: new Date().toISOString()
-        });
       }
 
       toast({ title: "Wallet Connected", description: `Welcome back, athlete!` });
@@ -77,6 +68,7 @@ export default function Navbar() {
   const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Earn", href: "/dashboard", icon: Activity },
+    { label: "Diet", href: "/diet", icon: Apple },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: "Ledger", href: "/leaderboard", icon: Trophy },
   ];
@@ -139,7 +131,7 @@ export default function Navbar() {
                     <Settings className="mr-3 h-4 w-4 text-primary" /> Athlete Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Biometric lock active." })} className="rounded-xl cursor-pointer font-bold p-3 focus:bg-primary/10">
+                <DropdownMenuItem onClick={() => toast({ title: "Security", description: "Encryption layer active." })} className="rounded-xl cursor-pointer font-bold p-3 focus:bg-primary/10">
                   <Shield className="mr-3 h-4 w-4 text-primary" /> On-Chain Security
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

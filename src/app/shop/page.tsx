@@ -5,7 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight, Tag, Loader2 } from "lucide-react";
+import { ShoppingBag, Star, Check, MapPin, Truck, Phone, Package, Heart, Info, ArrowRight, Tag, Loader2, X } from "lucide-react";
 import { getBalance, spendTokens } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,6 +38,7 @@ export default function ShopPage() {
   const [checkoutProduct, setCheckoutProduct] = useState<any>(null);
   const [successProduct, setSuccessProduct] = useState<any>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [showWishlist, setShowWishlist] = useState(false);
   const { toast } = useToast();
 
   const [shipping, setShipping] = useState({
@@ -57,6 +58,8 @@ export default function ShopPage() {
       setAddress(addr);
       getBalance(addr).then(setBalance);
     }
+    const savedWishlist = JSON.parse(localStorage.getItem('fitcoin_wishlist') || "[]");
+    setWishlist(savedWishlist);
   }, []);
 
   const handleRedeemInitiate = (product: any) => {
@@ -90,11 +93,9 @@ export default function ShopPage() {
 
     setLoading(true);
     try {
-      // 1. Update blockchain balance (mocked locally)
       const newBalance = await spendTokens(address, checkoutProduct.price);
       setBalance(newBalance);
 
-      // 2. Log purchase in Firestore if user is logged in
       if (user?.uid && db) {
         const purchaseRef = collection(db, "users", user.uid, "purchases");
         await addDoc(purchaseRef, {
@@ -108,7 +109,6 @@ export default function ShopPage() {
           timestamp: serverTimestamp()
         });
 
-        // 3. Log to activity ledger
         const logRef = collection(db, "users", user.uid, "activityLogs");
         await addDoc(logRef, {
           userId: user.uid,
@@ -137,7 +137,11 @@ export default function ShopPage() {
   };
 
   const toggleWishlist = (id: string) => {
-    setWishlist(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    setWishlist(prev => {
+      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      localStorage.setItem('fitcoin_wishlist', JSON.stringify(next));
+      return next;
+    });
     toast({ 
       title: wishlist.includes(id) ? "Removed" : "Added", 
       description: wishlist.includes(id) ? "Item removed from wishlist." : "Goal item saved!" 
@@ -161,7 +165,11 @@ export default function ShopPage() {
             <p className="text-muted-foreground mt-2 text-lg font-medium">Redeem your hard-earned FIT tokens for premium fitness hardware.</p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest bg-white dark:bg-card border-2 active:scale-95">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowWishlist(true)}
+              className="rounded-2xl h-14 px-6 font-black uppercase text-xs tracking-widest bg-white dark:bg-card border-2 active:scale-95"
+            >
               <Heart className="w-5 h-5 mr-2 text-primary" /> Wishlist ({wishlist.length})
             </Button>
             <div className="px-8 py-4 bg-primary text-white rounded-[2rem] font-black flex items-center gap-3 shadow-2xl shadow-primary/30 border-b-4 border-black/10">
@@ -213,20 +221,11 @@ export default function ShopPage() {
                           >
                             <Heart className={`w-5 h-5 ${wishlist.includes(product.id) ? "fill-primary text-primary" : ""}`} />
                           </Button>
-                          <div className="bg-white/80 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 border border-primary/10">
-                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                            <span className="text-[10px] font-black">{product.rating}</span>
-                          </div>
                         </div>
                       </div>
                       <CardHeader className="flex-1 pb-2">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-2xl font-black">{product.name}</CardTitle>
-                          <Button variant="ghost" size="icon" onClick={() => toast({ title: "Info", description: "Premium gym equipment verified by FitCoin Protocol." })} className="active:scale-95">
-                            <Info className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2 font-medium">Redeemable with FIT tokens earned at the gym. Fast global shipping included.</p>
+                        <CardTitle className="text-2xl font-black">{product.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground mt-2 font-medium">Verified by FitCoin Protocol. Fast global shipping included.</p>
                       </CardHeader>
                       <CardFooter className="p-6 pt-2">
                         <div className="flex items-center justify-between w-full p-4 bg-muted/30 rounded-3xl border border-muted">
@@ -258,148 +257,102 @@ export default function ShopPage() {
         </Tabs>
       </div>
 
+      {/* Wishlist Modal */}
+      <Dialog open={showWishlist} onOpenChange={setShowWishlist}>
+        <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none shadow-2xl overflow-hidden bg-background">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="font-headline font-black uppercase text-3xl italic tracking-tighter flex items-center gap-2">
+              <Heart className="text-primary fill-primary" /> Goal List
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {wishlist.length > 0 ? (
+              wishlist.map(id => {
+                const product = PRODUCTS.find(p => p.id === id);
+                if (!product) return null;
+                return (
+                  <div key={id} className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-muted hover:border-primary/20 transition-all">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{product.emoji}</span>
+                      <div>
+                        <p className="font-black text-sm">{product.name}</p>
+                        <p className="text-[10px] font-bold text-primary">{product.price} FIT</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => toggleWishlist(id)}
+                      className="text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-12 text-center text-muted-foreground">
+                <p className="font-black uppercase text-xs tracking-widest">Your wishlist is empty.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Checkout Modal */}
       <Dialog open={!!checkoutProduct} onOpenChange={(open) => { if (!open && !loading) setCheckoutProduct(null); }}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
-          <div className="max-h-[85vh] overflow-y-auto scroll-smooth p-8 bg-gradient-to-b from-primary/10 to-background flex flex-col gap-8">
+        <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none shadow-2xl">
+          <div className="max-h-[90vh] overflow-y-auto scroll-smooth p-8 bg-gradient-to-b from-primary/10 to-background flex flex-col gap-8">
             <DialogHeader>
               <DialogTitle className="font-headline font-black uppercase text-2xl flex items-center gap-2">
                 <Truck className="w-6 h-6 text-primary" /> Delivery Logistics
               </DialogTitle>
-              <p className="text-sm text-muted-foreground font-medium">Verify your shipping details for physical redemption.</p>
             </DialogHeader>
-            
             <div className="space-y-6">
               <div className="p-6 bg-white dark:bg-card rounded-[2rem] border-2 border-primary/10 flex justify-between items-center shadow-sm">
                 <div>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Selected Item</p>
                   <p className="text-xl font-black">{checkoutProduct?.name}</p>
-                  <p className="text-xs text-primary font-bold">{checkoutProduct?.category}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cost</p>
                   <p className="text-2xl font-black text-primary">{checkoutProduct?.price} FIT</p>
                 </div>
               </div>
-
               <div className="space-y-4 bg-white dark:bg-card p-6 rounded-[2rem] shadow-sm border-2 border-primary/10">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                    <Input 
-                      placeholder="e.g. John Doe" 
-                      value={shipping.fullName} 
-                      onChange={(e) => setShipping({...shipping, fullName: e.target.value})}
-                      className="rounded-xl h-12 border-2 focus:border-primary transition-all"
-                    />
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Full Name</Label>
+                    <Input placeholder="John Doe" value={shipping.fullName} onChange={(e) => setShipping({...shipping, fullName: e.target.value})} className="rounded-xl h-12 border-2" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Shipping Address</Label>
-                    <Input 
-                      placeholder="Street, Building, Flat" 
-                      value={shipping.address} 
-                      onChange={(e) => setShipping({...shipping, address: e.target.value})}
-                      className="rounded-xl h-12 border-2 focus:border-primary transition-all"
-                    />
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Address</Label>
+                    <Input placeholder="123 Gym Street" value={shipping.address} onChange={(e) => setShipping({...shipping, address: e.target.value})} className="rounded-xl h-12 border-2" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">City</Label>
-                      <Input 
-                        placeholder="City" 
-                        value={shipping.city} 
-                        onChange={(e) => setShipping({...shipping, city: e.target.value})}
-                        className="rounded-xl h-12 border-2 focus:border-primary transition-all"
-                      />
+                      <Label className="text-[10px] font-black uppercase tracking-widest">City</Label>
+                      <Input placeholder="New York" value={shipping.city} onChange={(e) => setShipping({...shipping, city: e.target.value})} className="rounded-xl h-12 border-2" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pincode</Label>
-                      <Input 
-                        placeholder="ZIP/PIN" 
-                        value={shipping.pincode} 
-                        onChange={(e) => setShipping({...shipping, pincode: e.target.value})}
-                        className="rounded-xl h-12 border-2 focus:border-primary transition-all"
-                      />
+                      <Label className="text-[10px] font-black uppercase tracking-widest">Pincode</Label>
+                      <Input placeholder="10001" value={shipping.pincode} onChange={(e) => setShipping({...shipping, pincode: e.target.value})} className="rounded-xl h-12 border-2" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</Label>
-                    <Input 
-                      placeholder="+1 (555) 000-0000" 
-                      value={shipping.phone} 
-                      onChange={(e) => setShipping({...shipping, phone: e.target.value})}
-                      className="rounded-xl h-12 border-2 focus:border-primary transition-all"
-                    />
-                  </div>
-                  <div className="space-y-2 pt-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                      <Tag className="w-3 h-3" /> Promo Code
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Enter code..." 
-                        value={shipping.promoCode} 
-                        onChange={(e) => setShipping({...shipping, promoCode: e.target.value})}
-                        className="rounded-xl h-12 border-2 border-dashed focus:border-primary transition-all flex-1"
-                      />
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        disabled={!shipping.promoCode || validatingCode}
-                        onClick={handleValidateCode}
-                        className="rounded-xl font-black uppercase text-[10px] h-12 px-4"
-                      >
-                        {validatingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                      </Button>
-                    </div>
+                    <Label className="text-[10px] font-black uppercase tracking-widest">Phone</Label>
+                    <Input placeholder="+1 555-5555" value={shipping.phone} onChange={(e) => setShipping({...shipping, phone: e.target.value})} className="rounded-xl h-12 border-2" />
                   </div>
                 </div>
               </div>
-
-              <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20">
-                <div className="flex items-start gap-3">
-                  <Package className="w-5 h-5 text-primary shrink-0 mt-1" />
-                  <p className="text-[10px] font-bold text-muted-foreground leading-relaxed">By finalizing, your FIT tokens will be burned and an immutable order record will be synchronized with your account.</p>
-                </div>
-              </div>
-
               <Button 
                 onClick={handleConfirmRedeem} 
                 disabled={loading}
-                className="w-full h-20 rounded-[1.5rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 border-b-8 border-black/10 active:border-b-0 active:translate-y-1 transition-all mt-4"
+                className="w-full h-20 rounded-[1.5rem] font-black uppercase text-xl shadow-2xl shadow-primary/30 active:scale-95"
               >
-                {loading ? (
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Finalizing...
-                  </div>
-                ) : (
-                  "Finalize Order"
-                )}
+                {loading ? <Loader2 className="animate-spin mr-2" /> : "Finalize Order"}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Success Modal */}
-      <Dialog open={!!successProduct} onOpenChange={() => setSuccessProduct(null)}>
-        <DialogContent className="max-w-sm rounded-[3rem] p-0 overflow-hidden border-none text-center">
-          <div className="bg-gradient-to-b from-primary/20 to-background p-10 space-y-8">
-            <motion.div 
-              initial={{ scale: 0, rotate: -45 }}
-              animate={{ scale: 1, rotate: 0 }}
-              className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-white mx-auto shadow-2xl"
-            >
-              <Check className="w-12 h-12" />
-            </motion.div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-headline font-black uppercase italic tracking-tighter">Order <span className="text-primary not-italic">Confirmed</span></h2>
-              <p className="text-muted-foreground font-medium">Your <span className="text-foreground font-black">{successProduct?.name}</span> is being prepared for transit. Check your activity ledger for updates.</p>
-            </div>
-            <Button className="w-full h-16 bg-primary text-lg font-black rounded-2xl shadow-xl shadow-primary/20 active:scale-95" onClick={() => setSuccessProduct(null)}>
-              Return to Vault
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
