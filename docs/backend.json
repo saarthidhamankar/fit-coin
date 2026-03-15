@@ -1,0 +1,422 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user of the FitCoin application, storing their unique identifier, wallet address, and aggregated fitness statistics.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "walletAddress": {
+          "type": "string",
+          "description": "The user's unique blockchain wallet address, used for authentication and token transfers."
+        },
+        "username": {
+          "type": "string",
+          "description": "An optional display name chosen by the user or derived from their wallet address."
+        },
+        "totalFitCoinsEarned": {
+          "type": "number",
+          "description": "The cumulative total of FIT tokens ever earned by the user across all activities."
+        },
+        "totalFitCoinsSpent": {
+          "type": "number",
+          "description": "The cumulative total of FIT tokens ever spent by the user in the rewards shop."
+        },
+        "totalWorkouts": {
+          "type": "number",
+          "description": "The total count of workout sessions logged by the user."
+        },
+        "currentDailyStreak": {
+          "type": "number",
+          "description": "The number of consecutive days the user has logged at least one workout."
+        },
+        "longestDailyStreak": {
+          "type": "number",
+          "description": "The highest number of consecutive workout days ever achieved by the user."
+        },
+        "lastWorkoutDate": {
+          "type": "string",
+          "description": "The date and time of the user's most recently logged workout.",
+          "format": "date-time"
+        },
+        "lastLoginDate": {
+          "type": "string",
+          "description": "The date and time the user last accessed the application, used for general activity tracking.",
+          "format": "date-time"
+        },
+        "unlockedAchievementIds": {
+          "type": "array",
+          "description": "An array of IDs referencing Achievement entities that the user has unlocked. (Relationship: UserProfile N:N Achievement)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "monthlyChallengeProgress": {
+          "type": "number",
+          "description": "A numerical value indicating the user's progress in the current monthly challenge, typically a percentage or specific target metric."
+        }
+      },
+      "required": [
+        "id",
+        "walletAddress",
+        "totalFitCoinsEarned",
+        "totalFitCoinsSpent",
+        "totalWorkouts",
+        "currentDailyStreak",
+        "longestDailyStreak",
+        "lastWorkoutDate",
+        "lastLoginDate",
+        "unlockedAchievementIds",
+        "monthlyChallengeProgress"
+      ]
+    },
+    "Workout": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Workout",
+      "type": "object",
+      "description": "Records the details of a single workout session logged by a user, including type, duration, and tokens earned.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Workout entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who logged this workout. (Relationship: UserProfile 1:N Workout)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The category or type of workout, e.g., 'Cardio', 'Strength Training', 'Yoga'."
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "The duration of the workout session in minutes."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date and time when the workout was logged.",
+          "format": "date-time"
+        },
+        "fitCoinsEarnedBase": {
+          "type": "number",
+          "description": "The base amount of FIT tokens earned for the workout duration, before any bonuses are applied."
+        },
+        "bonusesApplied": {
+          "type": "array",
+          "description": "A list of descriptive strings for any bonus rules that applied to this workout (e.g., 'Early Bird', 'Weekend Workout').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fitCoinsEarnedTotal": {
+          "type": "number",
+          "description": "The total amount of FIT tokens awarded for this workout, including base earnings and all applicable bonuses."
+        },
+        "transactionHash": {
+          "type": "string",
+          "description": "The blockchain transaction hash confirming the transfer of FIT tokens for this workout."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "type",
+        "durationMinutes",
+        "date",
+        "fitCoinsEarnedBase",
+        "bonusesApplied",
+        "fitCoinsEarnedTotal",
+        "transactionHash"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Defines an item available for purchase in the FitCoin rewards shop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the product belongs to, e.g., 'Nutrition', 'Equipment', 'Apparel', 'Training'."
+        },
+        "priceFitCoins": {
+          "type": "number",
+          "description": "The cost of the product in FIT tokens."
+        },
+        "emoji": {
+          "type": "string",
+          "description": "An emoji representation or icon for the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Optional URL to an image of the product.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "category",
+        "priceFitCoins",
+        "emoji"
+      ]
+    },
+    "Purchase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Purchase",
+      "type": "object",
+      "description": "Records a user's successful purchase of a product from the rewards shop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Purchase entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who made the purchase. (Relationship: UserProfile 1:N Purchase)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product that was purchased. (Relationship: Product 1:N Purchase)"
+        },
+        "purchaseDate": {
+          "type": "string",
+          "description": "The date and time when the purchase was made.",
+          "format": "date-time"
+        },
+        "fitCoinsSpent": {
+          "type": "number",
+          "description": "The amount of FIT tokens spent for this specific purchase."
+        },
+        "transactionHash": {
+          "type": "string",
+          "description": "The blockchain transaction hash confirming the spending of FIT tokens for this purchase."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "productId",
+        "purchaseDate",
+        "fitCoinsSpent",
+        "transactionHash"
+      ]
+    },
+    "ActivityLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ActivityLog",
+      "type": "object",
+      "description": "Provides a chronological record of significant user actions and token-related events for display in an activity feed.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ActivityLog entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile associated with this activity. (Relationship: UserProfile 1:N ActivityLog)"
+        },
+        "activityType": {
+          "type": "string",
+          "description": "The type of activity, e.g., 'WORKOUT_EARN', 'BONUS_EARN', 'PURCHASE_SPEND', 'CHALLENGE_COMPLETE', 'LOGIN'."
+        },
+        "description": {
+          "type": "string",
+          "description": "A concise, human-readable description of the activity."
+        },
+        "fitCoinsChange": {
+          "type": "number",
+          "description": "The net change in FIT tokens as a result of this activity (positive for earnings, negative for spending)."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time when the activity occurred.",
+          "format": "date-time"
+        },
+        "relatedEntityId": {
+          "type": "string",
+          "description": "Optional: Reference to another entity (e.g., Workout ID, Purchase ID) that this activity log entry relates to."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "activityType",
+        "description",
+        "fitCoinsChange",
+        "timestamp"
+      ]
+    },
+    "Achievement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Achievement",
+      "type": "object",
+      "description": "Defines a specific badge or milestone that users can earn within the FitCoin app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Achievement entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the achievement, e.g., 'First Workout', '7-Day Streak Master'."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the criteria required to unlock this achievement."
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "Optional URL to an image representing the achievement badge.",
+          "format": "uri"
+        },
+        "rewardFitCoins": {
+          "type": "number",
+          "description": "The amount of FIT tokens awarded to the user upon unlocking this achievement."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "rewardFitCoins"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores the main profile information for a user. Access is restricted to the authenticated user whose UID matches the document ID. The 'id' field in the document matches the '{userId}' path parameter.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to `request.auth.uid`."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/workouts/{workoutId}",
+        "definition": {
+          "entityName": "Workout",
+          "schema": {
+            "$ref": "#/backend/entities/Workout"
+          },
+          "description": "Records individual workout sessions for a specific user. Includes denormalized 'userId' field for authorization independence, ensuring `request.resource.data.userId` matches the `{userId}` path parameter for secure access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who logged the workout."
+            },
+            {
+              "name": "workoutId",
+              "description": "The unique identifier for a specific workout session."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Contains definitions of all products available in the rewards shop. This collection is publicly readable by all users, but typically requires administrative privileges for write operations.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for a specific product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/purchases/{purchaseId}",
+        "definition": {
+          "entityName": "Purchase",
+          "schema": {
+            "$ref": "#/backend/entities/Purchase"
+          },
+          "description": "Records individual product purchases made by a specific user. Includes denormalized 'userId' field for authorization independence, ensuring `request.resource.data.userId` matches the `{userId}` path parameter for secure access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who made the purchase."
+            },
+            {
+              "name": "purchaseId",
+              "description": "The unique identifier for a specific purchase transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/activityLogs/{activityLogId}",
+        "definition": {
+          "entityName": "ActivityLog",
+          "schema": {
+            "$ref": "#/backend/entities/ActivityLog"
+          },
+          "description": "Provides a chronological ledger of significant activities (e.g., logins, workout earnings, purchases) for a specific user. Includes denormalized 'userId' field for authorization independence, ensuring `request.resource.data.userId` matches the `{userId}` path parameter for secure access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user associated with this activity log entry."
+            },
+            {
+              "name": "activityLogId",
+              "description": "The unique identifier for a specific activity log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/achievements/{achievementId}",
+        "definition": {
+          "entityName": "Achievement",
+          "schema": {
+            "$ref": "#/backend/entities/Achievement"
+          },
+          "description": "Defines global achievement badges. This collection is publicly readable by all users, but typically requires administrative privileges for write operations.",
+          "params": [
+            {
+              "name": "achievementId",
+              "description": "The unique identifier for a specific achievement."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for FitCoin adheres strictly to the core design principles to ensure security, scalability, and debuggability. All user-specific data is nested under a top-level `/users/{userId}` collection, leveraging path-based ownership for robust authorization.\n\n**Authorization Independence (CRITICAL) & Denormalization:**\nEach user's primary profile data resides at `/users/{userId}`. Subcollections like `/users/{userId}/workouts`, `/users/{userId}/purchases`, and `/users/{userId}/activityLogs` are directly owned by a specific user. Crucially, every document within these subcollections (e.g., a `Workout` document) includes a `userId` field which explicitly matches the `{userId}` wildcard in its path. This denormalization is vital: it completely eliminates the need for `get()` calls in Firestore Security Rules to check parent document ownership. Rules can simply verify `request.auth.uid == userId` for the specific document or collection being accessed, ensuring atomic operations and preventing rule-based performance bottlenecks or complex debugging scenarios.\n\n**Clarity of Intent & Debuggability:**\nThe hierarchical path structure (`/users/{userId}/workouts/{workoutId}`) clearly signifies that `workoutId` belongs to `userId`. This makes security rules highly intuitive and easy to write, read, and debug. For instance, a rule for workouts would simply be `allow read, write: if request.auth.uid == request.resource.data.userId;` (or `request.auth.uid == userId` if relying on the path wildcard for `get/update/delete`, and `request.auth.uid == userId` for `list`).\n\n**QAPs (Rules are not Filters) & Structural Segregation:**\n\n1.  **Private User Data:** `/users/{userId}`, `/users/{userId}/workouts`, `/users/{userId}/purchases`, `/users/{userId}/activityLogs` all represent private data accessible only to the authenticated user whose `uid` matches the `{userId}`. This segregation ensures a homogeneous security posture within these collections, making `list` operations performant and secure (e.g., a user can only list *their own* workouts). No filtering is needed at the rule level because the structure inherently restricts access to owned data.\n2.  **Public Global Data:** `/products` and `/achievements` are global collections intended for all users to read. These collections have a homogeneous 'public read, admin write' security posture. `list` operations on these collections are naturally QAP-compliant as they are designed to be fully readable by all.\n\n**Fulfillment of User Request:**\n*   **Login Record:** Each user login can trigger an update to `UserProfile.lastLoginDate` and generate an `ActivityLog` entry at `/users/{userId}/activityLogs/{activityLogId}` with `activityType: 'LOGIN'`, providing a clear historical ledger.\n*   **FitCoins Earned:** `UserProfile.totalFitCoinsEarned` will aggregate lifetime earnings. Individual workout earnings are recorded in `Workout.fitCoinsEarnedTotal` and detailed in `ActivityLog` entries (`activityType: 'WORKOUT_EARN', 'BONUS_EARN'`) with `fitCoinsChange`.\n*   **Weekly and Monthly Streak:** The `UserProfile` entity tracks `currentDailyStreak` and `longestDailyStreak`. While explicit weekly/monthly streak fields are not in the provided schema, these can be calculated on the client-side by querying `ActivityLog` entries or `Workout` documents within a specific date range. If direct storage of weekly/monthly streaks were required, new fields in `UserProfile` or a dedicated subcollection (e.g., `/users/{userId}/streaks_summary`) would be added, updated via Cloud Functions.\n*   **Score in the Ledger:** The `ActivityLog` subcollection serves as the comprehensive ledger, recording all significant events including token changes, logins, workouts, and purchases, fulfilling the requirement for a transparent record of user activity and earnings."
+  }
+}
