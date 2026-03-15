@@ -10,6 +10,7 @@ import { Trophy, Medal, Crown, Flame, ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const MOCK_DATA = {
   Weekly: [
