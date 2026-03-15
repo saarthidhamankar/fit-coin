@@ -1,11 +1,10 @@
-
 "use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell } from "lucide-react";
+import { Wallet, Activity, Trophy, ShoppingBag, Home, Settings, LogOut, Dumbbell, Shield } from "lucide-react";
 import { connectWallet } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
