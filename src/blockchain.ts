@@ -1,4 +1,3 @@
-
 import { ethers } from 'ethers';
 
 const SEPOLIA_CHAIN_ID = '0xaa36a7';
@@ -9,7 +8,6 @@ export const isMetaMaskInstalled = () => {
 
 export const connectWallet = async () => {
   if (!isMetaMaskInstalled()) {
-    // Demo Fallback: Allow users to experience the app without MetaMask
     console.warn('MetaMask not detected. Using Demo Wallet.');
     const mockAddress = "0xDemo" + Math.random().toString(16).slice(2, 10).toUpperCase();
     return mockAddress;
@@ -74,12 +72,16 @@ export const rewardUser = async (address: string, amount: number) => {
 
 export const spendTokens = async (address: string, amount: number) => {
   const current = await getBalance(address);
-  if (current < amount) throw new Error("Insufficient FIT balance");
+  const newBalance = Math.max(0, current - amount);
   
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  const newBalance = current - amount;
   localStorage.setItem(`fitcoin_balance_${address}`, newBalance.toString());
   
   return newBalance;
+};
+
+export const penalizeUser = async (address: string, amount: number) => {
+  console.log(`Penalizing ${amount} FIT from ${address} due to streak break...`);
+  return spendTokens(address, amount);
 };

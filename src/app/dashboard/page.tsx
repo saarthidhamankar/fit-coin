@@ -5,19 +5,19 @@ import Navbar from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3 } from "lucide-react";
-import { getBalance } from "@/blockchain";
+import { Wallet, Flame, Dumbbell, History, Sparkles, Calendar as CalendarIcon, Info, Tag, BarChart3, ChevronRight, AlertTriangle } from "lucide-react";
+import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
 import { motion } from "framer-motion";
 import { generateMotivation, GenerateMotivationOutput } from "@/ai/flows/generate-motivation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, startOfWeek, addDays } from "date-fns";
 import CountUp from "@/components/CountUp";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { useFirestore, useCollection, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit, doc, updateDoc } from "firebase/firestore";
 import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, Cell } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { REWARD_RULES } from "@/lib/workout-rules";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -29,16 +29,12 @@ export default function Dashboard() {
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const { toast } = useToast();
 
-  const activityQuery = useMemoFirebase(() => {
+  const userDocRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    return query(
-      collection(db, "users", user.uid, "activityLogs"),
-      orderBy("timestamp", "desc"),
-      limit(5)
-    );
+    return doc(db, "users", user.uid);
   }, [db, user?.uid]);
 
-  const { data: activityLogs, isLoading: loadingLogs } = useCollection(activityQuery);
+  const { data: profile } = useDoc(userDocRef);
 
   const workoutQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -58,7 +54,7 @@ export default function Dashboard() {
     if (workouts) {
       workouts.forEach(w => {
         const date = new Date(w.date);
-        const dayIdx = (date.getDay() + 6) % 7; // Mon = 0
+        const dayIdx = (date.getDay() + 6) % 7;
         data[dayIdx].duration += w.durationMinutes;
       });
     }
@@ -71,45 +67,80 @@ export default function Dashboard() {
       setAddress(addr);
       refreshData(addr);
     }
-  }, [user]);
+  }, [user, profile]);
+
+  const checkStreakIntegrity = async (addr: string, currentProfile: any) => {
+    if (!currentProfile?.lastWorkoutDate || currentProfile.currentDailyStreak === 0) return;
+
+    const lastWorkout = new Date(currentProfile.lastWorkoutDate);
+    const now = new Date();
+    const diffHours = (now.getTime() - lastWorkout.getTime()) / (1000 * 60 * 60);
+
+    // If more than 48 hours passed, streak is broken
+    if (diffHours > 48) {
+      const penalty = REWARD_RULES.PENALTIES.STREAK_BREAK;
+      
+      toast({
+        variant: "destructive",
+        title: "Streak Broken! ❄️",
+        description: `You haven't trained in 48h. Penalty: -${penalty} FIT tokens.`,
+      });
+
+      const newBalance = await penalizeUser(addr, penalty);
+      setBalance(newBalance);
+
+      if (user?.uid && db) {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          currentDailyStreak: 0,
+          totalFitCoinsSpent: (currentProfile.totalFitCoinsSpent || 0) + penalty
+        });
+
+        const logRef = collection(db, "users", user.uid, "activityLogs");
+        await updateDoc(doc(logRef), {
+          userId: user.uid,
+          activityType: "STREAK_BREAK",
+          description: `Penalty for breaking streak`,
+          fitCoinsChange: -penalty,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+  };
 
   const refreshData = async (addr: string) => {
     const bal = await getBalance(addr);
     setBalance(bal);
 
-    const localHistory = JSON.parse(localStorage.getItem(`fitcoin_history_${addr}`) || "[]");
-    
-    const total = localHistory.length;
-    const streak = total > 0 ? (total % 7 || 7) : 0; 
-    const progress = Math.min((total / 30) * 100, 100);
-    
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    const weeklyTokens = localHistory
-      .filter((w: any) => new Date(w.date) >= lastWeek)
-      .reduce((acc: number, w: any) => acc + w.tokens, 0);
+    if (profile) {
+      await checkStreakIntegrity(addr, profile);
+      
+      const total = profile.totalWorkouts || 0;
+      const streak = profile.currentDailyStreak || 0;
+      const progress = Math.min((total / 30) * 100, 100);
+      
+      setStats(prev => ({ ...prev, totalWorkouts: total, currentStreak: streak, monthlyProgress: progress }));
 
-    setStats({ totalWorkouts: total, currentStreak: streak, monthlyProgress: progress, weeklyTokens });
-
-    if (!motivation) {
-      setLoadingMotivation(true);
-      try {
-        const result = await generateMotivation({
-          workoutHistory: localHistory.slice(0, 3).map((w: any) => ({
-            date: w.date.split('T')[0],
-            type: w.type,
-            durationMinutes: w.duration,
-            tokensEarned: w.tokens
-          })),
-          currentStreak: streak,
-          totalWorkouts: total,
-          totalTokensEarned: bal
-        });
-        setMotivation(result);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoadingMotivation(false);
+      if (!motivation && !loadingMotivation) {
+        setLoadingMotivation(true);
+        try {
+          const result = await generateMotivation({
+            workoutHistory: workouts?.slice(0, 3).map((w: any) => ({
+              date: w.date.split('T')[0],
+              type: w.type,
+              durationMinutes: w.durationMinutes,
+              tokensEarned: w.fitCoinsEarnedTotal
+            })),
+            currentStreak: streak,
+            totalWorkouts: total,
+            totalTokensEarned: bal
+          });
+          setMotivation(result);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoadingMotivation(false);
+        }
       }
     }
   };
@@ -156,7 +187,7 @@ export default function Dashboard() {
             { label: "Balance", value: balance, icon: Wallet, color: "text-primary", isCountUp: true },
             { label: "Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-orange-500", isCountUp: true },
             { label: "Workouts", value: stats.totalWorkouts, icon: Dumbbell, color: "text-blue-500", isCountUp: true },
-            { label: "Weekly Tokens", value: stats.weeklyTokens, prefix: "+", icon: Sparkles, color: "text-accent", isCountUp: true }
+            { label: "Monthly Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Sparkles, color: "text-accent", isCountUp: true }
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -173,7 +204,7 @@ export default function Dashboard() {
                   </div>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
                   <p className="text-2xl font-black">
-                    <CountUp value={stat.value} prefix={stat.prefix} suffix={stat.suffix} />
+                    <CountUp value={stat.value} suffix={stat.suffix} />
                   </p>
                 </CardContent>
               </Card>
@@ -191,7 +222,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
                 <div className="flex-1 space-y-6 text-center md:text-left">
                   <h2 className="text-4xl font-headline font-black leading-tight uppercase">Crush Your Next <span className="text-primary italic">Session</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium">Log your gym time to earn FIT. Every minute counts towards your monthly streak!</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium">Log your gym time to earn FIT. Every minute counts. Don't let your streak freeze!</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={() => address && refreshData(address)} 
@@ -275,6 +306,15 @@ export default function Dashboard() {
                     <div className="p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
                       <p className="text-sm leading-relaxed font-bold italic">"{motivation.motivationalMessage}"</p>
                     </div>
+                    {motivation.promoCode && (
+                      <div className="p-3 bg-yellow-400 text-black rounded-xl border-2 border-white/50 flex items-center justify-between">
+                        <div>
+                          <p className="text-[8px] font-black uppercase">Reward Unlocked!</p>
+                          <p className="text-sm font-black tracking-widest">{motivation.promoCode}</p>
+                        </div>
+                        <Tag className="w-5 h-5" />
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70">Today's Protocol:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
@@ -337,23 +377,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
-
-function ChevronRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  )
 }
