@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-gym",
+      "description": "Modern fitness gym with neon lighting",
+      "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&h=800&auto=format&fit=crop",
+      "imageHint": "gym fitness"
+    },
+    {
+      "id": "avatar-default",
+      "description": "Minimalist avatar portrait",
+      "imageUrl": "https://picsum.photos/seed/fitcoin-avatar/200/200",
+      "imageHint": "portrait person"
+    },
+    {
+      "id": "product-protein",
+      "description": "Whey protein supplement",
+      "imageUrl": "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?q=80&w=400&h=400&auto=format&fit=crop",
+      "imageHint": "protein powder"
+    }
+  ]
 }
