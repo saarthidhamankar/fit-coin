@@ -102,6 +102,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Generate delays on client to avoid hydration mismatch
     setMatrixDelays(Array.from({ length: 64 }, () => Math.random() * 2));
     
     const addr = localStorage.getItem('fitcoin_wallet_address');
@@ -177,9 +178,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "Assets", value: balance, icon: Wallet, color: "text-primary" },
-            { label: "Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-orange-500" },
-            { label: "Grinds", value: stats.totalWorkouts, icon: Dumbbell, color: "text-blue-500" },
-            { label: "Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-accent" }
+            { label: "Streak", value: stats.currentStreak, suffix: " Days", icon: Flame, color: "text-primary" },
+            { label: "Grinds", value: stats.totalWorkouts, icon: Dumbbell, color: "text-primary" },
+            { label: "Goal", value: Math.round(stats.monthlyProgress), suffix: "%", icon: Zap, color: "text-primary" }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
               <Card className="rounded-[2.5rem] border-none shadow-sm overflow-hidden hover:shadow-md transition-all group glass-card hover:border-primary/20 cursor-help" onClick={() => toast({ title: stat.label, description: `Protocol status: ${stat.value}${stat.suffix || ''}` })}>
@@ -202,7 +203,7 @@ export default function Dashboard() {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-[3rem] p-10 md:p-14 border-2 border-white/20 relative overflow-hidden group shadow-2xl glass-card"
+              className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-[3rem] p-10 md:p-14 border-2 border-white/20 relative overflow-hidden group shadow-2xl glass-card"
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
@@ -282,11 +283,11 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-8">
-            <Card className="rounded-[3rem] border-none shadow-2xl bg-gradient-to-br from-primary to-accent text-white overflow-hidden relative group">
+            <Card className="rounded-[3rem] border-none shadow-2xl bg-gradient-to-br from-primary to-primary/80 text-white overflow-hidden relative group">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
-                  <Sparkles className="w-6 h-6 animate-pulse text-yellow-300" />
+                  <Sparkles className="w-6 h-6 animate-pulse text-white/80" />
                   AI Performance Coach
                 </CardTitle>
               </CardHeader>
@@ -302,9 +303,9 @@ export default function Dashboard() {
                       <p className="text-base leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
                     {motivation.promoCode && (
-                      <div className="p-4 bg-yellow-400 text-black rounded-2xl border-2 border-white/50 flex items-center justify-between shadow-xl">
+                      <div className="p-4 bg-white/20 text-white rounded-2xl border-2 border-white/50 flex items-center justify-between shadow-xl backdrop-blur-md">
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest">Protocol Bonus</p>
+                          <p className="text-[9px] font-black uppercase tracking-widest opacity-70">Protocol Bonus</p>
                           <p className="text-lg font-black tracking-widest">{motivation.promoCode}</p>
                         </div>
                         <Tag className="w-6 h-6" />
