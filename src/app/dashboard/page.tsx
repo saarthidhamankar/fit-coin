@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -24,7 +23,8 @@ import {
   AlertTriangle, 
   TrendingUp, 
   Layers,
-  Timer
+  Timer,
+  Check
 } from "lucide-react";
 import { getBalance, penalizeUser } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
@@ -94,7 +94,6 @@ export default function Dashboard() {
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
           data[dayIdx].tokens += w.totalTokensEarned || 0;
-          // Normalized intensity score for visual impact
           data[dayIdx].intensity += ((w.durationMinutes || 1) * (w.totalTokensEarned || 1)) / 100;
         }
       });
@@ -457,16 +456,28 @@ export default function Dashboard() {
                     const hasWorkout = d.duration > 0 || d.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
-                        <div className={cn(
-                          "w-10 h-10 rounded-2xl flex items-center justify-center text-xs font-black transition-all relative",
-                          hasWorkout ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-muted/50 text-muted-foreground/30',
-                          isToday && !hasWorkout && 'border-2 border-primary/30 ring-2 ring-primary/10 animate-pulse'
+                        <motion.div 
+                          whileHover={{ scale: 1.15 }}
+                          className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all relative group shadow-sm",
+                          hasWorkout 
+                            ? 'bg-gradient-to-br from-primary to-accent text-white shadow-xl shadow-primary/20 scale-110' 
+                            : 'bg-muted/50 text-muted-foreground/30',
+                          isToday && !hasWorkout && 'border-2 border-primary/40 ring-4 ring-primary/10'
                         )}>
-                          {hasWorkout ? '✓' : ''}
-                        </div>
+                          {hasWorkout ? (
+                            <Flame className="w-6 h-6 fill-white animate-pulse" />
+                          ) : isToday ? (
+                            <div className="w-2 h-2 rounded-full bg-primary/40 animate-ping" />
+                          ) : null}
+                          
+                          {isToday && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white" />
+                          )}
+                        </motion.div>
                         <span className={cn(
-                          "text-[11px] font-black uppercase",
-                          isToday ? "text-primary" : "text-muted-foreground"
+                          "text-[10px] font-black uppercase tracking-widest",
+                          isToday ? "text-primary scale-110" : "text-muted-foreground opacity-60"
                         )}>{d.day[0]}</span>
                       </div>
                     );
@@ -485,7 +496,10 @@ export default function Dashboard() {
                 
                 <div className="p-6 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Protocol</span>
+                    </div>
                     <span className="text-[11px] font-black text-primary bg-white dark:bg-card px-3 py-1 rounded-full border border-primary/20 tracking-widest">
                       {Math.round(stats.monthlyProgress)}%
                     </span>
