@@ -35,13 +35,13 @@ import {
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, updateDoc, collection, query, orderBy, limit, addDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, orderBy, limit } from "firebase/firestore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const ACHIEVEMENTS = [
   { id: 1, title: "Consistent", desc: "5 recorded sessions", icon: "📈", condition: (p: any) => (p?.totalWorkoutsCompleted || 0) >= 5 },
@@ -161,6 +161,12 @@ export default function ProfilePage() {
   };
 
   const isPro = (profile?.totalWorkoutsCompleted || 0) >= 10;
+
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return "Just now";
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    return isNaN(date.getTime()) ? "Just now" : date.toLocaleString();
+  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
@@ -378,7 +384,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <p className="font-black text-sm uppercase">{log.description}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold">{new Date(log.timestamp).toLocaleString()}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold">{formatDate(log.timestamp)}</p>
                         </div>
                       </div>
                       <div className={`font-black text-lg italic ${log.fitCoinsChange > 0 ? 'text-primary' : log.fitCoinsChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>

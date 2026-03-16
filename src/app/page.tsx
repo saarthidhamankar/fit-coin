@@ -118,7 +118,8 @@ export default function LandingPage() {
       </section>
 
       <footer className="py-12 border-t text-center text-muted-foreground bg-secondary/10">
-        <p className="font-black uppercase tracking-widest text-[10px]">FitCoin Reward Plan v1.0</p>
+        <p className="font-black uppercase tracking-widest text-[10px] mb-2">FitCoin Reward Plan v1.0</p>
+        <p className="text-[11px] font-medium opacity-60">Created with love by @saarthidhamankar</p>
       </footer>
     </div>
   );
