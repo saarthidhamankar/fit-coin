@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
 import { useAuth } from "@/firebase";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
+import DecryptedText from "@/components/animations/DecryptedText";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function LandingPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen relative mesh-background overflow-x-hidden">
       <Navbar />
       
       <section className="relative pt-32 pb-32 flex flex-col items-center justify-center text-center px-4">
@@ -64,7 +65,15 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl md:text-8xl font-headline font-black text-foreground max-w-5xl leading-tight uppercase italic"
         >
-          Sweat is the new <span className="text-primary not-italic">Currency.</span>
+          Sweat is the new <span className="text-primary not-italic">
+            <DecryptedText 
+              text="Currency" 
+              animateOn="view" 
+              sequential 
+              speed={50}
+              maxIterations={15}
+            />
+          </span>
         </motion.h1>
 
         <motion.p 
@@ -73,7 +82,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2 }}
           className="mt-6 text-xl text-muted-foreground max-w-2xl font-medium"
         >
-          The reward plan for athletes. Earn FIT tokens for every workout and redeem them for premium gear.
+          The smart reward plan for athletes. Earn FIT tokens for every workout and redeem them for premium gear.
         </motion.p>
 
         <motion.div 
@@ -93,12 +102,12 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <section id="features" className="py-24 bg-white/50 dark:bg-black/10 backdrop-blur-sm">
+      <section id="features" className="py-24 relative z-10">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: Shield, title: "Secure History", text: "Every session is saved and verified on the network for total transparency." },
             { icon: Zap, title: "Effort Rewards", text: "Earn based on time and intensity. More sweat equals more FIT tokens." },
-            { icon: TrendingUp, title: "Redeem Gear", text: "FIT isn't just points. It's a token you use in our store for real fitness gear." }
+            { icon: TrendingUp, title: "Redeem Gear", text: "FIT isn't just points. It's a real token you use in our store for actual gear." }
           ].map((feature, i) => (
             <motion.div 
               key={i}
@@ -110,16 +119,16 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary group-hover:text-white transition-colors">
                 <feature.icon className="w-10 h-10 text-primary group-hover:text-white" />
               </div>
-              <h3 className="text-3xl font-headline font-black mb-4 uppercase">{feature.title}</h3>
+              <h3 className="text-3xl font-headline font-black mb-4 uppercase tracking-tighter italic">{feature.title}</h3>
               <p className="text-muted-foreground text-lg leading-relaxed font-medium">{feature.text}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      <footer className="py-12 border-t text-center text-muted-foreground bg-secondary/10">
+      <footer className="py-12 border-t text-center text-muted-foreground bg-secondary/10 relative z-10 backdrop-blur-md">
         <p className="font-black uppercase tracking-widest text-[10px] mb-2">FitCoin Reward Plan v1.0</p>
-        <p className="text-[11px] font-medium opacity-60">Created with love by @saarthidhamankar</p>
+        <p className="text-[11px] font-medium opacity-60 italic">Created with love by @saarthidhamankar</p>
       </footer>
     </div>
   );

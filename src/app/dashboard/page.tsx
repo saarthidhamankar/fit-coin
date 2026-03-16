@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -97,7 +96,7 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
-        // Use startTime fallback for immediate Sunday/Monday streak detection
+        // Use startTime for robust local date matching
         const workoutDate = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.startTime || w.date || Date.now());
         const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
         
@@ -119,9 +118,9 @@ export default function Dashboard() {
     
     // Entry-level scaling: Lower denominators so progress is visible early
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 10) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 30) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgEffort * 80, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 15) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 45) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgEffort * 100, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((profile?.currentStreakDays || 0) / 7) * 100, 100), fullMark: 100 },
       { subject: 'Goals', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 5) * 100, 100), fullMark: 100 },
     ];
@@ -146,7 +145,7 @@ export default function Dashboard() {
       }).then(setMotivation).catch(() => {
         const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
         setMotivation({
-          motivationalMessage: "Keep it up! Small steps lead to big changes.",
+          motivationalMessage: "Keep pushing! Every session is a victory for your future self.",
           workoutSuggestions: [WEEKLY_PLANS.MuscleGain[todayStr] || "Stay Active Today"],
           promoCode: (profile.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
         });
@@ -158,7 +157,7 @@ export default function Dashboard() {
     if (address) getBalance(address).then(setBalance);
   };
 
-  if (!isClient) return null;
+  if (!isClient || !todayDate) return null;
 
   const currentStreak = profile?.currentStreakDays || 0;
   const totalWorkouts = profile?.totalWorkoutsCompleted || 0;
@@ -179,7 +178,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly history and earnings summary.</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="pro-glass p-4 rounded-[2rem] flex items-center gap-4 group hover:scale-105 transition-all">
+            <div className="pro-glass p-4 rounded-[2.5rem] flex items-center gap-4 group hover:scale-105 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
@@ -198,7 +197,7 @@ export default function Dashboard() {
             { label: "My FIT", value: balance, icon: Wallet, suffix: "" },
             { label: "Day Streak", value: currentStreak, suffix: " Days", icon: Flame },
             { label: "Workouts", value: totalWorkouts, suffix: "", icon: Dumbbell },
-            { label: "Monthly Goal", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
+            { label: "Goal Progress", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
               <Card className="rounded-[2.5rem] border-none pro-glass hover:shadow-xl transition-all group overflow-hidden">
@@ -248,7 +247,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Weekly Balance
+                      Weekly Fitness Balance
                     </CardTitle>
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Performance history for the current week</p>
                   </div>
@@ -344,7 +343,7 @@ export default function Dashboard() {
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
                         <div className={cn(
-                          "w-12 h-12 flex items-center justify-center transition-all relative"
+                          "w-12 h-12 flex items-center justify-center transition-all relative group"
                         )}>
                           {hasWorkout ? (
                             <Avatar className="w-12 h-12 border-2 border-primary shadow-lg scale-110">
