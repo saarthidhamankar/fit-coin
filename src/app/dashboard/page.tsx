@@ -18,7 +18,8 @@ import {
   Target,
   ShieldCheck,
   Zap,
-  Activity
+  Activity,
+  History as HistoryIcon
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
@@ -72,7 +73,7 @@ export default function Dashboard() {
     return query(
       collection(db, "users", user.uid, "workoutSessions"),
       orderBy("timestamp", "desc"),
-      limit(100) 
+      limit(50) 
     );
   }, [db, user?.uid]);
 
@@ -116,7 +117,7 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Entry-level scaling: Lower denominators to make progress visible early
+    // Entry-level scaling: Lower denominators so progress is visible early
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 10) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 30) * 100, 100), fullMark: 100 },
@@ -196,7 +197,7 @@ export default function Dashboard() {
           {[
             { label: "My FIT", value: balance, icon: Wallet, suffix: "" },
             { label: "Day Streak", value: currentStreak, suffix: " Days", icon: Flame },
-            { label: "Total Workouts", value: totalWorkouts, suffix: "", icon: Dumbbell },
+            { label: "Workouts", value: totalWorkouts, suffix: "", icon: Dumbbell },
             { label: "Monthly Goal", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
@@ -247,9 +248,9 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      My Weekly Stats
+                      Weekly Balance
                     </CardTitle>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Your performance map for the current week</p>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Performance history for the current week</p>
                   </div>
                   <Badge variant="outline" className="rounded-full border-primary/20 px-4 py-1 text-[9px] font-black uppercase tracking-widest text-primary">Live Sync</Badge>
                 </div>
