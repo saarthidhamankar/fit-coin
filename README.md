@@ -1,3 +1,4 @@
+
 # FitCoin | Decentralized Fitness Rewards
 
 A high-end fitness tracking application built with Next.js, Firebase, and GenAI. Earn FIT tokens for every workout and redeem them for premium gear.
