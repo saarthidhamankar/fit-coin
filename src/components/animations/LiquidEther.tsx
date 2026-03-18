@@ -18,7 +18,7 @@ interface LiquidEtherProps {
 
 /**
  * LiquidEther - A high-end fluid motion background component.
- * Fixed: Dependency array size is now constant to prevent Next.js hook errors.
+ * Fixed: Stabilized dependency array to prevent Next.js Hook errors.
  */
 export default function LiquidEther({
   mouseForce = 20,
@@ -33,9 +33,10 @@ export default function LiquidEther({
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const color1 = colors[0] || "#5227FF";
-  const color2 = colors[1] || "#FF9FFC";
-  const color3 = colors[2] || "#B19EEF";
+  // Destructure with stable defaults to ensure useEffect deps are consistent
+  const c1 = colors[0] || "#5227FF";
+  const c2 = colors[1] || "#FF9FFC";
+  const c3 = colors[2] || "#B19EEF";
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,9 +53,9 @@ export default function LiquidEther({
     
     const uniforms = {
       uTime: { value: 0 },
-      uColor1: { value: new THREE.Color(color1) },
-      uColor2: { value: new THREE.Color(color2) },
-      uColor3: { value: new THREE.Color(color3) },
+      uColor1: { value: new THREE.Color(c1) },
+      uColor2: { value: new THREE.Color(c2) },
+      uColor3: { value: new THREE.Color(c3) },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uIntensity: { value: autoIntensity },
       uSpeed: { value: autoSpeed }
@@ -136,7 +137,7 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-  }, [color1, color2, color3, autoSpeed, autoIntensity, mouseForce, cursorSize, isViscous, viscous, isBounce, resolution]);
+  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Stable size dependency array
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }

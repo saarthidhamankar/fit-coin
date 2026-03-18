@@ -115,7 +115,7 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Rewarding scaling: Lower denominators make progress visible
+    // Rewarding scaling for immediate feedback
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
@@ -377,7 +377,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Consistency Warning</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Missing your session for more than 2 days will cost you -20 FIT tokens. Stay active!
+                      Missing sessions will cost you -20 FIT tokens. Stay active!
                     </p>
                   </div>
                 </div>

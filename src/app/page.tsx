@@ -51,8 +51,8 @@ export default function LandingPage() {
     <div className="min-h-screen relative mesh-background overflow-x-hidden">
       <Navbar />
       
-      {/* Hero Background Animation */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
+      {/* Interactive Hero Background Animation */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" style={{ width: '100vw', height: '100vh' }}>
         <SplashCursor
           SIM_RESOLUTION={160}
           DYE_RESOLUTION={1024}
