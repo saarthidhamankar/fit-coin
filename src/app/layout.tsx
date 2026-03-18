@@ -1,4 +1,3 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -26,6 +25,7 @@ export default function RootLayout({
       <body className="font-body antialiased selection:bg-primary/30 min-h-screen relative">
         <FirebaseClientProvider>
           <ThemeColorSynchronizer />
+          {/* Global background for inner pages, hidden on landing via z-index logic if needed */}
           <LiquidEther 
             mouseForce={20}
             cursorSize={100}

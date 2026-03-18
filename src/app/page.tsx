@@ -12,6 +12,7 @@ import Navbar from "@/components/layout/Navbar";
 import { useAuth } from "@/firebase";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import DecryptedText from "@/components/animations/DecryptedText";
+import SplashCursor from "@/components/animations/SplashCursor";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -50,6 +51,21 @@ export default function LandingPage() {
     <div className="min-h-screen relative mesh-background overflow-x-hidden">
       <Navbar />
       
+      {/* Hero Background Animation */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <SplashCursor
+          SIM_RESOLUTION={160}
+          DYE_RESOLUTION={1024}
+          DENSITY_DISSIPATION={1}
+          VELOCITY_DISSIPATION={1}
+          PRESSURE={0.7}
+          CURL={5}
+          SPLAT_RADIUS={0.2}
+          SPLAT_FORCE={9500}
+          COLOR_UPDATE_SPEED={50}
+        />
+      </div>
+
       <section className="relative pt-32 pb-32 flex flex-col items-center justify-center text-center px-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
