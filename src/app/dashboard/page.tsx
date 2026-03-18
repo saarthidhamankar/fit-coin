@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -96,9 +97,9 @@ export default function Dashboard() {
     
     if (workouts) {
       workouts.forEach(w => {
-        // Use startTime for robust local date matching
-        const workoutDate = w.timestamp?.toDate ? w.timestamp.toDate() : new Date(w.startTime || w.date || Date.now());
-        const dayIdx = data.findIndex(d => isSameDay(d.date, workoutDate));
+        // Robust date matching using multiple fields
+        const workoutDate = w.timestamp?.toDate ? w.timestamp.toDate() : (w.startTime ? new Date(w.startTime) : new Date());
+        const dayIdx = data.findIndex(d => isSameDay(d.date, startOfDay(workoutDate)));
         
         if (dayIdx !== -1) {
           data[dayIdx].duration += w.durationMinutes || 0;
@@ -134,7 +135,7 @@ export default function Dashboard() {
       setLoadingMotivation(true);
       generateMotivation({
         workoutHistory: workouts.slice(0, 3).map((w: any) => ({
-          date: (w.startTime || w.date)?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
+          date: w.startTime?.split?.('T')?.[0] || new Date().toISOString().split('T')[0],
           type: w.workoutType || w.type,
           durationMinutes: w.durationMinutes,
           tokensEarned: w.totalTokensEarned
@@ -164,7 +165,7 @@ export default function Dashboard() {
   const monthlyProgress = Math.min((totalWorkouts / 20) * 100, 100);
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
+    <div className="min-h-screen pt-24 pb-12 px-4 relative">
       <Navbar />
       
       <div className="max-w-7xl mx-auto space-y-8">
@@ -342,9 +343,12 @@ export default function Dashboard() {
                     const hasWorkout = d.duration > 0 || d.tokens > 0;
                     return (
                       <div key={i} className="flex flex-col items-center gap-3">
-                        <div className={cn(
-                          "w-12 h-12 flex items-center justify-center transition-all relative group"
-                        )}>
+                        <motion.div 
+                          whileHover={{ scale: 1.15 }}
+                          className={cn(
+                            "w-12 h-12 flex items-center justify-center transition-all relative group"
+                          )}
+                        >
                           {hasWorkout ? (
                             <Avatar className="w-12 h-12 border-2 border-primary shadow-lg scale-110">
                               <AvatarFallback className="bg-primary relative overflow-visible">
@@ -360,7 +364,7 @@ export default function Dashboard() {
                               {isToday && <div className="w-2 h-2 rounded-full bg-primary animate-ping" />}
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                         <span className={cn(
                           "text-[10px] font-black uppercase tracking-widest",
                           isToday ? "text-primary scale-110" : "text-muted-foreground opacity-60"

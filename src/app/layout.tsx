@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import ThemeColorSynchronizer from "@/components/ThemeColorSynchronizer";
+import LiquidEther from "@/components/animations/LiquidEther";
 
 export const metadata: Metadata = {
   title: 'FitCoin | Decentralized Fitness Rewards',
@@ -22,10 +23,24 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased selection:bg-primary/30">
+      <body className="font-body antialiased selection:bg-primary/30 min-h-screen relative">
         <FirebaseClientProvider>
           <ThemeColorSynchronizer />
-          {children}
+          <LiquidEther 
+            mouseForce={20}
+            cursorSize={100}
+            isViscous={false}
+            viscous={30}
+            colors={["#5227FF","#FF9FFC","#B19EEF"]}
+            autoDemo
+            autoSpeed={0.5}
+            autoIntensity={2.2}
+            isBounce={false}
+            resolution={0.5}
+          />
+          <div className="relative z-10">
+            {children}
+          </div>
           <Toaster />
         </FirebaseClientProvider>
       </body>
