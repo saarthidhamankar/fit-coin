@@ -83,7 +83,7 @@ export default function LandingPage() {
         >
           Sweat is the new <span className="text-primary not-italic">
             <DecryptedText 
-              text="Currency" 
+              text="Earnings" 
               animateOn="view" 
               sequential 
               speed={50}

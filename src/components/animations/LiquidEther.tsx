@@ -18,7 +18,7 @@ interface LiquidEtherProps {
 
 /**
  * LiquidEther - A high-end fluid motion background component.
- * Uses WebGL shaders to create a professional liquid-like effect.
+ * Fixed: Dependency array size is now constant to prevent Next.js hook errors.
  */
 export default function LiquidEther({
   mouseForce = 20,
@@ -33,7 +33,6 @@ export default function LiquidEther({
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Stabilize individual color values to prevent hook dependency size changes
   const color1 = colors[0] || "#5227FF";
   const color2 = colors[1] || "#FF9FFC";
   const color3 = colors[2] || "#B19EEF";
@@ -110,7 +109,7 @@ export default function LiquidEther({
     };
 
     const handleResize = () => {
-      if (!renderer || !camera) return;
+      if (!renderer) return;
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
@@ -137,7 +136,6 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-    // Maintain a constant size for the dependency array to fix React Hook errors
   }, [color1, color2, color3, autoSpeed, autoIntensity, mouseForce, cursorSize, isViscous, viscous, isBounce, resolution]);
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;

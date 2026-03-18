@@ -115,7 +115,7 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Reward-focused scaling: Lower denominators make progress immediately visible
+    // Rewarding scaling: Lower denominators make progress visible
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
