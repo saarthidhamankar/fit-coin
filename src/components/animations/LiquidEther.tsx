@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -24,11 +23,20 @@ interface LiquidEtherProps {
 export default function LiquidEther({
   mouseForce = 20,
   cursorSize = 100,
+  isViscous = false,
+  viscous = 30,
   colors = ["#5227FF", "#FF9FFC", "#B19EEF"],
   autoSpeed = 0.5,
   autoIntensity = 2.2,
+  isBounce = false,
+  resolution = 0.5,
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Stabilize individual color values to prevent hook dependency size changes
+  const color1 = colors[0] || "#5227FF";
+  const color2 = colors[1] || "#FF9FFC";
+  const color3 = colors[2] || "#B19EEF";
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,7 +45,7 @@ export default function LiquidEther({
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * resolution);
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
@@ -45,9 +53,9 @@ export default function LiquidEther({
     
     const uniforms = {
       uTime: { value: 0 },
-      uColor1: { value: new THREE.Color(colors[0]) },
-      uColor2: { value: new THREE.Color(colors[1]) },
-      uColor3: { value: new THREE.Color(colors[2]) },
+      uColor1: { value: new THREE.Color(color1) },
+      uColor2: { value: new THREE.Color(color2) },
+      uColor3: { value: new THREE.Color(color3) },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uIntensity: { value: autoIntensity },
       uSpeed: { value: autoSpeed }
@@ -102,14 +110,16 @@ export default function LiquidEther({
     };
 
     const handleResize = () => {
+      if (!renderer || !camera) return;
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('resize', handleResize);
 
+    let animationId: number;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       uniforms.uTime.value += 0.01;
       renderer.render(scene, camera);
     };
@@ -119,9 +129,16 @@ export default function LiquidEther({
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      if (containerRef.current) containerRef.current.removeChild(renderer.domElement);
+      cancelAnimationFrame(animationId);
+      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
     };
-  }, [colors, autoSpeed, autoIntensity]);
+    // Maintain a constant size for the dependency array to fix React Hook errors
+  }, [color1, color2, color3, autoSpeed, autoIntensity, mouseForce, cursorSize, isViscous, viscous, isBounce, resolution]);
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }

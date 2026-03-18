@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -58,56 +57,60 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
 
     setLoading(true);
     try {
-      let newStreak = 1;
       const today = new Date();
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayDateStr = today.toISOString().split('T')[0];
+      let newStreak = 1;
 
+      // Robust Streak Logic
       if (profile?.lastWorkoutDate) {
-        const lastWorkout = new Date(profile.lastWorkoutDate);
-        const lastDate = new Date(lastWorkout.getFullYear(), lastWorkout.getMonth(), lastWorkout.getDate());
-        const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 0) {
-          newStreak = profile.currentStreakDays || 1;
-        } else if (diffDays === 1) {
+        const lastDateStr = profile.lastWorkoutDate.split('T')[0];
+        const lastDate = new Date(lastDateStr);
+        const todayDate = new Date(todayDateStr);
+        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
           newStreak = (profile.currentStreakDays || 0) + 1;
+        } else if (diffDays === 0) {
+          newStreak = profile.currentStreakDays || 1;
         } else {
           newStreak = 1;
         }
       }
 
+      // 1. Blockchain Reward
       await rewardUser(address, preview.reward);
       
+      // 2. Firebase Updates (Non-blocking but executed in order)
       if (user?.uid && db) {
         const timestampStr = today.toISOString();
         
-        const sessionRef = collection(db, "users", user.uid, "workoutSessions");
-        await addDoc(sessionRef, {
+        // Save Session
+        await addDoc(collection(db, "users", user.uid, "workoutSessions"), {
           userId: user.uid,
           workoutType: type,
           durationMinutes: duration,
-          startTime: timestampStr,
           totalTokensEarned: preview.reward,
-          appliedBonuses: preview.breakdowns,
-          timestamp: serverTimestamp()
+          timestamp: serverTimestamp(),
+          startTime: timestampStr
         });
 
-        const profileRef = doc(db, "users", user.uid);
-        await updateDoc(profileRef, {
+        // Update Profile Stats
+        await updateDoc(doc(db, "users", user.uid), {
           totalWorkoutsCompleted: increment(1),
           totalFitEarned: increment(preview.reward),
           lastWorkoutDate: timestampStr,
           currentStreakDays: newStreak,
-          lastActivityAt: timestampStr
+          lastActivityAt: serverTimestamp()
         });
 
-        const logRef = collection(db, "users", user.uid, "activityLogs");
-        await addDoc(logRef, {
+        // Log Action
+        await addDoc(collection(db, "users", user.uid, "activityLogs"), {
           userId: user.uid,
           activityType: "WORKOUT_EARN",
           description: `Finished: ${type} session`,
           fitCoinsChange: preview.reward,
-          timestamp: timestampStr
+          timestamp: serverTimestamp()
         });
       }
 
@@ -118,12 +121,15 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         colors: ['#18D156', '#BCFA22', '#ffffff']
       });
 
-      toast({ title: "Workout Saved", description: `You earned ${preview.reward} FIT. Streak: ${newStreak} Days!` });
+      toast({ 
+        title: "Session Saved!", 
+        description: `You earned ${preview.reward} FIT. Current Streak: ${newStreak} Days!` 
+      });
       
       setOpen(false);
       onSuccess();
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to save workout." });
+      toast({ variant: "destructive", title: "Sync Failed", description: e.message || "Could not save session." });
     } finally {
       setLoading(false);
     }
@@ -138,10 +144,10 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
-        <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8 max-h-[90vh] overflow-y-auto scroll-smooth">
+        <div className="bg-gradient-to-b from-primary/10 to-background p-8 space-y-8 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-3xl font-headline font-black text-foreground uppercase italic tracking-tighter">New Workout</DialogTitle>
-            <p className="text-muted-foreground font-medium text-sm">Pick your workout and set the time to earn FIT.</p>
+            <p className="text-muted-foreground font-medium text-sm">Pick your session and set the time to earn FIT.</p>
           </DialogHeader>
           
           <div className="space-y-8 pb-4">
@@ -167,7 +173,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
             <div className="space-y-6 bg-white dark:bg-card p-8 rounded-[2rem] shadow-sm border-2 border-primary/10">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Workout Time</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Session Time</p>
                   <p className="text-5xl font-black text-primary">
                     {duration}<span className="text-lg text-primary/60 font-black ml-1 uppercase">min</span>
                   </p>
@@ -216,7 +222,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               {loading ? (
                 <div className="flex items-center gap-4">
                   <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
+                  Syncing...
                 </div>
               ) : (
                 <>
