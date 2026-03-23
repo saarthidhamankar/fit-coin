@@ -11,7 +11,9 @@
         "currentStreakDays": { "type": "number" },
         "totalWorkoutsCompleted": { "type": "number" },
         "totalFitEarned": { "type": "number" },
-        "lastWorkoutDate": { "type": "string", "format": "date-time" }
+        "lastWorkoutDate": { "type": "string", "format": "date-time" },
+        "avatarUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" }
       },
       "required": ["id"]
     },
@@ -25,16 +27,21 @@
         "workoutType": { "type": "string" },
         "durationMinutes": { "type": "number" },
         "totalTokensEarned": { "type": "number" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "timestamp": { "type": "string", "format": "date-time" },
+        "startTime": { "type": "string" }
       }
     },
-    "AdminRole": {
-      "title": "AdminRole",
+    "ActivityLog": {
+      "title": "ActivityLog",
       "type": "object",
-      "description": "System role definition for administrative access.",
+      "description": "A log entry for user activity.",
       "properties": {
+        "id": { "type": "string" },
         "userId": { "type": "string" },
-        "isAdmin": { "type": "boolean" }
+        "activityType": { "type": "string" },
+        "description": { "type": "string" },
+        "fitCoinsChange": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -50,9 +57,9 @@
       "schema": "WorkoutSession",
       "description": "Individual workout session logs."
     },
-    "/roles_admin/{userId}": {
-      "schema": "AdminRole",
-      "description": "Admin privileges check."
+    "/users/{userId}/activityLogs/{id}": {
+      "schema": "ActivityLog",
+      "description": "Log of user actions and FIT earnings."
     }
   }
 }
