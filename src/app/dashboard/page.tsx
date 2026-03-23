@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Zap,
   Activity,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Bot
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import WorkoutModal from "@/components/modals/WorkoutModal";
@@ -136,7 +137,7 @@ export default function Dashboard() {
       }).then(setMotivation).catch(() => {
         const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
         setMotivation({
-          motivationalMessage: "Keep pushing! Every minute counts towards your earnings.",
+          motivationalMessage: "Every session counts towards your goal. Stay active today!",
           workoutSuggestions: [WEEKLY_PLANS.MuscleGain[todayStr] || "Stay Active Today"],
           promoCode: (profile?.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
         });
@@ -145,7 +146,7 @@ export default function Dashboard() {
   }, [profile, workouts]);
 
   const handleWorkoutSuccess = () => {
-    toast({ title: "Stats Updated", description: "Your FITCoin is added in your wallet" });
+    toast({ title: "Session Success", description: "Your FITCoin is added in your wallet" });
   };
 
   if (!isClient || !todayDate) return null;
@@ -288,8 +289,8 @@ export default function Dashboard() {
             <Card className="rounded-[3rem] border-none shadow-2xl bg-primary text-white overflow-hidden relative group">
               <CardHeader className="relative z-10 pb-2 p-8">
                 <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter">
-                  <Sparkles className="w-6 h-6 text-white/80" />
-                  Today's Plan
+                  <Bot className="w-6 h-6 text-white/80" />
+                  AI Trainer Today
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 relative z-10 p-8 pt-4">
@@ -303,11 +304,11 @@ export default function Dashboard() {
                       <p className="text-base leading-relaxed font-bold italic tracking-tight">"{motivation.motivationalMessage}"</p>
                     </div>
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Daily Tasks:</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 ml-1">Daily Training Plan:</p>
                       {motivation.workoutSuggestions.map((s: string, i: number) => (
                         <div key={i} className="p-4 bg-white/20 rounded-2xl text-xs font-black border border-white/10 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                             <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          <div className="flex items-center gap-3 text-left">
+                             <div className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
                              {s}
                           </div>
                         </div>
@@ -315,7 +316,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first session to see your plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first session to receive your custom AI plan.</p>
                 )}
               </CardContent>
             </Card>

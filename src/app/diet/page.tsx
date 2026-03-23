@@ -158,8 +158,8 @@ export default function DietPage() {
                    <CardContent className="p-8">
                       <p className="text-sm font-bold leading-relaxed italic text-muted-foreground">
                         {dietType === "NonVeg" 
-                          ? "Plan focused on avian lean protein (Chicken), omega-synthesis (Fish Oil), and whole eggs. This ensures maximum effort and purity."
-                          : "Harnessing plant-based density through Soya isolate, low-fat Paneer, and activated nuts. Engineered for maximum growth and fiber baseline."}
+                          ? "Plan focused on lean avian and marine proteins, balanced with fiber baseline for maximum effort."
+                          : "Harnessing plant-based density through Soya isolate, low-fat Paneer, and activated nuts. Engineered for maximum growth."}
                       </p>
                    </CardContent>
                 </Card>

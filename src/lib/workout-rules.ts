@@ -22,22 +22,22 @@ export const REWARD_RULES = {
 
 export const WEEKLY_PLANS = {
   MuscleGain: {
-    Mon: "Chest & Triceps: Bench Press (4x10), Incline DB Press (3x12), Cable Flys (3x15), Skull Crushers (3x12)",
-    Tue: "Back & Biceps: Pull-ups (4xMax), Barbell Rows (4x10), Deadlifts (3x8), Hammer Curls (3x12)",
-    Wed: "Active Recovery: Low-intensity 20m walk + 15m full body mobility/stretching",
-    Thu: "Shoulders & Abs: Military Press (4x10), Lateral Raises (3x15), Planks (3x1m), Leg Raises (3x20)",
-    Fri: "Legs: Barbell Squats (4x10), Leg Press (3x12), Leg Extensions (3x15), Calf Raises (4x20)",
-    Sat: "Full Body Hypertrophy: Clean & Press (3x10), Weighted Dips (3x12), Face Pulls (3x15)",
-    Sun: "Rest & Nutrients: High protein intake (2g/kg), 8h+ sleep, and meal prep for Week X"
+    Sun: "Active Rest: Focused on high-protein synthesis and 20 min light walking.",
+    Mon: "Upper Body Power: Bench Press (4x10), Rows (4x10), Overhead Press (3x12).",
+    Tue: "Lower Body Foundation: Squats (4x10), Lunges (3x12), Calf Raises (4x20).",
+    Wed: "Recovery & Core: Planks (3x1min), Leg Raises (3x20), 15 min deep stretching.",
+    Thu: "Back & Biceps Focus: Pull-ups (4xMax), Barbell Curls (3x12), Lat Pulldowns (3x12).",
+    Fri: "Chest & Triceps Focus: Incline Press (3x12), Dips (3xMax), Cable Flys (3x15).",
+    Sat: "Full Body Hypertrophy: Clean and Press (3x10), Deadlifts (3x8), Face Pulls (3x15)."
   },
   FatLoss: {
-    Mon: "HIIT Session: 30m intervals (Sprints/Burpees) + 10m Core (Crunches/Bicycle)",
-    Tue: "Strength Circuit: Whole Body DB Circuit (4 rounds, 15 reps per exercise, 60s rest)",
-    Wed: "Steady State Cardio: 45m brisk walk at incline or light cycle at 65% Max HR",
-    Thu: "HIIT + Functional: Kettlebell swings (4x20), Box jumps (4x12), Mountain climbers (4x30s)",
-    Fri: "Metabolic Conditioning: EMOM 20m (Pushups, Squats, Situps, Lunges) + 10m Yoga",
-    Sat: "Outdoor Adventure: 60m Hiking, Swimming or Long distance Cycling in nature",
-    Sun: "Mobility & Prep: 30m Foam rolling + Micronutrient focus (Green veggies & 4L H2O)"
+    Sun: "Hydration Focus: 4L water baseline + 30 min foam rolling and recovery.",
+    Mon: "HIIT Cardio: 30 min interval sprints + mountain climbers (4x30s).",
+    Tue: "Metabolic Circuit: DB Snatches, Burpees, and Goblet Squats (4 rounds).",
+    Wed: "Low Intensity Cardio: 45 min brisk walk or light cycling (65% Max HR).",
+    Thu: "Functional Agility: Box jumps (3x12), Kettlebell swings (4x20), Skaters (3x20).",
+    Fri: "Core Ignition: Bicycle crunches, Russian twists, and Hollow holds (4 circuits).",
+    Sat: "Outdoor Endurance: 60 min hiking, swimming, or long-distance cycling."
   }
 };
 
