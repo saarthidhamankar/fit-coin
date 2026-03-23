@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Heart, ArrowRight, Truck, Loader2 } from "lucide-react";
-import { getBalance, spendTokens } from "@/blockchain";
+import { spendTokens } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import CountUp from "@/components/CountUp";
-import { useUser, useFirestore } from "@/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import confetti from "canvas-confetti";
@@ -32,7 +32,6 @@ const PRODUCTS = [
 export default function ShopPage() {
   const { user } = useUser();
   const db = useFirestore();
-  const [balance, setBalance] = useState(0);
   const [address, setAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<any>(null);
@@ -42,31 +41,38 @@ export default function ShopPage() {
 
   const [shipping, setShipping] = useState({ fullName: "", address: "", city: "", pincode: "", phone: "" });
 
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user?.uid]);
+
+  const { data: profile } = useDoc(userDocRef);
+
   useEffect(() => {
     setIsClient(true);
     const addr = localStorage.getItem('fitcoin_wallet_address');
-    if (addr) {
-      setAddress(addr);
-      getBalance(addr).then(setBalance);
-    }
+    if (addr) setAddress(addr);
+    
     const saved = JSON.parse(localStorage.getItem('fitcoin_wishlist') || "[]");
     setWishlist(saved);
   }, []);
 
+  const balance = profile?.totalFitEarned || 0;
+
   const handleRedeemInitiate = (product: any) => {
-    if (!address) {
-      toast({ variant: "destructive", title: "Wallet missing", description: "Connect your wallet to buy gear." });
+    if (!user) {
+      toast({ variant: "destructive", title: "Account missing", description: "Please sign in to buy gear." });
       return;
     }
     if (balance < product.price) {
-      toast({ variant: "destructive", title: "Low Balance", description: `You need ${product.price - balance} more FIT. Log more workouts!` });
+      toast({ variant: "destructive", title: "Low Earnings", description: `You need ${product.price - balance} more FIT. Log more workouts!` });
       return;
     }
     setCheckoutProduct(product);
   };
 
   const handleConfirmRedeem = async () => {
-    if (!checkoutProduct || !address) return;
+    if (!checkoutProduct || !user || !db) return;
 
     if (!shipping.fullName || !shipping.address || !shipping.pincode || !shipping.phone) {
       toast({ variant: "destructive", title: "Missing Info", description: "All shipping details are required." });
@@ -75,29 +81,34 @@ export default function ShopPage() {
 
     setLoading(true);
     try {
-      const newBalance = await spendTokens(address, checkoutProduct.price);
-      setBalance(newBalance);
+      // 1. Local Simulation spend (if needed for ethers sync)
+      if (address) await spendTokens(address, checkoutProduct.price);
 
-      if (user?.uid && db) {
-        await addDoc(collection(db, "users", user.uid, "purchases"), {
-          userId: user.uid,
-          productId: checkoutProduct.id,
-          productName: checkoutProduct.name,
-          purchaseDate: new Date().toISOString(),
-          fitCoinsSpent: checkoutProduct.price,
-          shippingDetails: shipping,
-          status: 'order_confirmed',
-          timestamp: serverTimestamp()
-        });
+      // 2. Permanent Backend spend
+      await updateDoc(doc(db, "users", user.uid), {
+        totalFitEarned: increment(-checkoutProduct.price)
+      });
 
-        await addDoc(collection(db, "users", user.uid, "activityLogs"), {
-          userId: user.uid,
-          activityType: "PURCHASE_SPEND",
-          description: `Redeemed: ${checkoutProduct.name}`,
-          fitCoinsChange: -checkoutProduct.price,
-          timestamp: new Date().toISOString()
-        });
-      }
+      // 3. Record in Purchases History
+      await addDoc(collection(db, "users", user.uid, "purchases"), {
+        userId: user.uid,
+        productId: checkoutProduct.id,
+        productName: checkoutProduct.name,
+        purchaseDate: new Date().toISOString(),
+        fitCoinsSpent: checkoutProduct.price,
+        shippingDetails: shipping,
+        status: 'order_confirmed',
+        timestamp: serverTimestamp()
+      });
+
+      // 4. Record in Action History
+      await addDoc(collection(db, "users", user.uid, "activityLogs"), {
+        userId: user.uid,
+        activityType: "PURCHASE_SPEND",
+        description: `Redeemed: ${checkoutProduct.name}`,
+        fitCoinsChange: -checkoutProduct.price,
+        timestamp: serverTimestamp()
+      });
 
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#18D156', '#BCFA22', '#ffffff'] });
 

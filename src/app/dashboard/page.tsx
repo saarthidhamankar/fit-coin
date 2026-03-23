@@ -149,7 +149,7 @@ export default function Dashboard() {
   }, [profile, workouts]);
 
   const handleWorkoutSuccess = () => {
-    toast({ title: "Stats Updated", description: "Your backend records are now live." });
+    toast({ title: "Stats Updated", description: "Your history is now live." });
   };
 
   if (!isClient || !todayDate) return null;
@@ -231,7 +231,7 @@ export default function Dashboard() {
                 </div>
                 <div className="hidden md:flex w-64 h-64 pro-glass rounded-[3rem] p-8 items-center justify-center flex-col text-center">
                   <Activity className="w-16 h-16 text-primary animate-pulse mb-4" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Backend Sync</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">History Sync</p>
                   <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">VERIFIED</Badge>
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Verified Backend History</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Verified History</p>
                 </div>
               </CardContent>
             </Card>

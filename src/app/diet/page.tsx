@@ -14,8 +14,8 @@ type DietType = "Veg" | "NonVeg";
 
 const DIET_DATA = {
   FatLoss: {
-    title: "Metabolic Cut Protocol",
-    description: "Optimizing calorie deficit with high-fiber veggies, seeds, and micronutrients for fat oxidation.",
+    title: "Effort Cut Plan",
+    description: "Optimizing calorie deficit with high-fiber veggies, seeds, and micronutrients for performance.",
     calories: "1800-2000 kcal",
     protein: "160g+",
     NonVeg: [
@@ -32,8 +32,8 @@ const DIET_DATA = {
     ]
   },
   MuscleGain: {
-    title: "Anabolic Bulk Protocol",
-    description: "Surplus calories optimized for hypertrophy with complex carbs, healthy fats, and high-protein superfoods.",
+    title: "Strength Bulk Plan",
+    description: "Surplus calories optimized for growth with complex carbs, healthy fats, and high-protein superfoods.",
     calories: "3000-3200 kcal",
     protein: "200g+",
     NonVeg: [
@@ -58,8 +58,8 @@ export default function DietPage() {
 
   const handleApplyPlan = (goal: string, type: string) => {
     toast({
-      title: "Protocol Activated",
-      description: `Your ${type} ${goal} performance blueprint has been synced.`,
+      title: "Plan Activated",
+      description: `Your ${type} ${goal} blueprint has been synced.`,
     });
   };
 
@@ -81,10 +81,10 @@ export default function DietPage() {
           className="text-center space-y-6"
         >
           <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full border font-black text-[10px] uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-primary/10 border-primary/20 text-primary'}`}>
-            <Apple className="w-4 h-4" /> Nutri-Protocol v4.0
+            <Apple className="w-4 h-4" /> Nutri-Plan v4.0
           </div>
           <h1 className="text-6xl font-headline font-black uppercase tracking-tighter italic">Dietary <span className={`${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'} not-italic`}>Fuel</span></h1>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium leading-relaxed">Precision benchmarks for metabolic dominance. High-density protein, zero beef, maximum rep recovery.</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium leading-relaxed">Precision benchmarks for high performance. High-density protein, maximum rep recovery.</p>
         </motion.div>
 
         <div className="flex flex-col gap-10">
@@ -125,7 +125,7 @@ export default function DietPage() {
                   <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                   <CardHeader className="p-10 pb-4">
                     <CardTitle className="text-3xl font-black uppercase italic leading-none tracking-tighter">
-                      Protocol Targets
+                      Plan Targets
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-10 pt-4 space-y-8">
@@ -153,13 +153,13 @@ export default function DietPage() {
 
                 <Card className="rounded-[3rem] border-none shadow-sm glass-card overflow-hidden">
                    <CardHeader className={`bg-muted/30 border-b border-border/10 p-8`}>
-                      <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>Expert Protocol Guide</CardTitle>
+                      <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>Expert Plan Guide</CardTitle>
                    </CardHeader>
                    <CardContent className="p-8">
                       <p className="text-sm font-bold leading-relaxed italic text-muted-foreground">
                         {dietType === "NonVeg" 
-                          ? "Protocol focused on avian lean protein (Chicken), omega-synthesis (Fish Oil), and whole eggs. Bovine products are strictly excluded for metabolic purity."
-                          : "Harnessing plant-based density through Soya isolate, low-fat Paneer, and activated nuts. Engineered for maximum hypertrophy and fiber baseline."}
+                          ? "Plan focused on avian lean protein (Chicken), omega-synthesis (Fish Oil), and whole eggs. This ensures maximum effort and purity."
+                          : "Harnessing plant-based density through Soya isolate, low-fat Paneer, and activated nuts. Engineered for maximum growth and fiber baseline."}
                       </p>
                    </CardContent>
                 </Card>
@@ -187,7 +187,7 @@ export default function DietPage() {
                             <div className="flex items-center justify-between mb-2">
                                <p className={`text-[10px] font-black uppercase tracking-widest ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>{meal.time}</p>
                                <Badge variant="outline" className={`text-[9px] font-black uppercase px-3 py-0.5 ${dietType === 'NonVeg' ? 'text-red-500 border-red-200 bg-red-50/50' : 'text-primary border-primary/20 bg-primary/5'}`}>
-                                 Verified Protocol
+                                 Verified Plan
                                </Badge>
                             </div>
                             <h4 className="text-2xl font-black uppercase tracking-tight">{meal.title}</h4>
