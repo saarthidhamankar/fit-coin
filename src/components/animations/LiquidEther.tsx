@@ -18,7 +18,7 @@ interface LiquidEtherProps {
 
 /**
  * LiquidEther - A high-end fluid motion background component.
- * Fixed: Stabilized dependency array to prevent Next.js Hook errors.
+ * Stabilized dependency array to prevent Next.js Hook errors.
  */
 export default function LiquidEther({
   mouseForce = 20,
@@ -33,7 +33,7 @@ export default function LiquidEther({
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Destructure with stable defaults to ensure useEffect deps are consistent
+  // Stable color extraction
   const c1 = colors[0] || "#5227FF";
   const c2 = colors[1] || "#FF9FFC";
   const c3 = colors[2] || "#B19EEF";
@@ -110,7 +110,6 @@ export default function LiquidEther({
     };
 
     const handleResize = () => {
-      if (!renderer) return;
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
@@ -137,7 +136,8 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Stable size dependency array
+    // MUST include all props to keep dependency array size constant
+  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution, mouseForce, cursorSize, isViscous, viscous, isBounce]);
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }

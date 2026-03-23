@@ -3,120 +3,57 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * FIRESTORE SECURITY RULES DOCUMENTATION
-     *
+     * FIRESTORE SECURITY RULES
+     * 
      * Core Philosophy:
-     * This ruleset implements a strict user-ownership model combined with a public-read 
-     * catalog system. Access to personal fitness data, workout logs, and purchase 
-     * history is restricted to the authenticated owner. Global application data 
-     * (products and achievements) is publicly accessible for reading but restricted 
-     * from client-side modifications.
-     *
-     * Data Structure:
-     * - /userProfiles/{userId}: Root documents for user settings and progress.
-     * - /userProfiles/{userId}/workoutLogs/{id}: Private logs nested under the owner.
-     * - /userProfiles/{userId}/purchaseHistory/{id}: Private history nested under the owner.
-     * - /shopProducts/{id}: Top-level public catalog of rewards.
-     * - /achievements/{id}: Top-level public catalog of unlockables.
-     *
-     * Key Security Decisions:
-     * 1. Path-Based Authorization: We use the userId in the document path as the primary 
-     *    authorization key, matching it against request.auth.uid.
-     * 2. Denormalization for Authorization: Essential IDs (userId, id) are required to be 
-     *    stored within documents. This allows rules to enforce relational integrity and 
-     *    perform ownership checks without expensive get() calls.
-     * 3. Prototyping Flexibility: While authorization is strictly enforced (who can 
-     *    access), the specific data schema (fields, types) is not validated to allow 
-     *    for rapid frontend iteration.
-     * 4. Relational Integrity: On creation and update, rules ensure that ownership 
-     *    links (like userId) remain consistent with the path and are immutable.
+     * - Users own their data under the /users/{userId} path.
+     * - Roles are read-only for users under /roles_admin/{userId}.
+     * - Global catalogs like products and achievements are public read.
      */
 
-    // --- Global Helper Functions ---
-
-    /** Checks if the request is made by a signed-in user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the provided UID matches the authenticated user's UID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the user owns the existing document in the database. */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    // --- Collection Rules ---
-
-    /**
-     * @description Rules for the user's root profile document.
-     * @path /userProfiles/{userId}
-     * @allow Authenticated user 'user_123' to (create) document /userProfiles/user_123.
-     * @deny Authenticated user 'user_123' to (update) document /userProfiles/user_456.
-     * @principle Enforces path-based ownership and validates that the internal 'id' field matches the UID.
-     */
-    match /userProfiles/{userId} {
+    // --- User Data ---
+    match /users/{userId} {
       allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow create, update: if isOwner(userId);
+      allow delete: if isOwner(userId);
 
-      /**
-       * @description Rules for individual workout logs nested under a user.
-       * @path /userProfiles/{userId}/workoutLogs/{workoutLogId}
-       * @allow User 'abc' to (list) their own logs at /userProfiles/abc/workoutLogs.
-       * @deny User 'abc' to (create) a log at /userProfiles/xyz/workoutLogs/log_1.
-       * @principle Restricts subcollection access to the parent path owner and enforces relational consistency.
-       */
-      match /workoutLogs/{workoutLogId} {
+      match /workoutSessions/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow create, update: if isOwner(userId);
       }
 
-      /**
-       * @description Rules for a user's store purchase history.
-       * @path /userProfiles/{userId}/purchaseHistory/{purchaseId}
-       * @allow User 'abc' to (get) their own purchase at /userProfiles/abc/purchaseHistory/p_1.
-       * @deny User 'abc' to (delete) a purchase belonging to /userProfiles/def.
-       * @principle Enforces strict ownership via the parent path and denormalized userId field.
-       */
-      match /purchaseHistory/{purchaseId} {
+      match /activityLogs/{id} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
+        allow create: if isOwner(userId);
+      }
+
+      match /purchases/{id} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId);
       }
     }
 
-    /**
-     * @description Global catalog for shop products.
-     * @path /shopProducts/{productId}
-     * @allow Any visitor (including anonymous) to (get) or (list) products.
-     * @deny Any user to (create) or (update) a product from the client.
-     * @principle Provides public read access for global data while preventing unauthorized writes.
-     */
+    // --- Admin Roles ---
+    match /roles_admin/{userId} {
+      allow get: if isOwner(userId);
+      allow list, write: if false; // Only manageable via console
+    }
+
+    // --- Global Catalogs ---
     match /shopProducts/{productId} {
-      allow get, list: if true;
-      // CRITICAL: Cannot implement owner-only writes. The 'ShopProduct' entity is missing an 'ownerId' or 'authorId' field.
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow read: if true;
     }
 
-    /**
-     * @description Global catalog for unlockable achievements.
-     * @path /achievements/{achievementId}
-     * @allow Any visitor to (list) all available achievements.
-     * @deny Authenticated users to (delete) achievement definitions.
-     * @principle Ensures static achievement definitions are read-only for all clients.
-     */
     match /achievements/{achievementId} {
-      allow get, list: if true;
-      // CRITICAL: Cannot implement owner-only writes. The 'Achievement' entity is missing an 'ownerId' or 'authorId' field.
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow read: if true;
     }
   }
 }
