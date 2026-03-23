@@ -30,7 +30,10 @@ import {
   Cpu,
   ShoppingBag,
   Dumbbell,
-  Palette
+  Palette,
+  Truck,
+  Package,
+  Clock
 } from "lucide-react";
 import { getBalance } from "@/blockchain";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +45,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const ACHIEVEMENTS = [
   { id: 1, title: "Consistent", desc: "5 recorded sessions", icon: "📈", condition: (p: any) => (p?.totalWorkoutsCompleted || 0) >= 5 },
@@ -66,6 +70,7 @@ export default function ProfilePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
@@ -87,6 +92,17 @@ export default function ProfilePage() {
   }, [db, user?.uid]);
 
   const { data: activityLogs, isLoading: logsLoading } = useCollection(logsQuery);
+
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return query(
+      collection(db, "users", user.uid, "purchases"),
+      orderBy("timestamp", "desc"),
+      limit(20)
+    );
+  }, [db, user?.uid]);
+
+  const { data: purchases, isLoading: ordersLoading } = useCollection(ordersQuery);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -240,7 +256,7 @@ export default function ProfilePage() {
               <CardHeader className="pb-2 border-b border-border/10 bg-muted/20 px-8 py-6 text-center">
                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Earnings Summary</CardTitle>
               </CardHeader>
-              <CardContent className="p-10 space-y-8">
+              <CardContent className="p-10 space-y-6">
                 <div className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" onClick={refreshBalance}>
                   <p className="text-[10px] font-black uppercase text-primary mb-3 tracking-[0.2em] flex items-center justify-between">
                     Balance
@@ -254,20 +270,28 @@ export default function ProfilePage() {
                   <Button 
                     variant="ghost" 
                     onClick={() => setLogsOpen(true)}
-                    className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group"
+                    className="h-24 bg-muted/30 rounded-[2rem] flex flex-col gap-1 border border-border/50 hover:bg-primary/10 transition-all group"
                   >
-                    <Database className="w-7 h-7 text-muted-foreground group-hover:text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">History</span>
+                    <History className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Logs</span>
                   </Button>
                   <Button 
                     variant="ghost" 
-                    onClick={() => setSecurityOpen(true)}
-                    className="h-28 bg-muted/30 rounded-[2.5rem] flex flex-col gap-2 border border-border/50 hover:bg-primary/10 transition-all group"
+                    onClick={() => setOrdersOpen(true)}
+                    className="h-24 bg-muted/30 rounded-[2rem] flex flex-col gap-1 border border-border/50 hover:bg-primary/10 transition-all group"
                   >
-                    <ShieldCheck className="w-7 h-7 text-accent group-hover:scale-110" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Security</span>
+                    <ShoppingBag className="w-6 h-6 text-primary group-hover:scale-110" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Orders</span>
                   </Button>
                 </div>
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setSecurityOpen(true)}
+                    className="w-full h-16 bg-muted/30 rounded-[2rem] flex items-center justify-center gap-3 border border-border/50 hover:bg-primary/10 transition-all group"
+                  >
+                    <ShieldCheck className="w-5 h-5 text-accent group-hover:scale-110" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Security Protocol</span>
+                  </Button>
               </CardContent>
             </Card>
 
@@ -398,6 +422,61 @@ export default function ProfilePage() {
               </div>
             </ScrollArea>
             <Button onClick={() => setLogsOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-primary text-white shadow-xl">Close Summary</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
+        <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
+          <div className="p-10 bg-gradient-to-b from-primary/5 to-background">
+            <DialogHeader className="mb-8 flex flex-row items-center justify-between">
+              <div>
+                <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-primary">My Orders</DialogTitle>
+                <p className="text-muted-foreground text-sm font-medium">Verified redemptions and shipping status.</p>
+              </div>
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                <Truck className="w-7 h-7 text-primary" />
+              </div>
+            </DialogHeader>
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {ordersLoading ? (
+                  <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" /></div>
+                ) : purchases && purchases.length > 0 ? (
+                  purchases.map((order: any) => (
+                    <div key={order.id} className="p-6 bg-white/40 dark:bg-black/40 rounded-3xl border border-white/20 flex flex-col gap-4 group hover:border-primary/20 transition-all">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                             <Package className="w-6 h-6" />
+                           </div>
+                           <div>
+                             <p className="font-black text-sm uppercase">{order.productName}</p>
+                             <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold">
+                               <Clock className="w-3 h-3" /> {formatDate(order.timestamp)}
+                             </div>
+                           </div>
+                        </div>
+                        <Badge className={cn(
+                          "rounded-full px-3 py-1 text-[8px] font-black uppercase tracking-widest border-none",
+                          order.status === 'order_confirmed' ? 'bg-blue-500 text-white' : 
+                          order.status === 'shipped' ? 'bg-orange-500 text-white' : 'bg-primary text-white'
+                        )}>
+                          {order.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-border/10">
+                         <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Spent</div>
+                         <div className="font-black text-primary italic">{order.fitCoinsSpent} <span className="text-[10px] not-italic">FIT</span></div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-20 opacity-50 font-black uppercase tracking-widest">No redemptions found.</div>
+                )}
+              </div>
+            </ScrollArea>
+            <Button onClick={() => setOrdersOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-primary text-white shadow-xl">Return to Profile</Button>
           </div>
         </DialogContent>
       </Dialog>
