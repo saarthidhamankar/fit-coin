@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc, increment, serverTimestamp } from "firebase/firestore";
 
 interface WorkoutModalProps {
   onSuccess: () => void;
@@ -55,6 +55,11 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       return;
     }
 
+    if (!user?.uid || !db) {
+      toast({ variant: "destructive", title: "Account Not Ready", description: "Please wait for synchronization." });
+      return;
+    }
+
     setLoading(true);
     try {
       const today = new Date();
@@ -78,41 +83,42 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         }
       }
 
-      // 1. Blockchain Reward
+      // 1. Blockchain Reward (Local Simulation)
       await rewardUser(address, preview.reward);
       
-      // 2. Firebase Updates (Non-blocking but executed in order)
-      if (user?.uid && db) {
-        const timestampStr = today.toISOString();
-        
-        // Save Session
-        await addDoc(collection(db, "users", user.uid, "workoutSessions"), {
-          userId: user.uid,
-          workoutType: type,
-          durationMinutes: duration,
-          totalTokensEarned: preview.reward,
-          timestamp: serverTimestamp(),
-          startTime: timestampStr
-        });
+      // 2. Permanent Backend Records (Firestore)
+      const timestampStr = today.toISOString();
+      
+      // Save Workout Session record
+      await addDoc(collection(db, "users", user.uid, "workoutSessions"), {
+        userId: user.uid,
+        workoutType: type,
+        durationMinutes: duration,
+        totalTokensEarned: preview.reward,
+        timestamp: serverTimestamp(),
+        startTime: timestampStr
+      });
 
-        // Update Profile Stats
-        await updateDoc(doc(db, "users", user.uid), {
-          totalWorkoutsCompleted: increment(1),
-          totalFitEarned: increment(preview.reward),
-          lastWorkoutDate: timestampStr,
-          currentStreakDays: newStreak,
-          lastActivityAt: serverTimestamp()
-        });
+      // Update User Profile (Using setDoc with merge: true to avoid "missing document" errors)
+      await setDoc(doc(db, "users", user.uid), {
+        id: user.uid,
+        username: profile?.username || "Athlete",
+        walletAddress: address,
+        totalWorkoutsCompleted: increment(1),
+        totalFitEarned: increment(preview.reward),
+        lastWorkoutDate: timestampStr,
+        currentStreakDays: newStreak,
+        lastActivityAt: serverTimestamp()
+      }, { merge: true });
 
-        // Log Action
-        await addDoc(collection(db, "users", user.uid, "activityLogs"), {
-          userId: user.uid,
-          activityType: "WORKOUT_EARN",
-          description: `Finished: ${type} session`,
-          fitCoinsChange: preview.reward,
-          timestamp: serverTimestamp()
-        });
-      }
+      // Record in Activity History
+      await addDoc(collection(db, "users", user.uid, "activityLogs"), {
+        userId: user.uid,
+        activityType: "WORKOUT_EARN",
+        description: `Completed: ${type} session`,
+        fitCoinsChange: preview.reward,
+        timestamp: serverTimestamp()
+      });
 
       confetti({
         particleCount: 150,
@@ -123,13 +129,18 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
 
       toast({ 
         title: "Session Saved!", 
-        description: `You earned ${preview.reward} FIT. Current Streak: ${newStreak} Days!` 
+        description: `You earned ${preview.reward} FIT. Your progress is synced to the backend.` 
       });
       
       setOpen(false);
       onSuccess();
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Sync Failed", description: e.message || "Could not save session." });
+      console.error(e);
+      toast({ 
+        variant: "destructive", 
+        title: "Update Failed", 
+        description: e.message || "Check your network and try again." 
+      });
     } finally {
       setLoading(false);
     }
@@ -140,7 +151,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       <DialogTrigger asChild>
         <Button size="lg" className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 animate-glow rounded-[1.5rem] border-2 border-white/50 transition-all active:scale-95">
           <Dumbbell className="w-7 h-7 mr-2" />
-          Log Workout
+          Earn FIT Now
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none focus:outline-none">
@@ -222,7 +233,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               {loading ? (
                 <div className="flex items-center gap-4">
                   <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Syncing...
+                  Syncing to Backend...
                 </div>
               ) : (
                 <>

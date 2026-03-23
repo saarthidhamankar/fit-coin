@@ -46,7 +46,6 @@ export default function Dashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const [address, setAddress] = useState<string | null>(null);
-  const [balance, setBalance] = useState(0);
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [todayDate, setTodayDate] = useState<Date | null>(null);
@@ -115,20 +114,17 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Rewarding scaling for immediate feedback
+    // Scaling for immediate feedback (making 1 workout feel significant)
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 20) * 100, 100), fullMark: 100 },
-      { subject: 'Time', A: Math.min((totalDuration / 60) * 100, 100), fullMark: 100 },
-      { subject: 'Effort', A: Math.min(avgEffort * 100, 100), fullMark: 100 },
+      { subject: 'Earnings', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
+      { subject: 'Time', A: Math.min((totalDuration / 120) * 100, 100), fullMark: 100 },
+      { subject: 'Effort', A: Math.min(avgEffort * 80, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((profile?.currentStreakDays || 0) / 7) * 100, 100), fullMark: 100 },
-      { subject: 'Goals', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 10) * 100, 100), fullMark: 100 },
+      { subject: 'Sessions', A: Math.min(((profile?.totalWorkoutsCompleted || 0) / 10) * 100, 100), fullMark: 100 },
     ];
   }, [chartData, profile]);
 
   useEffect(() => {
-    if (address) {
-      getBalance(address).then(setBalance);
-    }
     if (profile && !motivation && !loadingMotivation && workouts) {
       setLoadingMotivation(true);
       generateMotivation({
@@ -140,26 +136,27 @@ export default function Dashboard() {
         })),
         currentStreak: profile.currentStreakDays || 0,
         totalWorkouts: profile.totalWorkoutsCompleted || 0,
-        totalTokensEarned: balance
+        totalTokensEarned: profile.totalFitEarned || 0
       }).then(setMotivation).catch(() => {
         const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
         setMotivation({
-          motivationalMessage: "Keep pushing! Every session is a victory for your future self.",
+          motivationalMessage: "Keep pushing! Your effort is being recorded in the permanent history.",
           workoutSuggestions: [WEEKLY_PLANS.MuscleGain[todayStr] || "Stay Active Today"],
           promoCode: (profile?.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
         });
       }).finally(() => setLoadingMotivation(false));
     }
-  }, [profile, address, balance, workouts]);
+  }, [profile, workouts]);
 
   const handleWorkoutSuccess = () => {
-    if (address) getBalance(address).then(setBalance);
+    toast({ title: "Stats Updated", description: "Your backend records are now live." });
   };
 
   if (!isClient || !todayDate) return null;
 
   const currentStreak = profile?.currentStreakDays || 0;
   const totalWorkouts = profile?.totalWorkoutsCompleted || 0;
+  const balance = profile?.totalFitEarned || 0;
   const monthlyProgress = Math.min((totalWorkouts / 20) * 100, 100);
 
   return (
@@ -173,8 +170,8 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active Earnings: <span className="text-primary not-italic">LIVE ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your weekly history and progress summary.</p>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active Earnings: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified workout history and backend stats.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="pro-glass p-4 rounded-[2.5rem] flex items-center gap-4 group hover:scale-105 transition-all">
@@ -182,7 +179,7 @@ export default function Dashboard() {
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">My Wallet</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Balance</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -193,8 +190,8 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "FIT Balance", value: balance, icon: Wallet, suffix: "" },
-            { label: "Day Streak", value: currentStreak, suffix: " Days", icon: Flame },
+            { label: "FIT Earnings", value: balance, icon: Wallet, suffix: "" },
+            { label: "Current Streak", value: currentStreak, suffix: " Days", icon: Flame },
             { label: "Total Sessions", value: totalWorkouts, suffix: "", icon: Dumbbell },
             { label: "Goal Progress", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
           ].map((stat, i) => (
@@ -224,7 +221,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Session</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Earn FIT tokens for every minute you move. Consistency is the key to success.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Every minute is saved in your verified history. Consistency drives your balance up.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={handleWorkoutSuccess} 
@@ -234,8 +231,8 @@ export default function Dashboard() {
                 </div>
                 <div className="hidden md:flex w-64 h-64 pro-glass rounded-[3rem] p-8 items-center justify-center flex-col text-center">
                   <Activity className="w-16 h-16 text-primary animate-pulse mb-4" />
-                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Live Tracker</p>
-                  <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">CONNECTED</Badge>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Backend Sync</p>
+                  <Badge className="bg-primary/20 text-primary border-none text-[8px] tracking-widest">VERIFIED</Badge>
                 </div>
               </div>
             </motion.div>
@@ -246,7 +243,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Weekly Fitness Balance
+                      Weekly Effort Balance
                     </CardTitle>
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Performance history for the current week</p>
                   </div>
@@ -322,7 +319,7 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first session to see your daily plan.</p>
+                  <p className="text-sm opacity-80 font-bold tracking-tight">Log your first session to see your plan.</p>
                 )}
               </CardContent>
             </Card>
@@ -377,7 +374,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Consistency Warning</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
-                      Missing sessions will cost you -20 FIT tokens. Stay active!
+                      Missing sessions breaks your streak and history. Stay active!
                     </p>
                   </div>
                 </div>
@@ -392,7 +389,7 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
                    <ShieldCheck className="w-5 h-5 text-primary" />
-                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Verified History</p>
+                   <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Verified Backend History</p>
                 </div>
               </CardContent>
             </Card>

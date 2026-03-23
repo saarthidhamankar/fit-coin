@@ -136,7 +136,6 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-    // Array size MUST remain constant. We include all potential dynamic variables.
   }, [c1, c2, c3, autoSpeed, autoIntensity, resolution, mouseForce, cursorSize, isViscous, viscous, isBounce]);
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;

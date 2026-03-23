@@ -53,31 +53,30 @@ export const switchToSepolia = async () => {
   }
 };
 
+/**
+ * Wallet simulation synced with backend.
+ * While actual tokens would be on-chain, for this app
+ * the profile document in Firestore is the source of truth.
+ */
 export const getBalance = async (address: string) => {
   if (typeof window === 'undefined') return 0;
+  // Local cache for instant feedback
   const localBalance = localStorage.getItem(`fitcoin_balance_${address}`);
   return parseFloat(localBalance || "0");
 };
 
 export const rewardUser = async (address: string, amount: number) => {
   console.log(`Rewarding ${amount} FIT to ${address}...`);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
   const current = await getBalance(address);
   const newBalance = current + amount;
   localStorage.setItem(`fitcoin_balance_${address}`, newBalance.toString());
-  
   return newBalance;
 };
 
 export const spendTokens = async (address: string, amount: number) => {
   const current = await getBalance(address);
   const newBalance = Math.max(0, current - amount);
-  
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
   localStorage.setItem(`fitcoin_balance_${address}`, newBalance.toString());
-  
   return newBalance;
 };
 
