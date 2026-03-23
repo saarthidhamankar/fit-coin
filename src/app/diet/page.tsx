@@ -84,7 +84,7 @@ export default function DietPage() {
             <Apple className="w-4 h-4" /> Nutri-Plan v4.0
           </div>
           <h1 className="text-6xl font-headline font-black uppercase tracking-tighter italic">Dietary <span className={`${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'} not-italic`}>Fuel</span></h1>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium leading-relaxed">Precision benchmarks for high performance. High-density protein, maximum rep recovery.</p>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto font-medium leading-relaxed">Precision benchmarks for high performance. High-density protein, maximum recovery.</p>
         </motion.div>
 
         <div className="flex flex-col gap-10">

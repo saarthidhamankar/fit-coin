@@ -45,7 +45,6 @@ import { startOfWeek, eachDayOfInterval, endOfWeek, isSameDay, startOfDay } from
 export default function Dashboard() {
   const { user } = useUser();
   const db = useFirestore();
-  const [address, setAddress] = useState<string | null>(null);
   const [motivation, setMotivation] = useState<GenerateMotivationOutput | null>(null);
   const [loadingMotivation, setLoadingMotivation] = useState(false);
   const [todayDate, setTodayDate] = useState<Date | null>(null);
@@ -55,8 +54,6 @@ export default function Dashboard() {
   useEffect(() => {
     setIsClient(true);
     setTodayDate(new Date());
-    const addr = localStorage.getItem('fitcoin_wallet_address');
-    if (addr) setAddress(addr);
   }, []);
 
   const userDocRef = useMemoFirebase(() => {
@@ -114,7 +111,6 @@ export default function Dashboard() {
     const effortDays = chartData.filter(d => d.effort > 0).length || 1;
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
-    // Scaling for immediate feedback (making 1 workout feel significant)
     return [
       { subject: 'Earnings', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 120) * 100, 100), fullMark: 100 },
@@ -140,7 +136,7 @@ export default function Dashboard() {
       }).then(setMotivation).catch(() => {
         const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'short' }) as keyof typeof WEEKLY_PLANS.MuscleGain;
         setMotivation({
-          motivationalMessage: "Keep pushing! Your effort is being recorded in the permanent history.",
+          motivationalMessage: "Keep pushing! Every minute counts towards your earnings.",
           workoutSuggestions: [WEEKLY_PLANS.MuscleGain[todayStr] || "Stay Active Today"],
           promoCode: (profile?.currentStreakDays || 0) > 3 ? "STREAK3" : undefined
         });
@@ -149,7 +145,7 @@ export default function Dashboard() {
   }, [profile, workouts]);
 
   const handleWorkoutSuccess = () => {
-    toast({ title: "Stats Updated", description: "Your history is now live." });
+    toast({ title: "Stats Updated", description: "Your FITCoin is added in your wallet" });
   };
 
   if (!isClient || !todayDate) return null;
@@ -171,7 +167,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active Earnings: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
-            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified workout history and backend stats.</p>
+            <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history and wallet balance.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="pro-glass p-4 rounded-[2.5rem] flex items-center gap-4 group hover:scale-105 transition-all">
@@ -179,7 +175,7 @@ export default function Dashboard() {
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Total Balance</p>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Wallet Balance</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -221,7 +217,7 @@ export default function Dashboard() {
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
                 <div className="flex-1 space-y-8 text-center md:text-left">
                   <h2 className="text-5xl font-headline font-black leading-tight uppercase text-foreground">Log Your Next <span className="text-primary italic">Session</span></h2>
-                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Every minute is saved in your verified history. Consistency drives your balance up.</p>
+                  <p className="text-lg text-muted-foreground max-w-md font-medium tracking-tight">Every minute is saved in your history. Consistency drives your wallet balance up.</p>
                   <div className="max-w-xs mx-auto md:mx-0">
                     <WorkoutModal 
                       onSuccess={handleWorkoutSuccess} 
@@ -243,7 +239,7 @@ export default function Dashboard() {
                   <div className="space-y-1">
                     <CardTitle className="flex items-center gap-3 text-xl uppercase font-black italic tracking-tighter text-foreground">
                       <Target className="w-6 h-6 text-primary" />
-                      Weekly Effort Balance
+                      Weekly Fitness Balance
                     </CardTitle>
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-9">Performance history for the current week</p>
                   </div>
@@ -372,7 +368,7 @@ export default function Dashboard() {
                 <div className="p-5 bg-destructive/10 rounded-2xl border border-destructive/20 flex items-start gap-4">
                   <AlertTriangle className="w-6 h-6 text-destructive shrink-0" />
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Consistency Warning</p>
+                    <p className="text-[10px] font-black uppercase text-destructive tracking-widest">Effort Warning</p>
                     <p className="text-[11px] font-medium leading-tight text-destructive/80">
                       Missing sessions breaks your streak and history. Stay active!
                     </p>

@@ -90,7 +90,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       const timestampStr = today.toISOString();
       
       // Save Workout Session record
-      await addDoc(collection(db, "users", user.uid, "workoutSessions"), {
+      addDoc(collection(db, "users", user.uid, "workoutSessions"), {
         userId: user.uid,
         workoutType: type,
         durationMinutes: duration,
@@ -99,8 +99,8 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
         startTime: timestampStr
       });
 
-      // Update User Profile (Using setDoc with merge: true to avoid "missing document" errors)
-      await setDoc(doc(db, "users", user.uid), {
+      // Update User Profile
+      setDoc(doc(db, "users", user.uid), {
         id: user.uid,
         username: profile?.username || "Athlete",
         walletAddress: address,
@@ -112,7 +112,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       }, { merge: true });
 
       // Record in Activity History
-      await addDoc(collection(db, "users", user.uid, "activityLogs"), {
+      addDoc(collection(db, "users", user.uid, "activityLogs"), {
         userId: user.uid,
         activityType: "WORKOUT_EARN",
         description: `Completed: ${type} session`,
@@ -129,7 +129,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
 
       toast({ 
         title: "Session Saved!", 
-        description: `You earned ${preview.reward} FIT. Your progress is synced to the backend.` 
+        description: "Your FITCoin is added in your wallet" 
       });
       
       setOpen(false);
@@ -233,7 +233,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               {loading ? (
                 <div className="flex items-center gap-4">
                   <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Syncing to Backend...
+                  Updating Ledger...
                 </div>
               ) : (
                 <>

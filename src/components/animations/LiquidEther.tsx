@@ -18,7 +18,7 @@ interface LiquidEtherProps {
 
 /**
  * LiquidEther - A high-end fluid motion background component.
- * Stabilized dependency array to prevent Next.js Hook errors.
+ * Fixed the dependency array to be stable and constant in size.
  */
 export default function LiquidEther({
   mouseForce = 20,
@@ -33,7 +33,7 @@ export default function LiquidEther({
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Stable color extraction
+  // Stabilize colors to prevent array size issues in dependency tracking
   const c1 = colors[0] || "#5227FF";
   const c2 = colors[1] || "#FF9FFC";
   const c3 = colors[2] || "#B19EEF";
@@ -45,7 +45,7 @@ export default function LiquidEther({
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * resolution);
+    renderer.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2) * resolution);
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
@@ -136,7 +136,7 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Fixed dependency array size
+  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Stable, constant size array
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }
