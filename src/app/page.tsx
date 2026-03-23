@@ -34,8 +34,8 @@ export default function LandingPage() {
       if (auth) initiateAnonymousSignIn(auth);
 
       toast({ 
-        title: "Account Linked", 
-        description: addr.startsWith('0xDemo') ? "Demo Mode Active - Welcome!" : "Wallet connected successfully!" 
+        title: "Welcome, Athlete!", 
+        description: "Your session is ready. Let's move!" 
       });
       router.push("/dashboard");
     } catch (e: any) {

@@ -33,7 +33,7 @@ export default function LiquidEther({
 }: LiquidEtherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Stable color extraction
+  // Stable color extraction to ensure consistent dependency size
   const c1 = colors[0] || "#5227FF";
   const c2 = colors[1] || "#FF9FFC";
   const c3 = colors[2] || "#B19EEF";
@@ -136,7 +136,7 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-    // MUST include all props to keep dependency array size constant
+    // Array size MUST remain constant. We include all potential dynamic variables.
   }, [c1, c2, c3, autoSpeed, autoIntensity, resolution, mouseForce, cursorSize, isViscous, viscous, isBounce]);
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
