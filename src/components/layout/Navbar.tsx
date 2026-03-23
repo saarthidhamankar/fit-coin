@@ -58,10 +58,7 @@ export default function Navbar() {
       setAddress(addr);
       localStorage.setItem('fitcoin_wallet_address', addr);
 
-      // Sign in to Firebase Backend
-      if (auth) {
-        initiateAnonymousSignIn(auth);
-      }
+      if (auth) initiateAnonymousSignIn(auth);
 
       if (user?.uid && db) {
         const userRef = doc(db, "users", user.uid);
@@ -71,7 +68,7 @@ export default function Navbar() {
         }, { merge: true });
       }
 
-      toast({ title: "Wallet Connected", description: `Welcome back, athlete!` });
+      toast({ title: "Welcome, Athlete!", description: `Let's move!` });
     } catch (e: any) {
       toast({ variant: "destructive", title: "Connection Failed", description: e.message });
     }
@@ -159,8 +156,10 @@ export default function Navbar() {
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="rounded-xl cursor-pointer font-bold p-3 focus:bg-yellow-500/10 text-yellow-600">
-                      <Crown className="mr-3 h-4 w-4" /> System Admin Console
+                    <DropdownMenuItem asChild className="rounded-xl cursor-pointer font-bold p-3 focus:bg-yellow-500/10 text-yellow-600">
+                      <Link href="/admin" className="w-full flex items-center font-bold">
+                        <Crown className="mr-3 h-4 w-4" /> System Admin Console
+                      </Link>
                     </DropdownMenuItem>
                   </>
                 )}

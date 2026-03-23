@@ -1,15 +1,7 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * FIRESTORE SECURITY RULES
-     * 
-     * Core Philosophy:
-     * - Users own their data under the /users/{userId} path.
-     * - Roles are read-only for users under /roles_admin/{userId}.
-     * - Global catalogs like products and achievements are public read.
-     */
 
     function isSignedIn() {
       return request.auth != null;
@@ -17,6 +9,10 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- User Data ---
@@ -27,7 +23,7 @@ service cloud.firestore {
 
       match /workoutSessions/{id} {
         allow get, list: if isOwner(userId);
-        allow create, update: if isOwner(userId);
+        allow create: if isOwner(userId);
       }
 
       match /activityLogs/{id} {
@@ -41,18 +37,21 @@ service cloud.firestore {
       }
     }
 
+    // --- Global Orders ---
+    match /orders/{id} {
+      allow read, list: if isAdmin();
+      allow create: if isSignedIn(); // Users create orders on purchase
+      allow update: if isAdmin(); // Admins update order status
+    }
+
     // --- Admin Roles ---
     match /roles_admin/{userId} {
-      allow get: if isOwner(userId);
-      allow list, write: if false; // Only manageable via console
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
     }
 
     // --- Global Catalogs ---
     match /shopProducts/{productId} {
-      allow read: if true;
-    }
-
-    match /achievements/{achievementId} {
       allow read: if true;
     }
   }

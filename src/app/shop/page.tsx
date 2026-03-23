@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,27 +82,38 @@ export default function ShopPage() {
 
     setLoading(true);
     try {
-      // 1. Local Simulation spend (if needed for ethers sync)
+      // 1. Spend Simulation
       if (address) await spendTokens(address, checkoutProduct.price);
 
-      // 2. Permanent Backend spend
+      // 2. Profile Update
       await updateDoc(doc(db, "users", user.uid), {
         totalFitEarned: increment(-checkoutProduct.price)
       });
 
-      // 3. Record in Purchases History
+      // 3. User Purchase History
       await addDoc(collection(db, "users", user.uid, "purchases"), {
         userId: user.uid,
         productId: checkoutProduct.id,
         productName: checkoutProduct.name,
-        purchaseDate: new Date().toISOString(),
         fitCoinsSpent: checkoutProduct.price,
         shippingDetails: shipping,
         status: 'order_confirmed',
         timestamp: serverTimestamp()
       });
 
-      // 4. Record in Action History
+      // 4. Global Orders (FOR ADMINS)
+      await addDoc(collection(db, "orders"), {
+        userId: user.uid,
+        userEmail: user.email || "anonymous",
+        productId: checkoutProduct.id,
+        productName: checkoutProduct.name,
+        fitCoinsSpent: checkoutProduct.price,
+        shippingDetails: shipping,
+        status: 'order_confirmed',
+        timestamp: serverTimestamp()
+      });
+
+      // 5. Activity Log
       await addDoc(collection(db, "users", user.uid, "activityLogs"), {
         userId: user.uid,
         activityType: "PURCHASE_SPEND",
@@ -217,7 +229,7 @@ export default function ShopPage() {
         <DialogContent className="max-w-md rounded-[2.5rem] p-8 border-none pro-glass focus:outline-none">
           <DialogHeader className="mb-6">
             <DialogTitle className="font-headline font-black uppercase text-2xl flex items-center gap-2">
-              <Truck className="w-6 h-6 text-primary" /> Gear Delivery
+              <Truck className="w-6 h-6 text-primary" /> Delivery Details
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6">

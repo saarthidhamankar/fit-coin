@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -43,6 +44,22 @@
         "fitCoinsChange": { "type": "number" },
         "timestamp": { "type": "string", "format": "date-time" }
       }
+    },
+    "Order": {
+      "title": "Order",
+      "type": "object",
+      "description": "A global record of a shop redemption for admin tracking.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "fitCoinsSpent": { "type": "number" },
+        "shippingDetails": { "type": "object" },
+        "status": { "type": "string", "enum": ["order_confirmed", "shipped", "delivered"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -60,6 +77,10 @@
     "/users/{userId}/activityLogs/{id}": {
       "schema": "ActivityLog",
       "description": "Log of user actions and FIT earnings."
+    },
+    "/orders/{id}": {
+      "schema": "Order",
+      "description": "Global shop orders for admin fulfillment."
     }
   }
 }

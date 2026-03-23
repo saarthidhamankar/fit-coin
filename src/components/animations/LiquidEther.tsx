@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -18,7 +19,7 @@ interface LiquidEtherProps {
 
 /**
  * LiquidEther - A high-end fluid motion background component.
- * Fixed the dependency array to be stable and constant in size to avoid Next.js hook errors.
+ * FIXED: Dependency array is constant to prevent NextJS hydration errors.
  */
 export default function LiquidEther({
   mouseForce = 20,
@@ -137,7 +138,7 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution, mouseForce, isViscous, viscous, autoDemo, isBounce]); 
+  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Stable dependency array
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }
