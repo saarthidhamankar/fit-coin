@@ -84,7 +84,7 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl md:text-8xl font-headline font-black text-foreground max-w-5xl leading-tight uppercase italic"
         >
-          Sweat is the new <span className="text-black dark:text-white not-italic underline decoration-primary">
+          Sweat is the new <span className="text-black dark:text-white not-italic underline decoration-primary font-black">
             <DecryptedText 
               text="Currency" 
               animateOn="view" 
