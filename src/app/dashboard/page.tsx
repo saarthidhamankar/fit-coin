@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -113,7 +114,7 @@ export default function Dashboard() {
     const avgEffort = chartData.reduce((acc, d) => acc + d.effort, 0) / effortDays;
     
     return [
-      { subject: 'Earnings', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
+      { subject: 'Currency', A: Math.min((totalTokens / 50) * 100, 100), fullMark: 100 },
       { subject: 'Time', A: Math.min((totalDuration / 120) * 100, 100), fullMark: 100 },
       { subject: 'Effort', A: Math.min(avgEffort * 80, 100), fullMark: 100 },
       { subject: 'Streak', A: Math.min(((profile?.currentStreakDays || 0) / 7) * 100, 100), fullMark: 100 },
@@ -167,7 +168,7 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active Earnings: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active <span className="text-black dark:text-white not-italic">Currency</span>: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history and wallet balance.</p>
           </div>
           <div className="flex items-center gap-4">
@@ -176,7 +177,7 @@ export default function Dashboard() {
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">Wallet Balance</p>
+                <p className="text-[10px] font-black uppercase text-black dark:text-white tracking-widest leading-none mb-1">Wallet Balance</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -187,7 +188,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "FIT Earnings", value: balance, icon: Wallet, suffix: "" },
+            { label: "FIT Currency", value: balance, icon: Wallet, suffix: "" },
             { label: "Current Streak", value: currentStreak, suffix: " Days", icon: Flame },
             { label: "Total Sessions", value: totalWorkouts, suffix: "", icon: Dumbbell },
             { label: "Goal Progress", value: Math.round(monthlyProgress), suffix: "%", icon: Zap }
@@ -198,7 +199,10 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-2xl bg-secondary mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <stat.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</p>
+                  <p className={cn(
+                    "text-[10px] font-black uppercase tracking-widest mb-1",
+                    stat.label.includes("Currency") ? "text-black dark:text-white" : "text-muted-foreground"
+                  )}>{stat.label}</p>
                   <p className="text-2xl font-black">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </p>

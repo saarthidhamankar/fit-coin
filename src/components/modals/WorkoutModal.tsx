@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -209,7 +210,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               <div className="flex justify-between items-center relative z-10">
                 <div className="flex items-center gap-3">
                   <Trophy className="w-6 h-6 text-yellow-300" />
-                  <span className="text-xs font-black uppercase tracking-[0.1em]">Estimated Earnings</span>
+                  <span className="text-xs font-black uppercase tracking-[0.1em] text-black">Estimated Currency</span>
                 </div>
                 <div className="flex items-baseline gap-1">
                   <motion.span 

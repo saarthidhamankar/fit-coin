@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -139,7 +140,7 @@ export default function LeaderboardPage() {
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="w-24 px-8 font-black uppercase text-[10px] tracking-widest">Rank</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest">Athlete</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest">Earnings</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-black dark:text-white">Currency</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest">Streak</TableHead>
                     <TableHead className="text-right px-8 font-black uppercase text-[10px] tracking-widest">Trend</TableHead>
                   </TableRow>

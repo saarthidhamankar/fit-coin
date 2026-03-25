@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -136,7 +137,7 @@ export default function ProfilePage() {
       setBalance(newBalance);
       toast({
         title: "Balance Synchronized",
-        description: "Your earnings have been verified.",
+        description: "Your currency has been verified.",
       });
     } finally {
       setIsSyncing(false);
@@ -254,11 +255,11 @@ export default function ProfilePage() {
           <aside className="space-y-12">
             <Card className="rounded-[3.5rem] border-none shadow-2xl overflow-hidden glass-card bg-gradient-to-br from-primary/5 to-accent/5">
               <CardHeader className="pb-2 border-b border-border/10 bg-muted/20 px-8 py-6 text-center">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Earnings Summary</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white">Currency Summary</CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-6">
                 <div className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" onClick={refreshBalance}>
-                  <p className="text-[10px] font-black uppercase text-primary mb-3 tracking-[0.2em] flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-black dark:text-white mb-3 tracking-[0.2em] flex items-center justify-between">
                     Balance
                     <RefreshCw className={`w-4 h-4 transition-transform duration-700 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
                   </p>
@@ -389,7 +390,7 @@ export default function ProfilePage() {
             <DialogHeader className="mb-8 flex flex-row items-center justify-between">
               <div>
                 <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-primary">Action History</DialogTitle>
-                <p className="text-muted-foreground text-sm font-medium">Your recent fitness and earnings history.</p>
+                <p className="text-muted-foreground text-sm font-medium">Your recent fitness and history.</p>
               </div>
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
                 <Database className="w-7 h-7 text-primary" />
@@ -466,7 +467,7 @@ export default function ProfilePage() {
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                         <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Spent</div>
+                         <div className="text-[10px] font-black uppercase text-black dark:text-white tracking-widest">Spent</div>
                          <div className="font-black text-primary italic">{order.fitCoinsSpent} <span className="text-[10px] not-italic">FIT</span></div>
                       </div>
                     </div>
