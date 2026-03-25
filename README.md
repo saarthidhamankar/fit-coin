@@ -1,25 +1,31 @@
 
-# FitCoin | Decentralized Fitness Rewards
+# FitCoin | Decentralized Fitness Rewards Ecosystem
 
-A professional fitness tracking ecosystem built with Next.js, Firebase, and Gemini AI. Earn **Currency** for every workout and redeem it for premium gear.
+FitCoin is a professional fitness tracking platform built with Next.js, Firebase, and Gemini AI. It operates on the core philosophy that **"Sweat is the new Currency,"** allowing athletes to earn FIT assets for every session and redeem them for premium gear.
 
-## 🚀 The Tech Stack
+## 🚀 Technical Architecture Report
+
+### 1. The Core Infrastructure
 - **Framework**: Next.js 15 (App Router)
-- **Database**: Firebase Firestore (Real-time sync)
-- **Auth**: Firebase Anonymous Auth (Wallet-linked)
-- **AI**: Google Genkit (Gemini 2.5 Flash Trainer)
-- **Visuals**: Three.js & WebGL Fluid Dynamics
-- **Blockchain**: Simulated Sepolia Testnet via Ethers.js
+- **Database**: Firebase Firestore (Live Sync)
+- **Identity**: Firebase Anonymous Auth + Ethers.js (Wallet-Linked)
+- **AI Engine**: Google Genkit (Gemini 2.5 Flash)
+- **Animation**: Three.js & WebGL Fluid Simulation
 
-## ✨ Core Features
-- **Sweat is Currency**: High-contrast dashboard tracking FIT assets in real-time.
-- **Sunday Streak Logic**: Weekly tracking starting on Sunday for weekend warriors.
-- **AI Training Plan**: Daily personalized workout and diet suggestions powered by Gemini.
-- **Admin Console**: Secure global order management for physical gear redemptions.
-- **Action History**: A verified, permanent ledger of every fitness activity.
+### 2. Key Modules & Logic
+- **Active Currency System**: A verified calculation engine that converts duration and intensity into digital assets.
+- **AI Trainer (Gemini)**: A personalized daily planning system that analyzes workout history to suggest unique "Effort Plans."
+- **Sunday-Start Protocol**: Weekly streak logic strictly starting on Sunday to maximize weekend engagement.
+- **Global Fulfillment Ledger**: A secure admin console for tracking and managing physical gear redemptions.
+- **Action History**: A permanent, immutable record of all fitness activities and transactions.
 
-## 🛡️ Security & Ownership
-FitCoin uses decentralized identity principles. Your fitness history and FIT balance are tied to your wallet address, ensuring you own your progress across the blockchain.
+### 3. Visual Experience
+- **Interactive Hero**: High-performance SplashCursor and Threads simulations using WebGL.
+- **Ambient UI**: LiquidEther background layers stabilized with React hooks for a premium feel.
+- **3D Branding**: Three.js-powered 3D assets for high-end aesthetic value.
+
+## ⛓️ Blockchain & Ownership
+FitCoin utilizes decentralized identity principles. Your fitness history and FIT balance are tied to your wallet address, ensuring you own your progress across the blockchain. Every session is an entry in your verified history, creating an immutable fitness legacy.
 
 ---
-Created with love by @saarthidhamankar
+Created for the future of fitness by @saarthidhamankar
