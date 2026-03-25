@@ -48,11 +48,11 @@ export default function LandingPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen relative mesh-background overflow-x-hidden">
+    <div className="min-h-screen relative overflow-x-hidden">
       <Navbar />
       
       {/* High-End Threads Hero Background Animation */}
-      <div className="fixed inset-0 pointer-events-none flex items-center justify-center -z-10">
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center -z-10 opacity-60">
         <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
           <Threads
             color={[0.32, 0.15, 1]}
@@ -115,7 +115,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <section id="features" className="py-24 relative z-10">
+      <section id="features" className="py-24 relative z-10 bg-background/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: Shield, title: "Secure History", text: "Every session is saved and verified on the network for total transparency." },
