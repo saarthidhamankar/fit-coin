@@ -84,7 +84,7 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl md:text-8xl font-headline font-black text-foreground max-w-5xl leading-tight uppercase italic"
         >
-          Sweat is the new <span className="text-black dark:text-white not-italic underline decoration-primary font-black">
+          Sweat is the new <span className="text-black not-italic underline decoration-primary font-black">
             <DecryptedText 
               text="Currency" 
               animateOn="view" 
@@ -101,7 +101,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2 }}
           className="mt-6 text-xl text-muted-foreground max-w-2xl font-medium"
         >
-          The smart reward plan for athletes. Earn FIT tokens for every workout and redeem them for premium gear.
+          The smart reward plan for athletes. Earn FIT currency for every workout and redeem them for premium gear.
         </motion.p>
 
         <motion.div 
@@ -125,8 +125,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: Shield, title: "Secure History", text: "Every session is saved and verified on the network for total transparency." },
-            { icon: Zap, title: "Effort Rewards", text: "Earn based on time and intensity. More sweat equals more FIT tokens." },
-            { icon: TrendingUp, title: "Redeem Gear", text: "FIT isn't just points. It's a real token you use in our store for actual gear." }
+            { icon: Zap, title: "Effort Rewards", text: "Earn based on time and intensity. More sweat equals more FIT currency." },
+            { icon: TrendingUp, title: "Redeem Gear", text: "FIT isn't just points. It's a real asset you use in our store for actual gear." }
           ].map((feature, i) => (
             <motion.div 
               key={i}

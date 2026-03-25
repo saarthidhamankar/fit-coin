@@ -168,7 +168,7 @@ export default function Dashboard() {
           className="flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div>
-            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active <span className="text-black dark:text-white not-italic">Currency</span>: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
+            <h1 className="text-4xl font-headline font-black uppercase italic tracking-tighter text-foreground">Active <span className="text-black not-italic">Currency</span>: <span className="text-primary not-italic">SYNCED ⚡</span></h1>
             <p className="text-muted-foreground mt-1 font-medium tracking-tight">Your verified fitness history and wallet balance.</p>
           </div>
           <div className="flex items-center gap-4">
@@ -177,7 +177,7 @@ export default function Dashboard() {
                 <Wallet className="w-6 h-6 text-primary group-hover:text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-black dark:text-white tracking-widest leading-none mb-1">Wallet Balance</p>
+                <p className="text-[10px] font-black uppercase text-black tracking-widest leading-none mb-1">Wallet Balance</p>
                 <p className="text-2xl font-black text-primary">
                   <CountUp value={balance} /> FIT
                 </p>
@@ -201,7 +201,7 @@ export default function Dashboard() {
                   </div>
                   <p className={cn(
                     "text-[10px] font-black uppercase tracking-widest mb-1",
-                    stat.label.includes("Currency") ? "text-black dark:text-white" : "text-muted-foreground"
+                    stat.label.includes("Currency") ? "text-black" : "text-muted-foreground"
                   )}>{stat.label}</p>
                   <p className="text-2xl font-black">
                     <CountUp value={stat.value} suffix={stat.suffix} />
