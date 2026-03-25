@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 145 20% 98%;
-    --foreground: 145 10% 5%;
+    --background: 142 45% 95%;
+    --foreground: 142 10% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 145 10% 5%;
+    --card-foreground: 142 10% 5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 145 10% 5%;
-    --primary: 145 85% 45%;
-    --primary-foreground: 145 85% 98%;
-    --secondary: 145 20% 94%;
-    --secondary-foreground: 145 85% 45%;
-    --muted: 145 20% 94%;
-    --muted-foreground: 145 10% 40%;
-    --accent: 115 95% 55%;
-    --accent-foreground: 145 10% 5%;
+    --popover-foreground: 142 10% 5%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 142 76% 98%;
+    --secondary: 142 25% 90%;
+    --secondary-foreground: 142 76% 36%;
+    --muted: 142 25% 90%;
+    --muted-foreground: 142 10% 35%;
+    --accent: 142 85% 45%;
+    --accent-foreground: 142 10% 5%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 145 20% 90%;
-    --input: 145 20% 90%;
-    --ring: 145 85% 45%;
+    --border: 142 20% 85%;
+    --input: 142 20% 85%;
+    --ring: 142 76% 36%;
     --radius: 2.5rem;
   }
 
   .dark {
-    --background: 145 40% 2%;
-    --foreground: 145 10% 98%;
-    --card: 145 30% 4%;
-    --card-foreground: 145 10% 98%;
-    --popover: 145 30% 4%;
-    --popover-foreground: 145 10% 98%;
-    --primary: 145 85% 50%;
-    --primary-foreground: 145 85% 5%;
-    --secondary: 145 20% 10%;
-    --secondary-foreground: 145 85% 60%;
-    --muted: 145 20% 10%;
-    --muted-foreground: 145 10% 65%;
-    --accent: 115 95% 60%;
-    --accent-foreground: 145 10% 5%;
+    --background: 142 50% 3%;
+    --foreground: 142 10% 98%;
+    --card: 142 40% 4%;
+    --card-foreground: 142 10% 98%;
+    --popover: 142 40% 4%;
+    --popover-foreground: 142 10% 98%;
+    --primary: 142 76% 45%;
+    --primary-foreground: 142 76% 5%;
+    --secondary: 142 20% 10%;
+    --secondary-foreground: 142 76% 60%;
+    --muted: 142 20% 10%;
+    --muted-foreground: 142 10% 65%;
+    --accent: 142 85% 50%;
+    --accent-foreground: 142 10% 5%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 145 10% 98%;
-    --border: 145 20% 12%;
-    --input: 145 20% 12%;
-    --ring: 145 85% 50%;
+    --destructive-foreground: 142 10% 98%;
+    --border: 142 20% 12%;
+    --input: 142 20% 12%;
+    --ring: 142 76% 45%;
   }
 }
 
@@ -66,10 +66,10 @@
 
 .mesh-background {
   background: 
-    radial-gradient(at 0% 0%, hsla(145, 85%, 45%, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(115, 95%, 55%, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(145, 85%, 45%, 0.1) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(115, 95%, 55%, 0.1) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(142, 85%, 45%, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(142, 95%, 55%, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(142, 85%, 45%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(142, 95%, 55%, 0.1) 0px, transparent 50%);
   background-color: hsl(var(--background));
   background-attachment: fixed;
 }
@@ -85,12 +85,12 @@
 }
 
 @keyframes glow {
-  0%, 100% { box-shadow: 0 0 10px hsla(145, 85%, 45%, 0.3); }
-  50% { box-shadow: 0 0 25px hsla(145, 85%, 45%, 0.6); }
+  0%, 100% { box-shadow: 0 0 10px hsla(142, 85%, 45%, 0.3); }
+  50% { box-shadow: 0 0 25px hsla(142, 85%, 45%, 0.6); }
 }
 
 .animate-glow {
-  animation: glow 3s infinite ease-in-out;
+  animation: glow 2s infinite ease-in-out;
 }
 
 ::-webkit-scrollbar {

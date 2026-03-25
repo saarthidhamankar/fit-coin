@@ -25,13 +25,13 @@ export default function RootLayout({
       <body className="font-body antialiased selection:bg-primary/30 min-h-screen relative">
         <FirebaseClientProvider>
           <ThemeColorSynchronizer />
-          {/* Global background for inner pages, placed at -z-20 to allow hero animations at -z-10 to be visible */}
+          {/* Global background for inner pages, using green palette */}
           <LiquidEther 
             mouseForce={20}
             cursorSize={100}
             isViscous={false}
             viscous={30}
-            colors={["#5227FF","#FF9FFC","#B19EEF"]}
+            colors={["#18D156","#BCFA22","#064E3B"]}
             autoDemo
             autoSpeed={0.5}
             autoIntensity={2.2}

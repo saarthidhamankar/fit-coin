@@ -115,7 +115,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <section id="features" className="py-24 relative z-10 bg-background/50 backdrop-blur-sm">
+      <section id="features" className="py-24 relative z-10">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           {[
             { icon: Shield, title: "Secure History", text: "Every session is saved and verified on the network for total transparency." },
