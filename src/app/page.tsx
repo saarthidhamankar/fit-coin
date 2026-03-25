@@ -12,7 +12,7 @@ import Navbar from "@/components/layout/Navbar";
 import { useAuth } from "@/firebase";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import DecryptedText from "@/components/animations/DecryptedText";
-import SplashCursor from "@/components/animations/SplashCursor";
+import Threads from "@/components/animations/Threads";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -51,18 +51,13 @@ export default function LandingPage() {
     <div className="min-h-screen relative mesh-background overflow-x-hidden">
       <Navbar />
       
-      {/* Interactive Hero Background Animation */}
+      {/* High-End Threads Hero Background Animation */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" style={{ width: '100vw', height: '100vh' }}>
-        <SplashCursor
-          SIM_RESOLUTION={160}
-          DYE_RESOLUTION={1024}
-          DENSITY_DISSIPATION={1}
-          VELOCITY_DISSIPATION={1}
-          PRESSURE={0.7}
-          CURL={5}
-          SPLAT_RADIUS={0.2}
-          SPLAT_FORCE={9500}
-          COLOR_UPDATE_SPEED={50}
+        <Threads
+          color={[0.32, 0.15, 1]}
+          amplitude={2.4}
+          distance={0.4}
+          enableMouseInteraction
         />
       </div>
 
