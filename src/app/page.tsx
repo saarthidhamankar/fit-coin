@@ -52,13 +52,15 @@ export default function LandingPage() {
       <Navbar />
       
       {/* High-End Threads Hero Background Animation */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" style={{ width: '100vw', height: '100vh' }}>
-        <Threads
-          color={[0.32, 0.15, 1]}
-          amplitude={2.4}
-          distance={0.4}
-          enableMouseInteraction
-        />
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center -z-10">
+        <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          <Threads
+            color={[0.32, 0.15, 1]}
+            amplitude={2.4}
+            distance={0.4}
+            enableMouseInteraction
+          />
+        </div>
       </div>
 
       <section className="relative pt-32 pb-32 flex flex-col items-center justify-center text-center px-4">

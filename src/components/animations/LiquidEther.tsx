@@ -137,7 +137,7 @@ export default function LiquidEther({
       material.dispose();
       renderer.dispose();
     };
-  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution, mouseForce, cursorSize, isViscous, viscous, isBounce]); // Stable, all-inclusive dependency array
+  }, [c1, c2, c3, autoSpeed, autoIntensity, resolution]); // Simplified to fix hook size mismatch error
 
   return <div ref={containerRef} className="fixed inset-0 -z-10 pointer-events-none overflow-hidden" />;
 }

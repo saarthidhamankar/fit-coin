@@ -128,7 +128,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
       });
 
       toast({ 
-        title: "Session Saved!", 
+        title: "Session Success", 
         description: "Your FITCoin is added in your wallet" 
       });
       
@@ -233,7 +233,7 @@ export default function WorkoutModal({ onSuccess, userStats }: WorkoutModalProps
               {loading ? (
                 <div className="flex items-center gap-4">
                   <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
-                  Updating Ledger...
+                  Updating History...
                 </div>
               ) : (
                 <>
