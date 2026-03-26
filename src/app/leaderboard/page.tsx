@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import Silk from "@/components/animations/Silk";
 
 const MOCK_DATA = {
   Weekly: [
@@ -40,7 +41,6 @@ const MOCK_DATA = {
 export default function LeaderboardPage() {
   const [address, setAddress] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("Weekly");
-  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     setAddress(localStorage.getItem('fitcoin_wallet_address'));
@@ -49,10 +49,23 @@ export default function LeaderboardPage() {
   const athletes = useMemo(() => MOCK_DATA[activeTab as keyof typeof MOCK_DATA], [activeTab]);
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4">
+    <div className="min-h-screen pt-24 pb-12 px-4 relative">
+      {/* Background Animation */}
+      <div className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-40">
+        <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          <Silk
+            speed={4.1}
+            scale={0.9}
+            color="#07741d"
+            noiseIntensity={0.8}
+            rotation={0}
+          />
+        </div>
+      </div>
+
       <Navbar />
 
-      <div className="max-w-5xl mx-auto space-y-16">
+      <div className="max-w-5xl mx-auto space-y-16 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,13 +74,13 @@ export default function LeaderboardPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-xs uppercase tracking-widest">
             <Trophy className="w-4 h-4" /> Global Hall of Fame
           </div>
-          <h1 className="text-5xl font-headline font-black">Top Performers</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">The strongest athletes on the blockchain. Sweat is the only way to climb this mountain.</p>
+          <h1 className="text-5xl font-headline font-black uppercase italic tracking-tighter italic">Ledger <span className="text-primary not-italic">Ranks</span></h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium">The strongest athletes on the network. Sweat is the only way to climb this mountain.</p>
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-center mb-16">
-            <TabsList className="bg-white dark:bg-card p-1 rounded-[2rem] shadow-sm border-2 border-primary/10 h-16 w-full max-w-md">
+            <TabsList className="bg-white/40 dark:bg-card/40 backdrop-blur-md p-1 rounded-[2rem] shadow-sm border-2 border-primary/10 h-16 w-full max-w-md">
               {["Weekly", "Monthly", "AllTime"].map(tab => (
                 <TabsTrigger key={tab} value={tab} className="flex-1 h-12 rounded-[1.5rem] text-sm font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg">
                   {tab === "AllTime" ? "All Time" : tab}
@@ -86,9 +99,8 @@ export default function LeaderboardPage() {
                 transition={{ duration: 0.2 }}
                 className="flex flex-col md:flex-row items-end justify-center gap-4 md:gap-12 px-4"
               >
-                {/* Podium Rendering */}
                 {athletes.slice(0, 3).map((a, i) => {
-                  const ranks = [2, 1, 3]; // Order for podium layout
+                  const ranks = [2, 1, 3]; 
                   const currentAthlete = athletes.find(athlete => athlete.rank === ranks[i]);
                   if (!currentAthlete) return null;
 
@@ -122,11 +134,11 @@ export default function LeaderboardPage() {
                         </div>
                       </div>
                       <div className={cn(
-                        "bg-white dark:bg-card rounded-[2.5rem] shadow-xl flex flex-col items-center justify-center p-6 border-t-[8px]",
+                        "bg-white/40 dark:bg-card/40 backdrop-blur-md rounded-[2.5rem] shadow-xl flex flex-col items-center justify-center p-6 border-t-[8px]",
                         currentAthlete.rank === 1 ? "h-44 w-52 border-yellow-400" : currentAthlete.rank === 2 ? "h-28 w-40 border-gray-300" : "h-24 w-36 border-orange-400"
                       )}>
-                        <p className="font-black text-sm">{currentAthlete.username}</p>
-                        <p className="font-black text-primary">{(currentAthlete.tokens / 1000).toFixed(1)}k FIT</p>
+                        <p className="font-black text-sm uppercase tracking-tight">{currentAthlete.username}</p>
+                        <p className="font-black text-primary text-xl">{(currentAthlete.tokens / 1000).toFixed(1)}k FIT</p>
                       </div>
                     </div>
                   );
@@ -134,13 +146,13 @@ export default function LeaderboardPage() {
               </motion.div>
             </AnimatePresence>
 
-            <Card className="rounded-[3rem] border-none shadow-xl overflow-hidden bg-white dark:bg-card">
+            <Card className="rounded-[3rem] border-none shadow-xl overflow-hidden pro-glass">
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="w-24 px-8 font-black uppercase text-[10px] tracking-widest">Rank</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest">Athlete</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-black dark:text-white">Currency</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest text-primary">Currency</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest">Streak</TableHead>
                     <TableHead className="text-right px-8 font-black uppercase text-[10px] tracking-widest">Trend</TableHead>
                   </TableRow>

@@ -47,6 +47,7 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import Silk from "@/components/animations/Silk";
 
 const ACHIEVEMENTS = [
   { id: 1, title: "Consistent", desc: "5 recorded sessions", icon: "📈", condition: (p: any) => (p?.totalWorkoutsCompleted || 0) >= 5 },
@@ -186,10 +187,23 @@ export default function ProfilePage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-12 px-4 relative mesh-background">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 pb-12 px-4 relative">
+      {/* Background Animation */}
+      <div className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-40">
+        <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          <Silk
+            speed={4.1}
+            scale={0.9}
+            color="#07741d"
+            noiseIntensity={0.8}
+            rotation={0}
+          />
+        </div>
+      </div>
+
       <Navbar />
 
-      <div className="max-w-6xl mx-auto space-y-12">
+      <div className="max-w-6xl mx-auto space-y-12 relative z-10">
         <section className="relative">
           <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="h-80 w-full bg-gradient-to-br from-primary via-primary/80 to-accent rounded-[3.5rem] overflow-hidden relative shadow-2xl border-4 border-white/10 z-0">
             {profile?.bannerUrl ? (
@@ -253,13 +267,13 @@ export default function ProfilePage() {
 
         <div className="grid md:grid-cols-3 gap-12">
           <aside className="space-y-12">
-            <Card className="rounded-[3.5rem] border-none shadow-2xl overflow-hidden glass-card bg-gradient-to-br from-primary/5 to-accent/5">
+            <Card className="rounded-[3.5rem] border-none shadow-2xl overflow-hidden pro-glass bg-gradient-to-br from-primary/5 to-accent/5">
               <CardHeader className="pb-2 border-b border-border/10 bg-muted/20 px-8 py-6 text-center">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-black dark:text-white">Currency Summary</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground">Currency Summary</CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-6">
                 <div className="p-10 bg-white/40 dark:bg-black/40 rounded-[3rem] border-2 border-primary/20 hover:scale-[1.03] transition-all cursor-pointer group shadow-inner" onClick={refreshBalance}>
-                  <p className="text-[10px] font-black uppercase text-black dark:text-white mb-3 tracking-[0.2em] flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase text-foreground mb-3 tracking-[0.2em] flex items-center justify-between">
                     Balance
                     <RefreshCw className={`w-4 h-4 transition-transform duration-700 ${isSyncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
                   </p>
@@ -281,8 +295,8 @@ export default function ProfilePage() {
                     onClick={() => setOrdersOpen(true)}
                     className="h-24 bg-muted/30 rounded-[2rem] flex flex-col gap-1 border border-border/50 hover:bg-primary/10 transition-all group"
                   >
-                    <ShoppingBag className="w-6 h-6 text-primary group-hover:scale-110" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Orders</span>
+                    <Truck className="w-6 h-6 text-primary group-hover:scale-110" />
+                    <span className="text-[9px] font-black uppercase tracking-widest leading-none">Delivery Status</span>
                   </Button>
                 </div>
                 <Button 
@@ -296,7 +310,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[3.5rem] border-none shadow-xl overflow-hidden glass-card">
+            <Card className="rounded-[3.5rem] border-none shadow-xl overflow-hidden pro-glass">
               <CardContent className="p-10 space-y-8">
                 {[
                   { label: "Total Sessions", value: profile?.totalWorkoutsCompleted || "0", icon: LayoutGrid, color: "text-blue-500" },
@@ -318,7 +332,7 @@ export default function ProfilePage() {
           </aside>
 
           <main className="md:col-span-2 space-y-12">
-            <Card className="rounded-[4rem] border-none shadow-2xl overflow-hidden glass-card">
+            <Card className="rounded-[4rem] border-none shadow-2xl overflow-hidden pro-glass">
               <CardHeader className="flex flex-row items-center justify-between border-b border-border/10 bg-muted/10 p-12">
                 <CardTitle className="flex items-center gap-5 text-4xl font-black uppercase italic tracking-tighter">
                   <Award className="w-12 h-12 text-primary" />
@@ -353,7 +367,7 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[4rem] border-none shadow-xl overflow-hidden glass-card">
+            <Card className="rounded-[4rem] border-none shadow-xl overflow-hidden pro-glass">
               <CardHeader className="bg-muted/10 border-b border-border/10 p-12">
                 <CardTitle className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Privacy Controls</CardTitle>
               </CardHeader>
@@ -385,7 +399,7 @@ export default function ProfilePage() {
       </div>
 
       <Dialog open={logsOpen} onOpenChange={setLogsOpen}>
-        <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
+        <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl pro-glass">
           <div className="p-10 bg-gradient-to-b from-primary/5 to-background">
             <DialogHeader className="mb-8 flex flex-row items-center justify-between">
               <div>
@@ -428,12 +442,12 @@ export default function ProfilePage() {
       </Dialog>
 
       <Dialog open={ordersOpen} onOpenChange={setOrdersOpen}>
-        <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
+        <DialogContent className="max-w-2xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl pro-glass">
           <div className="p-10 bg-gradient-to-b from-primary/5 to-background">
             <DialogHeader className="mb-8 flex flex-row items-center justify-between">
               <div>
-                <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-primary">My Orders</DialogTitle>
-                <p className="text-muted-foreground text-sm font-medium">Verified redemptions and shipping status.</p>
+                <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-primary">Delivery Status</DialogTitle>
+                <p className="text-muted-foreground text-sm font-medium">Verified gear redemptions and shipping queue.</p>
               </div>
               <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
                 <Truck className="w-7 h-7 text-primary" />
@@ -466,24 +480,53 @@ export default function ProfilePage() {
                           {order.status.replace('_', ' ')}
                         </Badge>
                       </div>
+                      
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        {[
+                          { label: 'Confirmed', status: 'order_confirmed', icon: Package },
+                          { label: 'Shipped', status: 'shipped', icon: Truck },
+                          { label: 'Delivered', status: 'delivered', icon: ShieldCheck }
+                        ].map((step, idx) => {
+                          const isActive = order.status === step.status;
+                          const isPast = (order.status === 'shipped' && step.status === 'order_confirmed') || 
+                                         (order.status === 'delivered' && (step.status === 'order_confirmed' || step.status === 'shipped'));
+                          return (
+                            <div key={idx} className="flex flex-col items-center gap-1">
+                              <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all",
+                                isActive ? "bg-primary border-primary text-white scale-110" : 
+                                isPast ? "bg-primary/20 border-primary/40 text-primary" : 
+                                "bg-muted/50 border-muted text-muted-foreground"
+                              )}>
+                                <step.icon className="w-4 h-4" />
+                              </div>
+                              <span className={cn(
+                                "text-[8px] font-black uppercase tracking-widest",
+                                isActive ? "text-primary" : "text-muted-foreground opacity-60"
+                              )}>{step.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
                       <div className="flex items-center justify-between pt-2 border-t border-border/10">
-                         <div className="text-[10px] font-black uppercase text-black dark:text-white tracking-widest">Spent</div>
-                         <div className="font-black text-primary italic">{order.fitCoinsSpent} <span className="text-[10px] not-italic">FIT</span></div>
+                         <div className="text-[10px] font-black uppercase text-foreground tracking-widest">Athlete Cost</div>
+                         <div className="font-black text-primary italic text-lg">{order.fitCoinsSpent} <span className="text-[10px] not-italic opacity-60">FIT</span></div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-20 opacity-50 font-black uppercase tracking-widest">No redemptions found.</div>
+                  <div className="text-center py-20 opacity-50 font-black uppercase tracking-widest">No redemptions found in history.</div>
                 )}
               </div>
             </ScrollArea>
-            <Button onClick={() => setOrdersOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-primary text-white shadow-xl">Return to Profile</Button>
+            <Button onClick={() => setOrdersOpen(false)} className="w-full h-16 rounded-2xl mt-8 font-black uppercase bg-primary text-white shadow-xl shadow-primary/20">Return to Profile</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={securityOpen} onOpenChange={setSecurityOpen}>
-        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl glass-card">
+        <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl pro-glass">
           <div className="p-10 bg-gradient-to-b from-accent/10 to-background">
             <DialogHeader className="mb-8">
               <DialogTitle className="text-4xl font-headline font-black uppercase italic tracking-tighter text-accent">Account Safety</DialogTitle>
@@ -520,7 +563,7 @@ export default function ProfilePage() {
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="rounded-[4rem] max-w-lg p-0 border-none glass-card shadow-2xl overflow-hidden focus:outline-none">
+        <DialogContent className="rounded-[4rem] max-w-lg p-0 border-none pro-glass shadow-2xl overflow-hidden focus:outline-none">
           <div className="p-12 space-y-10 bg-gradient-to-br from-primary/10 to-background">
             <DialogHeader className="space-y-4">
               <DialogTitle className="font-headline font-black uppercase text-5xl italic tracking-tighter text-primary">Edit Athlete Profile</DialogTitle>
