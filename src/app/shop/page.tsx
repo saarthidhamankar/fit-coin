@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,6 +16,7 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import confetti from "canvas-confetti";
+import Silk from "@/components/animations/Silk";
 
 const PRODUCTS = [
   { id: "p1", name: "FitCoin Water Bottle", price: 80, emoji: "🍶", category: "Equipment" },
@@ -146,10 +146,23 @@ export default function ShopPage() {
   const categories = ["Equipment", "Nutrition", "Apparel", "Training"];
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12 px-4 relative mesh-background">
+    <div className="min-h-screen pt-24 pb-12 px-4 relative">
+      {/* Background Animation */}
+      <div className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-40">
+        <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          <Silk
+            speed={4.1}
+            scale={0.9}
+            color="#07741d"
+            noiseIntensity={0.8}
+            rotation={0}
+          />
+        </div>
+      </div>
+
       <Navbar />
 
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-12 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
