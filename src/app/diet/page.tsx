@@ -73,6 +73,7 @@ export default function DietPage() {
       animate={{ opacity: 1 }}
       className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden"
     >
+      {/* Background Animation */}
       <div className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-40">
         <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
           <Silk
