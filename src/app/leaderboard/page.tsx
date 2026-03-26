@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-xs uppercase tracking-widest">
             <Trophy className="w-4 h-4" /> Global Hall of Fame
           </div>
-          <h1 className="text-5xl font-headline font-black uppercase italic tracking-tighter italic">Ledger <span className="text-primary not-italic">Ranks</span></h1>
+          <h1 className="text-5xl font-headline font-black uppercase italic tracking-tighter">Ledger <span className="text-primary not-italic">Ranks</span></h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium">The strongest athletes on the network. Sweat is the only way to climb this mountain.</p>
         </motion.div>
 
