@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Apple, Flame, Dumbbell, Zap, Coffee, Utensils, Info, CheckCircle2, Leaf, Pill, Waves, HeartPulse, Banana, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import Silk from "@/components/animations/Silk";
 
 type DietType = "Veg" | "NonVeg";
 
@@ -70,11 +71,23 @@ export default function DietPage() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen pt-24 pb-12 px-4 relative mesh-background overflow-hidden"
+      className="min-h-screen pt-24 pb-12 px-4 relative overflow-hidden"
     >
+      <div className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-40">
+        <div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          <Silk
+            speed={4.1}
+            scale={0.9}
+            color="#07741d"
+            noiseIntensity={0.8}
+            rotation={0}
+          />
+        </div>
+      </div>
+
       <Navbar />
 
-      <div className="max-w-6xl mx-auto space-y-16">
+      <div className="max-w-6xl mx-auto space-y-16 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,7 +164,7 @@ export default function DietPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-[3rem] border-none shadow-sm glass-card overflow-hidden">
+                <Card className="rounded-[3rem] border-none shadow-sm pro-glass overflow-hidden">
                    <CardHeader className={`bg-muted/30 border-b border-border/10 p-8`}>
                       <CardTitle className={`text-[10px] font-black uppercase tracking-[0.3em] ${dietType === 'NonVeg' ? 'text-red-500' : 'text-primary'}`}>Expert Plan Guide</CardTitle>
                    </CardHeader>
@@ -174,7 +187,7 @@ export default function DietPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.1 }}
                     >
-                      <Card className={`rounded-[2.5rem] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden glass-card hover:border-${dietType === 'NonVeg' ? 'red-500/20' : 'primary/20'}`}>
+                      <Card className={`rounded-[2.5rem] border-none shadow-sm hover:shadow-xl transition-all group overflow-hidden pro-glass hover:border-${dietType === 'NonVeg' ? 'red-500/20' : 'primary/20'}`}>
                         <CardContent className="p-8 flex items-center gap-8">
                           <div className={`w-20 h-20 rounded-3xl flex items-center justify-center border-2 transition-all group-hover:scale-110 ${
                             dietType === 'NonVeg' 
@@ -206,7 +219,7 @@ export default function DietPage() {
                     { title: "Timing", text: "Pre-Rep Activation", icon: Zap },
                     { title: "Vitamins", text: "Multistack Daily", icon: HeartPulse }
                   ].map((item, i) => (
-                    <Card key={i} className="rounded-[2.5rem] border-none glass-card p-6 text-center group hover:-translate-y-2 transition-all">
+                    <Card key={i} className="rounded-[2.5rem] border-none pro-glass p-6 text-center group hover:-translate-y-2 transition-all">
                       <div className={`w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-colors ${dietType === 'NonVeg' ? 'bg-red-50 text-red-500 group-hover:bg-red-500 group-hover:text-white' : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'}`}>
                         <item.icon className="w-6 h-6" />
                       </div>
